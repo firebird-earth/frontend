@@ -1,0 +1,132 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  z-index: 0;
+}
+
+/* Ensure header and navigation stay above map */
+.leaflet-control-container .leaflet-top,
+.leaflet-control-container .leaflet-bottom {
+  z-index: 400;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+/* Control positioning and styling */
+.leaflet-control-container .leaflet-top.leaflet-left {
+  margin-top: 10px;
+  margin-left: 10px;
+}
+
+.leaflet-control-container .leaflet-top.leaflet-right {
+  margin-top: 10px;
+  margin-right: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.leaflet-control-container .leaflet-bottom.leaflet-right {
+  margin-bottom: 10px;
+  margin-right: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.leaflet-control-container .leaflet-bottom.leaflet-left {
+  margin-bottom: 10px;
+  margin-left: 10px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Scale control styles */
+.leaflet-control-scale {
+  margin-bottom: 0 !important;
+  margin-right: 0 !important;
+}
+
+.leaflet-control-scale-line {
+  border-color: #374151 !important;
+  color: #374151 !important;
+  background-color: rgba(255, 255, 255, 0.8) !important;
+  padding: 4px 8px !important;
+  border-radius: 4px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+}
+
+/* North Arrow styles */
+.leaflet-control-north {
+  margin-bottom: 0 !important;
+  margin-left: 0 !important;
+  transform: scale(0.8);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+/* Navigate control styles */
+.leaflet-control-navigate {
+  margin-bottom: 5px !important;
+  order: -1;
+}
+
+.leaflet-control-navigate button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 30px !important;
+  height: 30px !important;
+  background: white !important;
+  border: 2px solid rgba(0,0,0,0.2) !important;
+  border-radius: 4px !important;
+  box-shadow: none !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+}
+
+.leaflet-control-navigate button:hover {
+  background: #f9fafb !important;
+}
+
+.leaflet-control-navigate button svg {
+  width: 16px !important;
+  height: 16px !important;
+  color: #374151 !important;
+}
+
+/* Zoom control styles */
+.leaflet-control-zoom {
+  transform: scale(0.9);
+}
+
+.leaflet-control-zoom a {
+  width: 30px !important;
+  height: 30px !important;
+  line-height: 30px !important;
+}
+
+/* Custom cursor for AOI creation */
+.creating-aoi .leaflet-container {
+  cursor: url('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png') 12 41, crosshair !important;
+}

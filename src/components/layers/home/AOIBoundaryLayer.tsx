@@ -1,7 +1,8 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { useMap } from 'react-leaflet';
-import { calculateBufferCircle } from '../../../utils/geometryUtils';
+import { calculateBufferCircle } from '../../../utils/geometry';
+import { useAppSelector } from '../../../hooks/useAppSelector';
 
 interface AOIBoundaryLayerProps {
   locationId: number;
@@ -16,58 +17,41 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active,
   const bufferCircleRef = useRef<L.Circle | null>(null);
   const boundaryCircleRef = useRef<L.Circle | null>(null);
   const centroidMarkerRef = useRef<L.Marker | null>(null);
+  const opacityRef = useRef<number>(1.0);
+  
+  const opacity = 1.0;
 
+  // Create or remove layers based on active state and center
   useEffect(() => {
     if (!active || !center) {
-      // Clean up existing layers
-      if (boundaryRef.current) {
-        map.removeLayer(boundaryRef.current);
-        boundaryRef.current = null;
-      }
-      if (bufferCircleRef.current) {
-        map.removeLayer(bufferCircleRef.current);
-        bufferCircleRef.current = null;
-      }
-      if (boundaryCircleRef.current) {
-        map.removeLayer(boundaryCircleRef.current);
-        boundaryCircleRef.current = null;
-      }
-      if (centroidMarkerRef.current) {
-        map.removeLayer(centroidMarkerRef.current);
-        centroidMarkerRef.current = null;
-      }
+      [boundaryRef, bufferCircleRef, boundaryCircleRef, centroidMarkerRef].forEach(ref => {
+        if (ref.current) {
+          map.removeLayer(ref.current);
+          ref.current = null;
+        }
+      });
       return;
     }
 
-    // Clean up existing layers before creating new ones
-    if (boundaryRef.current) {
-      map.removeLayer(boundaryRef.current);
-      boundaryRef.current = null;
-    }
-    if (bufferCircleRef.current) {
-      map.removeLayer(bufferCircleRef.current);
-      bufferCircleRef.current = null;
-    }
-    if (boundaryCircleRef.current) {
-      map.removeLayer(boundaryCircleRef.current);
-      boundaryCircleRef.current = null;
-    }
-    if (centroidMarkerRef.current) {
-      map.removeLayer(centroidMarkerRef.current);
-      centroidMarkerRef.current = null;
-    }
+    // Clean up existing layers
+    [boundaryRef, bufferCircleRef, boundaryCircleRef, centroidMarkerRef].forEach(ref => {
+      if (ref.current) {
+        map.removeLayer(ref.current);
+        ref.current = null;
+      }
+    });
 
     // Create boundary layer if geojson exists
     if (geojson) {
       try {
         const boundaryLayer = L.geoJSON(geojson, {
-          interactive: false, // Make non-interactive
+          interactive: false,
           style: {
-            color: '#2563eb', // blue-600
+            color: '#2563eb',
             weight: 2,
             fillColor: '#2563eb',
-            fillOpacity: 0.1,
-            opacity: 1
+            fillOpacity: 0.1 * opacity,
+            opacity: opacity
           }
         });
         boundaryLayer.addTo(map);
@@ -78,47 +62,39 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active,
     }
 
     // Calculate and create buffer circle
-    const circleResult = calculateBufferCircle(center, geojson, 8); // 8 mile buffer
+    const circleResult = calculateBufferCircle(center, geojson, 8);
     
-    console.log('Buffer circle result:', circleResult);
-    
-    // Create the buffer circle (larger circle)
-    const bufferCircle = L.circle(
-      circleResult.center, // Already in [lat, lng] format
-      {
-        interactive: false, // Make non-interactive
-        radius: circleResult.radius,
-        color: '#2563eb',
-        weight: 1,
-        fillColor: '#2563eb',
-        fillOpacity: 0.05,
-        opacity: 0.5
-      }
-    );
+    const bufferCircle = L.circle(circleResult.center, {
+      interactive: false,
+      radius: circleResult.radius,
+      color: '#2563eb',
+      weight: 1,
+      fillColor: '#2563eb',
+      fillOpacity: 0.05 * opacity,
+      opacity: 0.5 * opacity
+    });
 
     bufferCircle.addTo(map);
     bufferCircleRef.current = bufferCircle;
 
-    // Create the boundary circle (smaller circle) if it exists
     if (circleResult.boundaryCircle) {
       const boundaryCircle = L.circle(
         circleResult.boundaryCircle.center,
         {
           interactive: false,
           radius: circleResult.boundaryCircle.radius,
-          color: '#ef4444', // red-500
+          color: '#ef4444',
           weight: 1,
           fillColor: '#ef4444',
-          fillOpacity: 0.05,
-          opacity: 0.5,
-          dashArray: '5, 5' // Dashed line
+          fillOpacity: 0.05 * opacity,
+          opacity: 0.5 * opacity,
+          dashArray: '5, 5'
         }
       );
 
       boundaryCircle.addTo(map);
       boundaryCircleRef.current = boundaryCircle;
       
-      // Add a marker at the center of the boundary circle for debugging
       const centroidMarker = L.marker(circleResult.boundaryCircle.center, {
         icon: L.divIcon({
           className: 'centroid-marker',
@@ -126,32 +102,57 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active,
           iconSize: [8, 8],
           iconAnchor: [4, 4]
         }),
-        interactive: false
+        interactive: false,
+        opacity: opacity
       });
       
       centroidMarker.addTo(map);
       centroidMarkerRef.current = centroidMarker;
     }
 
+    opacityRef.current = opacity;
+
     return () => {
-      if (boundaryRef.current) {
-        map.removeLayer(boundaryRef.current);
-        boundaryRef.current = null;
-      }
-      if (bufferCircleRef.current) {
-        map.removeLayer(bufferCircleRef.current);
-        bufferCircleRef.current = null;
-      }
-      if (boundaryCircleRef.current) {
-        map.removeLayer(boundaryCircleRef.current);
-        boundaryCircleRef.current = null;
-      }
-      if (centroidMarkerRef.current) {
-        map.removeLayer(centroidMarkerRef.current);
-        centroidMarkerRef.current = null;
-      }
+      [boundaryRef, bufferCircleRef, boundaryCircleRef, centroidMarkerRef].forEach(ref => {
+        if (ref.current) {
+          map.removeLayer(ref.current);
+          ref.current = null;
+        }
+      });
     };
-  }, [active, geojson, center, map]);
+  }, [active, geojson, center, map, opacity]);
+
+  // Handle opacity changes
+  useEffect(() => {
+    if (opacityRef.current !== opacity) {
+      if (boundaryRef.current) {
+        boundaryRef.current.setStyle({
+          opacity: opacity,
+          fillOpacity: 0.1 * opacity
+        });
+      }
+      
+      if (bufferCircleRef.current) {
+        bufferCircleRef.current.setStyle({
+          opacity: 0.5 * opacity,
+          fillOpacity: 0.05 * opacity
+        });
+      }
+      
+      if (boundaryCircleRef.current) {
+        boundaryCircleRef.current.setStyle({
+          opacity: 0.5 * opacity,
+          fillOpacity: 0.05 * opacity
+        });
+      }
+      
+      if (centroidMarkerRef.current) {
+        centroidMarkerRef.current.setOpacity(opacity);
+      }
+      
+      opacityRef.current = opacity;
+    }
+  }, [opacity]);
 
   return null;
 };

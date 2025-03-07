@@ -24,6 +24,15 @@ const createDefaultSettings = (userId: string): FirebaseUserSettings => ({
         showNorthArrow: true,
         showZoomControls: true
       },
+      grid: {
+        show: false,
+        size: 100,
+        unit: 'acres'
+      },
+      coordinates: {
+        show: false,
+        format: 'latlon-dd'
+      },
       lastLocation: {
         center: [-114, 41.5],
         zoom: 5

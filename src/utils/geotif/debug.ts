@@ -1,4 +1,4 @@
-import { GeoTiffBounds } from './geotiffUtils';
+import { GeoTiffBounds } from './types';
 
 export function getMountainVillageBounds(): GeoTiffBounds {
   // Mountain Village, CO coordinates
@@ -97,8 +97,4 @@ export function compareGeoTiffBounds(actual: GeoTiffBounds, expected: GeoTiffBou
     expected: (expectedWidth * Math.cos(expectedCenterLat * Math.PI / 180)) / expectedHeight,
     actual: (actualWidth * Math.cos(actualCenterLat * Math.PI / 180)) / actualHeight
   });
-}
-
-export function useDebugBounds(): boolean {
-  return true;
 }

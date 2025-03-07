@@ -1,6 +1,7 @@
 import { GeoJSON } from 'geojson';
 import L from 'leaflet';
 import proj4 from 'proj4';
+import { GeoTiffBounds } from './geotif/types';
 
 // Register common projections
 // NAD83 / UTM zone 13N (used in Colorado)
@@ -33,15 +34,29 @@ export function calculateBufferCircle(
   }
 
   try {
-    // Extract all points from the boundary
+    // Extract all points from the boundary - do this only once
     const points: [number, number][] = []; // [lat, lng]
+    const bounds = {
+      minLat: Infinity,
+      maxLat: -Infinity,
+      minLng: Infinity,
+      maxLng: -Infinity
+    };
     
     boundary.features.forEach(feature => {
       if (feature.geometry.type === 'Polygon') {
         feature.geometry.coordinates.forEach(ring => {
           ring.forEach(coord => {
             // GeoJSON coordinates are [longitude, latitude]
-            points.push([coord[1], coord[0]]);
+            const lat = coord[1];
+            const lng = coord[0];
+            points.push([lat, lng]);
+            
+            // Update bounds while we iterate
+            bounds.minLat = Math.min(bounds.minLat, lat);
+            bounds.maxLat = Math.max(bounds.maxLat, lat);
+            bounds.minLng = Math.min(bounds.minLng, lng);
+            bounds.maxLng = Math.max(bounds.maxLng, lng);
           });
         });
       }
@@ -54,28 +69,15 @@ export function calculateBufferCircle(
       };
     }
     
-    console.log(`Extracted ${points.length} points from boundary`);
-    
-    // Find the bounding box of the polygon
-    let minLat = Infinity;
-    let maxLat = -Infinity;
-    let minLng = Infinity;
-    let maxLng = -Infinity;
-    
-    for (const point of points) {
-      minLat = Math.min(minLat, point[0]);
-      maxLat = Math.max(maxLat, point[0]);
-      minLng = Math.min(minLng, point[1]);
-      maxLng = Math.max(maxLng, point[1]);
-    }
+    console.debug('Boundary analysis:', {
+      points: points.length,
+      bounds
+    });
     
     // Calculate the center of the bounding box
-    const centerLat = (minLat + maxLat) / 2;
-    const centerLng = (minLng + maxLng) / 2;
+    const centerLat = (bounds.minLat + bounds.maxLat) / 2;
+    const centerLng = (bounds.minLng + bounds.maxLng) / 2;
     const boundaryCenter: [number, number] = [centerLat, centerLng];
-    
-    console.log('Boundary bounding box:', { minLat, maxLat, minLng, maxLng });
-    console.log('Boundary center:', boundaryCenter);
     
     // Find the maximum distance from the center to any point on the boundary
     let maxDistance = 0;
@@ -89,8 +91,11 @@ export function calculateBufferCircle(
       }
     }
     
-    console.log('Maximum distance from center:', maxDistance);
-    console.log('Furthest point:', furthestPoint);
+    console.debug('Circle calculation:', {
+      center: boundaryCenter,
+      maxRadius: maxDistance,
+      furthestPoint
+    });
     
     // Create the boundary circle
     const boundaryCircle = {
@@ -135,64 +140,4 @@ function distance(a: [number, number], b: [number, number]): number {
   // Earth radius in meters
   const R = 6371000;
   return R * c;
-}
-
-export interface GeoTiffSummary {
-  width: number;
-  height: number;
-  data: Float32Array | Uint16Array | Uint8Array;
-  min: number;
-  max: number;
-  mean: number;
-  noDataValue: number | null;
-  latMin: number;
-  latMax: number;
-  lonMin: number;
-  lonMax: number;
-}
-
-export interface GeoTiffMetadata {
-  metadata: {
-    standard: {
-      imageWidth: number;
-      imageHeight: number;
-      bitsPerSample: number[];
-      compression: number | null;
-      modelTransform: {
-        matrix?: number[];
-        tiepoint?: number[];
-        origin: [number, number] | null;
-      };
-      resolution: {
-        x: number;
-        y: number;
-      };
-      noData: number | null;
-      nonNullValues: number;
-      totalPixels: number;
-      zeroCount: number;
-      crs: string;
-      projectionName: string;
-      datum: string;
-    };
-    custom: {
-      units?: string;
-      description?: string;
-    };
-  };
-  range: {
-    min: number;
-    max: number;
-    mean: number;
-  };
-}
-
-// Updated here to store Leaflet-friendly bounds
-// [ [south, west], [north, east] ] in WGS84
-export interface GeoTiffBounds {
-  bounds: [[number, number], [number, number]];
-  sourceCRS: string;
-  transform?: number[];
-  tiepoint?: number[];
-  pixelScale?: number[];
 }

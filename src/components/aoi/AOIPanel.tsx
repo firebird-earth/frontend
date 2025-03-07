@@ -3,7 +3,7 @@ import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { stopCreatingAOI, setSelectedAOI } from '../../store/slices/uiSlice';
 import { useAOI } from '../../hooks/useAOI';
-import { navigateToLocation } from '../../utils/mapUtils';
+import { navigateToLocation } from '../../utils/map';
 import { Edit2, Trash2, X } from 'lucide-react';
 
 const AOIPanel: React.FC = () => {

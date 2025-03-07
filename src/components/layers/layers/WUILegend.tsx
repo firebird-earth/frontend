@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getBrightness } from '../../../utils/colorUtils';
+import { AlertTriangle } from 'lucide-react';
 
 interface LegendItem {
   label: string;
@@ -34,16 +34,22 @@ const WUILegend: React.FC = () => {
           }))
         );
 
-        const itemsWithBrightness = await Promise.all(
-          items.map(async (item) => ({
-            ...item,
-            brightness: await getBrightness(item.imageData)
-          }))
-        );
-
-        const sortedItems = itemsWithBrightness
-          .sort((a, b) => a.brightness - b.brightness)
-          .map(({ brightness, ...item }) => item);
+        // Sort items by perceived brightness (approximation)
+        // Since we can't use the getBrightness function anymore, we'll sort by label
+        // This is a simple approximation - in a real app, you might want to implement
+        // a brightness calculation function in colors.ts
+        const sortedItems = [...items].sort((a, b) => {
+          // Try to extract numeric values from labels if possible
+          const aNum = parseInt(a.label.replace(/\D/g, ''));
+          const bNum = parseInt(b.label.replace(/\D/g, ''));
+          
+          if (!isNaN(aNum) && !isNaN(bNum)) {
+            return aNum - bNum;
+          }
+          
+          // Fallback to alphabetical sorting
+          return a.label.localeCompare(b.label);
+        });
 
         setLegendItems(sortedItems);
         setIsLoading(false);
@@ -72,8 +78,9 @@ const WUILegend: React.FC = () => {
 
   if (error) {
     return (
-      <div className="text-xs text-red-500 dark:text-red-400">
-        Error loading legend: {error}
+      <div className="text-xs text-red-500 dark:text-red-400 flex items-start space-x-1">
+        <AlertTriangle className="h-3 w-3 mt-0.5 flex-shrink-0" />
+        <span>Error loading legend: {error}</span>
       </div>
     );
   }

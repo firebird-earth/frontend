@@ -3,9 +3,10 @@ import { useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { useAppSelector } from '../../../hooks/useAppSelector';
-import { showAOIPanel } from '../../../store/slices/uiSlice';
+import { showAOIPanel, toggleLegend } from '../../../store/slices/uiSlice';
 import { setCoordinates, clearAOI } from '../../../store/slices/aoiSlice';
 import { clearActiveLocation } from '../../../store/slices/mapSlice';
+import { clearActiveLayers } from '../../../store/slices/layersSlice';
 
 const MapClickHandler: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -20,6 +21,12 @@ const MapClickHandler: React.FC = () => {
       // Clear any existing AOI and active location
       dispatch(clearAOI());
       dispatch(clearActiveLocation());
+      
+      // Clear all active layers to prevent GeoTIFF loading errors
+      dispatch(clearActiveLayers());
+      
+      // Close the legend panel if it's open
+      dispatch(toggleLegend(false));
 
       const coords: [number, number] = [e.latlng.lng, e.latlng.lat];
       

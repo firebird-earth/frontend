@@ -111,4 +111,4 @@ const MapComponent: React.FC = () => {
   );
 };
 
-export default MapComponent;
+export default MapComponent

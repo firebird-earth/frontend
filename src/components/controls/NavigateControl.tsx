@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppSelector } from '../../hooks/useAppSelector';
-import { navigateToLocation } from '../../utils/mapUtils';
+import { navigateToLocation } from '../../utils/map';
 import { locations } from '../../constants/locations';
 
 const NavigateControl = () => {

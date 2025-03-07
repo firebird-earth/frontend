@@ -14,6 +14,15 @@ export interface FirebaseUserSettings {
         showNorthArrow: boolean;
         showZoomControls: boolean;
       };
+      grid: {
+        show: boolean;
+        size: number;
+        unit: 'acres' | 'meters';
+      };
+      coordinates: {
+        show: boolean;
+        format: 'latlon-dd' | 'latlon-dms' | 'utm';
+      };
       lastLocation: {
         center: [number, number];
         zoom: number;

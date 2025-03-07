@@ -1,11 +1,28 @@
 import React, { useState } from 'react';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, ArrowUp, ArrowDown, ChevronsUp, ChevronsDown, Sliders, Info } from 'lucide-react';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
-import { toggleLayer } from '../../store/slices/layersSlice';
+import { 
+  toggleLayer, 
+  toggleSingleLayer, 
+  setLayerOpacity,
+  bringLayerToFront,
+  sendLayerToBack,
+  bringLayerForward,
+  sendLayerBackward,
+  setLayerValueRange,
+  clearActiveLayers
+} from '../../store/slices/layersSlice';
 import WUILegend from '../layers/layers/WUILegend';
 import CrisisAreasLegend from '../layers/layers/CrisisAreasLegend';
 import GeoTiffLegend from '../layers/firemetrics/GeoTiffLegend';
+import { getColorScheme, getGradientForScheme } from '../../utils/colors';
+import { getOrderedGeoTiffLayers, isEsriLayer } from '../../utils/layers';
+import OpacitySlider from './OpacitySlider';
+import ValueRangeControl from './ValueRangeControl';
+import AboutPanel from './AboutPanel';
+import { geotiffService } from '../../services/geotiffService';
+import { getGeoTiffUrl } from '../../constants/urls';
 
 interface MenuState {
   isOpen: boolean;
@@ -16,7 +33,27 @@ interface MenuState {
 const Legend: React.FC = () => {
   const dispatch = useAppDispatch();
   const { categories } = useAppSelector(state => state.layers);
+  const currentAOI = useAppSelector(state => state.aoi.currentAOI);
   const [menu, setMenu] = useState<MenuState | null>(null);
+  const [showOpacityControl, setShowOpacityControl] = useState<{
+    categoryId: string;
+    layerId: number;
+    initialOpacity: number;
+  } | null>(null);
+  const [showValueRangeControl, setShowValueRangeControl] = useState<{
+    categoryId: string;
+    layerId: number;
+    initialRange: {
+      min: number;
+      max: number;
+      defaultMin: number;
+      defaultMax: number;
+    };
+  } | null>(null);
+  const [showAboutPanel, setShowAboutPanel] = useState<{
+    metadata: any;
+    range: any;
+  } | null>(null);
 
   // Get all active layers except basemaps
   const allActiveLayers = Object.entries(categories).flatMap(([categoryId, category]) => {
@@ -31,18 +68,19 @@ const Legend: React.FC = () => {
     return [];
   });
 
-  // Separate firemetrics and fuels layers from other layers
-  const firemetricsLayers = allActiveLayers.filter(
-    ({ categoryId }) => categoryId === 'firemetrics' || categoryId === 'fuels'
-  );
+  // Get GeoTIFF layers in the same order as they're rendered on the map
+  const geoTiffLayers = getOrderedGeoTiffLayers(categories).map(layer => ({
+    categoryId: layer.name.includes('Canopy') ? 'fuels' : 'firemetrics',
+    layer
+  }));
   
-  // All other layers (not firemetrics or fuels)
+  // Get all other active layers (not GeoTIFF)
   const otherLayers = allActiveLayers.filter(
-    ({ categoryId }) => categoryId !== 'firemetrics' && categoryId !== 'fuels'
+    ({ layer }) => layer.type !== 'geotiff'
   );
 
-  // Combine the layers with firemetrics first, then other layers
-  const activeLayers = [...firemetricsLayers, ...otherLayers];
+  // Combine the layers with GeoTIFF layers first, then other layers
+  const activeLayers = [...geoTiffLayers, ...otherLayers];
 
   const handleMenuClick = (e: React.MouseEvent, categoryId: string, layerId: number) => {
     e.stopPropagation();
@@ -64,6 +102,33 @@ const Legend: React.FC = () => {
     }
   }, [menu]);
 
+  const handleOpacityChange = (e: React.ChangeEvent<HTMLInputElement>, categoryId: string, layerId: number) => {
+    e.stopPropagation();
+    const opacity = parseFloat(e.target.value);
+    dispatch(setLayerOpacity({ categoryId, layerId, opacity }));
+  };
+
+  const handleShowAbout = async (categoryId: string, layerId: number) => {
+    const layer = categories[categoryId]?.layers.find(l => l.id === layerId);
+    if (!layer || !currentAOI) return;
+
+    try {
+      const aoiId = 'id' in currentAOI ? currentAOI.id : 1;
+      const layerName = layer.source.split('/').pop()?.replace('.tif', '') || '';
+      const url = getGeoTiffUrl(aoiId, layerName);
+
+      const metadata = await geotiffService.getGeoTiffMetadata(url);
+      
+      setShowAboutPanel({
+        metadata: metadata.metadata,
+        range: metadata.range
+      });
+      setMenu(null);
+    } catch (error) {
+      console.error('Failed to load GeoTIFF metadata:', error);
+    }
+  };
+
   if (activeLayers.length === 0) return null;
 
   return (
@@ -81,31 +146,113 @@ const Legend: React.FC = () => {
                 <MoreVertical className="h-4 w-4" />
               </button>
               {menu?.isOpen && menu.categoryId === categoryId && menu.layerId === layer.id && (
-                <div className="absolute right-0 mt-1 w-48 bg-white rounded-lg shadow-lg py-1 border z-50">
+                <div className="absolute right-0 mt-1 w-56 bg-white rounded-lg shadow-lg py-1 border z-50">
+                  {/* Opacity Control */}
+                  {!isEsriLayer(categoryId, layer.id, categories) && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowOpacityControl({
+                          categoryId,
+                          layerId: layer.id,
+                          initialOpacity: layer.opacity || 1
+                        });
+                        setMenu(null);
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-[#333333] hover:bg-gray-100 flex items-center"
+                    >
+                      <Sliders className="h-4 w-4 mr-2" />
+                      Adjust Opacity
+                    </button>
+                  )}
+
+                  {/* Value Range Control */}
+                  {layer.type === 'geotiff' && layer.valueRange && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setShowValueRangeControl({
+                          categoryId,
+                          layerId: layer.id,
+                          initialRange: layer.valueRange!
+                        });
+                        setMenu(null);
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-[#333333] hover:bg-gray-100 flex items-center"
+                    >
+                      <Sliders className="h-4 w-4 mr-2" />
+                      Adjust Value Range
+                    </button>
+                  )}
+                  
+                  {/* Layer ordering controls - only for GeoTIFF layers */}
+                  {layer.type === 'geotiff' && (
+                    <>
+                      <button
+                        className="w-full px-4 py-2 text-left text-sm text-[#333333] hover:bg-gray-100 flex items-center"
+                        onClick={() => {
+                          dispatch(bringLayerToFront({ categoryId, layerId: layer.id }));
+                          setMenu(null);
+                        }}
+                      >
+                        <ChevronsUp className="h-4 w-4 mr-2" />
+                        Bring to Front
+                      </button>
+                      <button
+                        className="w-full px-4 py-2 text-left text-sm text-[#333333] hover:bg-gray-100 flex items-center"
+                        onClick={() => {
+                          dispatch(bringLayerForward({ categoryId, layerId: layer.id }));
+                          setMenu(null);
+                        }}
+                      >
+                        <ArrowUp className="h-4 w-4 mr-2" />
+                        Bring Forward
+                      </button>
+                      <button
+                        className="w-full px-4 py-2 text-left text-sm text-[#333333] hover:bg-gray-100 flex items-center"
+                        onClick={() => {
+                          dispatch(sendLayerBackward({ categoryId, layerId: layer.id }));
+                          setMenu(null);
+                        }}
+                      >
+                        <ArrowDown className="h-4 w-4 mr-2" />
+                        Send Backward
+                      </button>
+                      <button
+                        className="w-full px-4 py-2 text-left text-sm text-[#333333] hover:bg-gray-100 flex items-center"
+                        onClick={() => {
+                          dispatch(sendLayerToBack({ categoryId, layerId: layer.id }));
+                          setMenu(null);
+                        }}
+                      >
+                        <ChevronsDown className="h-4 w-4 mr-2" />
+                        Send to Back
+                      </button>
+                    </>
+                  )}
+
+                  {/* About Panel - only for GeoTIFF layers */}
+                  {layer.type === 'geotiff' && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleShowAbout(categoryId, layer.id);
+                      }}
+                      className="w-full px-4 py-2 text-left text-sm text-[#333333] hover:bg-gray-100 flex items-center"
+                    >
+                      <Info className="h-4 w-4 mr-2" />
+                      About
+                    </button>
+                  )}
+                  
+                  <div className="border-t border-gray-200 my-1"></div>
+                  
                   <button
-                    className="w-full px-4 py-2 text-left text-sm text-[#333333] hover:bg-gray-100"
-                    onClick={() => {
-                      console.log('Adjust opacity');
-                      setMenu(null);
-                    }}
-                  >
-                    Adjust Opacity
-                  </button>
-                  <button
-                    className="w-full px-4 py-2 text-left text-sm text-[#333333] hover:bg-gray-100"
-                    onClick={() => {
-                      console.log('Zoom to layer');
-                      setMenu(null);
-                    }}
-                  >
-                    Zoom to Layer
-                  </button>
-                  <button
-                    className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100"
-                    onClick={() => {
-                      dispatch(toggleLayer({ categoryId, layerId: layer.id }));
-                      setMenu(null);
-                    }}
+                     className="w-full px-4 py-2 text-left text-sm text-red-600 hover:bg-gray-100"
+                     onClick={() => {
+                       dispatch(toggleLayer({ categoryId, layerId: layer.id }));
+                       setMenu(null);
+                     }}
                   >
                     Remove Layer
                   </button>
@@ -115,13 +262,33 @@ const Legend: React.FC = () => {
           </div>
           
           {/* Layer-specific legends */}
-          {layer.type === 'geotiff' && <GeoTiffLegend url={layer.source} />}
+          {layer.type === 'geotiff' && (
+            <GeoTiffLegend 
+              url={layer.source} 
+              categoryId={categoryId}
+              layerId={layer.id}
+            />
+          )}
           {layer.name === 'WUI' && <WUILegend />}
           {layer.name === 'Wildfire Crisis Areas' && <CrisisAreasLegend />}
           {layer.name === 'Mortality' && (
             <div className="space-y-2">
               <div className="space-y-1">
-                <div className={`h-4 w-full bg-gradient-to-r from-green-500 via-yellow-400 to-red-500 rounded`} />
+                {(() => {
+                  const mortalityScheme = getColorScheme('greenYellowRed');
+                  if (mortalityScheme) {
+                    return (
+                      <div 
+                        className="h-4 w-full rounded" 
+                        style={{ background: getGradientForScheme(mortalityScheme) }}
+                      />
+                    );
+                  } else {
+                    return (
+                      <div className="h-4 w-full bg-gradient-to-r from-green-500 via-yellow-400 to-red-500 rounded" />
+                    );
+                  }
+                })()}
                 <div className="flex justify-between text-xs text-gray-600">
                   <span>Low</span>
                   <span>High</span>
@@ -240,6 +407,35 @@ const Legend: React.FC = () => {
           )}
         </div>
       ))}
+
+      {/* Opacity Control Dialog */}
+      {showOpacityControl && (
+        <OpacitySlider
+          categoryId={showOpacityControl.categoryId}
+          layerId={showOpacityControl.layerId}
+          initialOpacity={showOpacityControl.initialOpacity}
+          onClose={() => setShowOpacityControl(null)}
+        />
+      )}
+
+      {/* Value Range Control Dialog */}
+      {showValueRangeControl && (
+        <ValueRangeControl
+          categoryId={showValueRangeControl.categoryId}
+          layerId={showValueRangeControl.layerId}
+          initialRange={showValueRangeControl.initialRange}
+          onClose={() => setShowValueRangeControl(null)}
+        />
+      )}
+
+      {/* About Panel */}
+      {showAboutPanel && (
+        <AboutPanel
+          metadata={showAboutPanel.metadata}
+          range={showAboutPanel.range}
+          onClose={() => setShowAboutPanel(null)}
+        />
+      )}
     </div>
   );
 };

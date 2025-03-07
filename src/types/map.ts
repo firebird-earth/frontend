@@ -21,13 +21,21 @@ export interface MapViewport {
 export interface MapLayer {
   id: number;
   name: string;
-  type: 'tile' | 'vector' | 'raster' | 'geotiff';
+  type: 'tile' | 'vector' | 'raster' | 'geotiff' | 'placeholder';
   source: string;
   active: boolean;
   opacity?: number;
   minZoom?: number;
   maxZoom?: number;
   attribution?: string;
+  order?: number;
+  bounds?: [[number, number], [number, number]]; // [[south, west], [north, east]]
+  valueRange?: {
+    min: number;
+    max: number;
+    defaultMin: number;
+    defaultMax: number;
+  };
 }
 
 export interface LayerCategory {

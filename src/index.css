@@ -83,6 +83,7 @@
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
+  order: -1 !important; /* This ensures the north arrow appears before the coordinates */
 }
 
 /* Navigate control styles */
@@ -126,7 +127,47 @@
   line-height: 30px !important;
 }
 
-/* Custom cursor for AOI creation */
+/* Coordinates enabled cursor */
+.coordinates-enabled {
+  cursor: default !important;
+}
+
+/* Coordinates control styles */
+.leaflet-control-coordinates {
+  margin-bottom: 0 !important;
+  margin-left: 0 !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 2px solid rgba(0,0,0,0.2) !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  color: #374151 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+/* Creating AOI cursor */
 .creating-aoi .leaflet-container {
   cursor: url('https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png') 12 41, crosshair !important;
+}
+
+/* GeoTIFF rendering improvements */
+.leaflet-image-layer {
+  image-rendering: -moz-crisp-edges;          /* Firefox */
+  image-rendering: -o-crisp-edges;            /* Opera */
+  image-rendering: -webkit-optimize-contrast;  /* Safari */
+  image-rendering: crisp-edges;               /* Generic */
+  image-rendering: pixelated;                 /* Chrome */
+}
+
+/* High-quality GeoTIFF rendering */
+.geotiff-high-quality {
+  image-rendering: -moz-crisp-edges;
+  image-rendering: -o-crisp-edges;
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }

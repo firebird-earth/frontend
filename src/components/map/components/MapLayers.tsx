@@ -5,28 +5,18 @@ import WUILayer from '../../layers/layers/WUILayer';
 import CrisisAreasLayer from '../../layers/layers/CrisisAreasLayer';
 import AOIBoundaryLayer from '../../layers/home/AOIBoundaryLayer';
 import GeoTiffLayer from '../../layers/firemetrics/GeoTiffLayer';
+import { getOrderedGeoTiffLayers } from '../../../utils/layers';
 
 const MapLayers: React.FC = () => {
   const currentAOI = useAppSelector(state => state.aoi.currentAOI);
   const coordinates = useAppSelector(state => state.aoi.coordinates);
   const layers = useAppSelector(state => state.layers);
-
-  // Debug logs for layer state
-  console.log('MapLayers render:', {
-    basemaps: layers.categories.basemaps?.layers,
-    fuels: layers.categories.fuels?.layers,
-    activeGeoTiffLayers: layers.categories.fuels?.layers.filter(l => l.active)
-  });
-
+  
   const activeBasemap = layers.categories.basemaps?.layers.find(l => l.active);
   const wuiLayer = layers.categories.wildfire?.layers.find(l => l.name === 'WUI');
   const crisisAreasLayer = layers.categories.wildfire?.layers.find(l => l.name === 'Wildfire Crisis Areas');
   
-  // Only include GeoTIFF layers (not placeholder types)
-  const activeGeoTiffLayers = [
-    ...(layers.categories.firemetrics?.layers.filter(l => l.active && l.type === 'geotiff') || []),
-    ...(layers.categories.fuels?.layers.filter(l => l.active && l.type === 'geotiff') || [])
-  ];
+  const activeGeoTiffLayers = getOrderedGeoTiffLayers(layers.categories);
 
   if (!activeBasemap) return null;
 
@@ -65,11 +55,15 @@ const MapLayers: React.FC = () => {
         />
       )}
 
+      {/* Render GeoTIFF layers in the same order as they appear in the legend */}
       {activeGeoTiffLayers.map(layer => (
         <GeoTiffLayer
-          key={layer.id}
+          key={`${layer.id}-${layer.name}-${layer.active}-${layer.order}`}
           url={layer.source}
           active={layer.active}
+          zIndex={layer.order || 0}
+          categoryId={layer.name.includes('Canopy') ? 'fuels' : 'firemetrics'}
+          layerId={layer.id}
         />
       ))}
     </>

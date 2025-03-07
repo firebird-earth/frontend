@@ -7,10 +7,11 @@ import { useAppSelector } from './hooks/useAppSelector';
 import { toggleSettings, toggleNav, setActiveTab, setTheme } from './store/slices/uiSlice';
 import { initializeSettings } from './store/slices/settingsSlice';
 import firebirdLogo from './assets/firebird-logo.png';
+import CurrentAOI from './components/header/CurrentAOI';
 
 const App: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { theme, showSettings } = useAppSelector(state => state.ui);
+  const { theme, showSettings, isNavOpen } = useAppSelector(state => state.ui);
   const { settings } = useAppSelector(state => state.settings);
   const settingsRef = React.useRef<HTMLDivElement>(null);
 
@@ -56,7 +57,8 @@ const App: React.FC = () => {
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 shadow-md py-2 relative z-[1000]">
         <div className="w-full px-4">
-          <div className="flex items-center justify-between">
+          <div className="grid grid-cols-[calc(16rem-32px)_1fr_auto] items-center">
+            {/* Left column: Menu button and logo - width matches navigation panel minus padding */}
             <div className="flex items-center space-x-3">
               <button 
                 onClick={() => dispatch(toggleNav())}
@@ -77,7 +79,14 @@ const App: React.FC = () => {
                 />
               </button>
             </div>
-            <div className="flex items-center space-x-3">
+            
+            {/* Center column: AOI selector (left-justified) */}
+            <div className="flex justify-start">
+              <CurrentAOI />
+            </div>
+            
+            {/* Right column: Search, Export, Settings */}
+            <div className="flex items-center justify-end space-x-3">
               <button className="flex items-center space-x-2 px-2.5 py-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white">
                 <Search className="h-4 w-4" />
                 <span className="text-sm">Search</span>

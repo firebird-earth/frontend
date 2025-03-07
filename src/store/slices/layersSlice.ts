@@ -45,7 +45,15 @@ const initialState: LayersState = {
         name: 'Flame Length',
         type: 'geotiff',
         source: GEOTIFF_LAYERS.FLAME_LENGTH,
-        active: false
+        active: false,
+        order: 10
+      },
+      { 
+        name: 'Burn Probability',
+        type: 'geotiff',
+        source: GEOTIFF_LAYERS.BURN_PROBABILITY,
+        active: false,
+        order: 20
       }
     ]),
     fuels: createInitialCategory('fuels', 'Fuels', [
@@ -53,25 +61,29 @@ const initialState: LayersState = {
         name: 'Canopy Cover', 
         type: 'geotiff',
         source: GEOTIFF_LAYERS.CANOPY_COVER,
-        active: false
+        active: false,
+        order: 30
       },
       { 
         name: 'Canopy Height', 
         type: 'geotiff',
         source: GEOTIFF_LAYERS.CANOPY_HEIGHT,
-        active: false
+        active: false,
+        order: 40
       },
       { 
         name: 'Canopy Bulk Density', 
         type: 'geotiff',
         source: GEOTIFF_LAYERS.CANOPY_BULK_DENSITY,
-        active: false // Set back to inactive by default
+        active: false,
+        order: 50
       },
       { 
         name: 'Mortality', 
-        type: 'placeholder', // Changed from 'geotiff' to 'placeholder' so it doesn't load any data
-        source: '', // Removed the source
-        active: false
+        type: 'placeholder',
+        source: '',
+        active: false,
+        order: 60
       }
     ]),
     jurisdictions: createInitialCategory('jurisdictions', 'Jurisdictions', [
@@ -125,6 +137,24 @@ const initialState: LayersState = {
   error: null
 };
 
+const getHighestLayerOrder = (state: LayersState): number => {
+  let highestOrder = 0;
+  
+  Object.values(state.categories).forEach(cat => {
+    cat.layers.forEach(l => {
+      if (l.type === 'geotiff' && l.order !== undefined) {
+        highestOrder = Math.max(highestOrder, l.order);
+      }
+    });
+  });
+  
+  return highestOrder;
+};
+
+const isGeoTiffLayer = (layer: MapLayer): boolean => {
+  return layer.type === 'geotiff';
+};
+
 const layersSlice = createSlice({
   name: 'layers',
   initialState,
@@ -146,6 +176,11 @@ const layersSlice = createSlice({
           l.active = l.id === layerId;
         });
       } else {
+        if (!layer.active && layer.type === 'geotiff') {
+          const highestOrder = getHighestLayerOrder(state);
+          layer.order = highestOrder + 10;
+        }
+        
         layer.active = !layer.active;
       }
     },
@@ -159,23 +194,44 @@ const layersSlice = createSlice({
         return;
       }
 
-      // Modified to only turn off layers in the same category
-      // This allows layers from different categories to remain active
       const category = state.categories[categoryId];
-      if (category) {
-        // Turn off other layers in the same category
+      if (!category) return;
+      
+      const targetLayer = category.layers.find(l => l.id === layerId);
+      if (!targetLayer) return;
+
+      const isTargetGeoTiff = isGeoTiffLayer(targetLayer);
+
+      if (isTargetGeoTiff) {
+        if (state.categories.firemetrics) {
+          state.categories.firemetrics.layers.forEach(layer => {
+            if (isGeoTiffLayer(layer) && !(categoryId === 'firemetrics' && layer.id === layerId)) {
+              layer.active = false;
+            }
+          });
+        }
+        
+        if (state.categories.fuels) {
+          state.categories.fuels.layers.forEach(layer => {
+            if (isGeoTiffLayer(layer) && !(categoryId === 'fuels' && layer.id === layerId)) {
+              layer.active = false;
+            }
+          });
+        }
+      } else {
         category.layers.forEach(layer => {
           if (layer.id !== layerId) {
             layer.active = false;
           }
         });
-        
-        // Turn on the selected layer
-        const layer = category.layers.find(l => l.id === layerId);
-        if (layer) {
-          layer.active = true;
-        }
       }
+      
+      if (isTargetGeoTiff) {
+        const highestOrder = getHighestLayerOrder(state);
+        targetLayer.order = highestOrder + 10;
+      }
+      
+      targetLayer.active = true;
     },
     setLayerOpacity: (
       state,
@@ -194,9 +250,225 @@ const layersSlice = createSlice({
       if (layer) {
         layer.opacity = Math.max(0, Math.min(1, opacity));
       }
+    },
+    bringLayerToFront: (
+      state,
+      action: PayloadAction<{
+        categoryId: string;
+        layerId: number;
+      }>
+    ) => {
+      const { categoryId, layerId } = action.payload;
+      const category = state.categories[categoryId];
+      
+      if (!category) return;
+
+      const layer = category.layers.find(l => l.id === layerId);
+      if (!layer || layer.type !== 'geotiff') return;
+
+      const highestOrder = getHighestLayerOrder(state);
+      
+      layer.order = highestOrder + 10;
+    },
+    sendLayerToBack: (
+      state,
+      action: PayloadAction<{
+        categoryId: string;
+        layerId: number;
+      }>
+    ) => {
+      const { categoryId, layerId } = action.payload;
+      const category = state.categories[categoryId];
+      
+      if (!category) return;
+
+      const layer = category.layers.find(l => l.id === layerId);
+      if (!layer || layer.type !== 'geotiff') return;
+
+      let lowestOrder = Infinity;
+      
+      Object.values(state.categories).forEach(cat => {
+        cat.layers.forEach(l => {
+          if (l.type === 'geotiff' && l.order !== undefined) {
+            lowestOrder = Math.min(lowestOrder, l.order);
+          }
+        });
+      });
+      
+      layer.order = lowestOrder - 10;
+    },
+    bringLayerForward: (
+      state,
+      action: PayloadAction<{
+        categoryId: string;
+        layerId: number;
+      }>
+    ) => {
+      const { categoryId, layerId } = action.payload;
+      const category = state.categories[categoryId];
+      
+      if (!category) return;
+
+      const layer = category.layers.find(l => l.id === layerId);
+      if (!layer || layer.type !== 'geotiff' || layer.order === undefined) return;
+
+      const allGeoTiffLayers: { layer: MapLayer, categoryId: string }[] = [];
+      
+      Object.entries(state.categories).forEach(([catId, cat]) => {
+        cat.layers.forEach(l => {
+          if (l.type === 'geotiff' && l.order !== undefined) {
+            allGeoTiffLayers.push({ layer: l, categoryId: catId });
+          }
+        });
+      });
+      
+      allGeoTiffLayers.sort((a, b) => {
+        if (a.layer.order === undefined || b.layer.order === undefined) return 0;
+        return a.layer.order - b.layer.order;
+      });
+      
+      for (let i = 0; i < allGeoTiffLayers.length - 1; i++) {
+        if (allGeoTiffLayers[i].layer.id === layer.id && 
+            allGeoTiffLayers[i].categoryId === categoryId) {
+          const nextLayer = allGeoTiffLayers[i + 1].layer;
+          if (nextLayer.order !== undefined) {
+            const temp = layer.order;
+            layer.order = nextLayer.order;
+            nextLayer.order = temp;
+          }
+          break;
+        }
+      }
+    },
+    sendLayerBackward: (
+      state,
+      action: PayloadAction<{
+        categoryId: string;
+        layerId: number;
+      }>
+    ) => {
+      const { categoryId, layerId } = action.payload;
+      const category = state.categories[categoryId];
+      
+      if (!category) return;
+
+      const layer = category.layers.find(l => l.id === layerId);
+      if (!layer || layer.type !== 'geotiff' || layer.order === undefined) return;
+
+      const allGeoTiffLayers: { layer: MapLayer, categoryId: string }[] = [];
+      
+      Object.entries(state.categories).forEach(([catId, cat]) => {
+        cat.layers.forEach(l => {
+          if (l.type === 'geotiff' && l.order !== undefined) {
+            allGeoTiffLayers.push({ layer: l, categoryId: catId });
+          }
+        });
+      });
+      
+      allGeoTiffLayers.sort((a, b) => {
+        if (a.layer.order === undefined || b.layer.order === undefined) return 0;
+        return a.layer.order - b.layer.order;
+      });
+      
+      for (let i = 1; i < allGeoTiffLayers.length; i++) {
+        if (allGeoTiffLayers[i].layer.id === layer.id && 
+            allGeoTiffLayers[i].categoryId === categoryId) {
+          const prevLayer = allGeoTiffLayers[i - 1].layer;
+          if (prevLayer.order !== undefined) {
+            const temp = layer.order;
+            layer.order = prevLayer.order;
+            prevLayer.order = temp;
+          }
+          break;
+        }
+      }
+    },
+    setLayerBounds: (
+      state,
+      action: PayloadAction<{
+        categoryId: string;
+        layerId: number;
+        bounds: [[number, number], [number, number]];
+      }>
+    ) => {
+      const { categoryId, layerId, bounds } = action.payload;
+      const category = state.categories[categoryId];
+      
+      if (!category) return;
+
+      const layer = category.layers.find(l => l.id === layerId);
+      if (!layer) return;
+
+      layer.bounds = bounds;
+    },
+    clearActiveLayers: (state) => {
+      Object.entries(state.categories).forEach(([categoryId, category]) => {
+        if (categoryId !== 'basemaps') {
+          category.layers.forEach(layer => {
+            layer.active = false;
+          });
+        }
+      });
+    },
+    setLayerValueRange: (
+      state,
+      action: PayloadAction<{
+        categoryId: string;
+        layerId: number;
+        min: number;
+        max: number;
+      }>
+    ) => {
+      const { categoryId, layerId, min, max } = action.payload;
+      const category = state.categories[categoryId];
+      
+      if (!category) return;
+
+      const layer = category.layers.find(l => l.id === layerId);
+      if (layer && layer.valueRange) {
+        layer.valueRange.min = min;
+        layer.valueRange.max = max;
+      }
+    },
+    initializeLayerValueRange: (
+      state,
+      action: PayloadAction<{
+        categoryId: string;
+        layerId: number;
+        min: number;
+        max: number;
+      }>
+    ) => {
+      const { categoryId, layerId, min, max } = action.payload;
+      const category = state.categories[categoryId];
+      
+      if (!category) return;
+
+      const layer = category.layers.find(l => l.id === layerId);
+      if (layer) {
+        layer.valueRange = {
+          min,
+          max,
+          defaultMin: min,
+          defaultMax: max
+        };
+      }
     }
   }
 });
 
-export const { toggleLayer, toggleSingleLayer, setLayerOpacity } = layersSlice.actions;
+export const { 
+  toggleLayer, 
+  toggleSingleLayer, 
+  setLayerOpacity,
+  bringLayerToFront,
+  sendLayerToBack,
+  bringLayerForward,
+  sendLayerBackward,
+  setLayerBounds,
+  clearActiveLayers,
+  setLayerValueRange,
+  initializeLayerValueRange
+} = layersSlice.actions;
+
 export default layersSlice.reducer;

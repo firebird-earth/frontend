@@ -1,25 +1,43 @@
-import React, { useEffect, useState } from 'react';
-import { extractGeoTiffMetadata } from '../../../utils/geotiffUtils';
-import { getGradientColors } from '../../../utils/colorUtils';
-import { AlertTriangle, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { extractGeoTiffMetadata } from '../../../utils/geotif/utils';
+import { getColorScheme, getGradientForScheme } from '../../../utils/colors';
+import { AlertTriangle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { geotiffService } from '../../../services/geotiffService';
+import { useAppSelector } from '../../../hooks/useAppSelector';
+import { getGeoTiffUrl } from '../../../constants/urls';
 
 interface GeoTiffLegendProps {
   url: string;
+  categoryId?: string;
+  layerId?: number;
 }
 
-interface DataRange {
-  min: number;
-  max: number;
-  mean: number;
-}
-
-const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({ url }) => {
+const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({ url, categoryId, layerId }) => {
   const [metadata, setMetadata] = useState<any>(null);
-  const [dataRange, setDataRange] = useState<DataRange | null>(null);
+  const [dataRange, setDataRange] = useState<{min: number; max: number; mean: number} | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [showAbout, setShowAbout] = useState(false);
+  
+  // Get the current AOI from Redux store
+  const currentAOI = useAppSelector(state => state.aoi.currentAOI);
+  const isCreatingAOI = useAppSelector(state => state.ui.isCreatingAOI);
+  const layer = useAppSelector(state => {
+    if (!categoryId || !layerId) return null;
+    return state.layers.categories[categoryId]?.layers.find(l => l.id === layerId);
+  });
+  
+  // Determine the actual URL to use based on the current AOI
+  const effectiveUrl = React.useMemo(() => {
+    if (!currentAOI) {
+      return url;
+    }
+    
+    const aoiId = 'id' in currentAOI ? currentAOI.id : 1;
+    const layerName = url.split('/').pop()?.replace('.tif', '') || '';
+    return getGeoTiffUrl(aoiId, layerName);
+  }, [url, currentAOI]);
 
   useEffect(() => {
     const loadMetadata = async () => {
@@ -28,69 +46,18 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({ url }) => {
         setError(null);
         setProgress(0);
 
-        const fetchOptions: RequestInit = {
-          method: 'GET',
-          mode: 'cors',
-          headers: {
-            'Accept': 'image/tiff,*/*'
-          }
-        };
-
-        const headResponse = await fetch(url, { ...fetchOptions, method: 'HEAD' });
-        if (!headResponse.ok) {
-          throw new Error(`Failed to fetch file info: ${headResponse.status} ${headResponse.statusText}`);
-        }
-        
-        const totalSize = parseInt(headResponse.headers.get('content-length') || '0', 10);
-        if (totalSize === 0) {
-          throw new Error('File size is 0 bytes');
+        if (!currentAOI) {
+          throw new Error("Please select an Area of Interest (AOI) first");
         }
 
-        const response = await fetch(url, fetchOptions);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch file: ${response.status} ${response.statusText}`);
-        }
+        const metadataResult = await geotiffService.getGeoTiffMetadata(effectiveUrl, setProgress);
 
-        const reader = response.body?.getReader();
-        if (!reader) {
-          throw new Error('Failed to get response reader');
-        }
-
-        const chunks: Uint8Array[] = [];
-        let receivedLength = 0;
-
-        while (true) {
-          const { done, value } = await reader.read();
-          
-          if (done) break;
-          
-          chunks.push(value);
-          receivedLength += value.length;
-          
-          const percent = Math.round((receivedLength / totalSize) * 100);
-          setProgress(percent);
-        }
-
-        const chunksAll = new Uint8Array(receivedLength);
-        let position = 0;
-        for (const chunk of chunks) {
-          chunksAll.set(chunk, position);
-          position += chunk.length;
-        }
-
-        const file = new File([chunksAll], 'temp.tif', { 
-          type: 'image/tiff',
-          lastModified: Date.now()
-        });
-
-        const { metadata: meta, range } = await extractGeoTiffMetadata(file);
-
-        if (!meta?.standard || !range) {
+        if (!metadataResult?.metadata?.standard || !metadataResult?.range) {
           throw new Error('Invalid metadata or data range');
         }
 
-        setMetadata(meta);
-        setDataRange(range);
+        setMetadata(metadataResult.metadata);
+        setDataRange(metadataResult.range);
         setProgress(100);
       } catch (error) {
         const message = error instanceof Error ? error.message : 'Unknown error';
@@ -102,7 +69,21 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({ url }) => {
     };
 
     loadMetadata();
-  }, [url]);
+  }, [effectiveUrl, currentAOI, isCreatingAOI]);
+
+  const getColorSchemeForUrl = () => {
+    if (effectiveUrl.includes('burn_probability')) {
+      return getColorScheme('burnProbability');
+    } else if (effectiveUrl.includes('canopy_cover')) {
+      return getColorScheme('canopyCover');
+    } else if (effectiveUrl.includes('flame_length')) {
+      return getColorScheme('fireIntensity');
+    } else {
+      return getColorScheme('greenYellowRed');
+    }
+  };
+
+  const colorScheme = getColorSchemeForUrl();
 
   if (loading) {
     return (
@@ -111,7 +92,7 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({ url }) => {
           <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
           <div className="flex-1">
             <div className="text-sm font-medium text-gray-900">
-              Loading GeoTIFF data...
+              Loading GeoTIFF...
             </div>
             <div className="mt-1 relative h-2 bg-gray-200 rounded-full overflow-hidden">
               <div 
@@ -147,6 +128,7 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({ url }) => {
   }
 
   const { standard, custom } = metadata;
+  const valueRange = layer?.valueRange;
 
   const formatNoData = (value: any): string => {
     if (value === undefined || value === null) return 'Not set';
@@ -162,10 +144,15 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({ url }) => {
   return (
     <div className="space-y-4">
       <div className="space-y-1">
-        <div className={`h-4 w-full bg-gradient-to-r ${getGradientColors(url)} rounded`} />
+        {colorScheme && (
+          <div 
+            className="h-4 w-full rounded" 
+            style={{ background: getGradientForScheme(colorScheme) }}
+          />
+        )}
         <div className="flex justify-between text-xs text-gray-600">
-          <span>{dataRange.min.toFixed(3)}</span>
-          <span>{dataRange.max.toFixed(3)}</span>
+          <span>{valueRange ? valueRange.min.toFixed(3) : dataRange.min.toFixed(3)}</span>
+          <span>{valueRange ? valueRange.max.toFixed(3) : dataRange.max.toFixed(3)}</span>
         </div>
         <div className="text-xs text-gray-600 text-center">
           {custom?.units || 'units'}
@@ -173,20 +160,18 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({ url }) => {
       </div>
 
       <div className="bg-gray-50 rounded-lg">
-        {/* Collapsible About section header */}
         <button 
           onClick={() => setShowAbout(!showAbout)}
           className="w-full flex items-center justify-between p-3 text-sm font-medium text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
         >
           <span>About</span>
           {showAbout ? (
-            <ChevronDown className="h-4 w-4 text-gray-500" />
+            <ChevronUp className="h-4 w-4 text-gray-500" />
           ) : (
-            <ChevronRight className="h-4 w-4 text-gray-500" />
+            <ChevronDown className="h-4 w-4 text-gray-500" />
           )}
         </button>
 
-        {/* Collapsible content */}
         {showAbout && (
           <div className="p-3 pt-0 space-y-1.5">
             <div className="space-y-1">
@@ -270,7 +255,7 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({ url }) => {
                 <span className="text-sm text-gray-600">No Data:</span>
                 <span className="text-sm font-medium text-gray-700">
                   {formatNoData(standard.noData)}
-                </span>
+                 </span>
               </div>
               {custom?.description && (
                 <div className="flex items-center justify-between">
@@ -291,7 +276,7 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({ url }) => {
               </div>
               {standard.projectionName && (
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">EPSG:</span>
+                  <span className="text-sm text-gray-600"></span>
                   <span className="text-sm font-medium text-gray-700">
                     {standard.projectionName}
                   </span>

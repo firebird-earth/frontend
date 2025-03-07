@@ -6,7 +6,7 @@ import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { useAppSelector } from '../../../hooks/useAppSelector';
 import { toggleSection, startCreatingAOI } from '../../../store/slices/uiSlice';
 import { setCurrentAOI } from '../../../store/slices/aoiSlice';
-import { navigateToLocation } from '../../../utils/mapUtils';
+import { navigateToLocation } from '../../../utils/map';
 import { useAOI } from '../../../hooks/useAOI';
 import locations from '../../../constants/locations';
 
@@ -33,6 +33,7 @@ const HomeTab: React.FC = () => {
   const handleCreateAOI = (e: React.MouseEvent) => {
     e.stopPropagation();
     dispatch(startCreatingAOI());
+    // Don't clear layers or close legend here - this will happen when the user drops a pin or saves
   };
 
   const isActive = (id: number | string) => {

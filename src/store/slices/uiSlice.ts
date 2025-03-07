@@ -48,8 +48,13 @@ const uiSlice = createSlice({
     toggleNav: (state) => {
       state.isNavOpen = !state.isNavOpen;
     },
-    toggleLegend: (state) => {
-      state.isLegendOpen = !state.isLegendOpen;
+    toggleLegend: (state, action?: PayloadAction<boolean>) => {
+      // If a specific value is provided, use it; otherwise toggle
+      if (action?.payload !== undefined) {
+        state.isLegendOpen = action.payload;
+      } else {
+        state.isLegendOpen = !state.isLegendOpen;
+      }
     },
     setTheme: (state, action: PayloadAction<'light' | 'dark'>) => {
       state.theme = action.payload;

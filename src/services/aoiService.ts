@@ -3,8 +3,9 @@ import { AOI, CreateAOIInput, UpdateAOIInput, AOIState } from '../types/aoi';
 import { store } from '../store';
 import { setActiveLocation } from '../store/slices/mapSlice';
 import { setCurrentAOI } from '../store/slices/aoiSlice';
-import { showAOIPanel } from '../store/slices/uiSlice';
-import { navigateToLocation } from '../utils/mapUtils';
+import { showAOIPanel, toggleLegend } from '../store/slices/uiSlice';
+import { navigateToLocation } from '../utils/map';
+import { clearActiveLayers } from '../store/slices/layersSlice';
 
 class AOIService {
   private static instance: AOIService;
@@ -60,6 +61,13 @@ class AOIService {
       });
 
       const dispatch = store.dispatch;
+      
+      // Clear all active layers when creating a new AOI
+      dispatch(clearActiveLayers());
+      
+      // Close the legend panel
+      dispatch(toggleLegend(false));
+      
       dispatch(setActiveLocation(parseInt(newAOI.id)));
       dispatch(setCurrentAOI(newAOI));
       dispatch(showAOIPanel());

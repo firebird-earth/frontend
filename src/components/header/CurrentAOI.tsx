@@ -5,7 +5,7 @@ import AOISelector from './AOISelector';
 
 const CurrentAOI: React.FC = () => {
   const [showSelector, setShowSelector] = useState(false);
-  const currentAOI = useAppSelector(state => state.aoi.currentAOI);
+  const currentAOI = useAppSelector(state => state.home.aoi.current);
   const isNavOpen = useAppSelector(state => state.ui.isNavOpen);
   
   const toggleSelector = () => {

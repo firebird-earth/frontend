@@ -4,14 +4,14 @@ import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { setLayerOpacity } from '../../store/slices/layersSlice';
 import { useDraggable } from '../../hooks/useDraggable';
 
-interface OpacitySliderProps {
+interface OpacityDialogProps {
   categoryId: string;
   layerId: number;
   initialOpacity?: number;
   onClose: () => void;
 }
 
-const OpacitySlider: React.FC<OpacitySliderProps> = ({ 
+const OpacityDialog: React.FC<OpacityDialogProps> = ({ 
   categoryId, 
   layerId, 
   initialOpacity = 1, 
@@ -35,7 +35,7 @@ const OpacitySlider: React.FC<OpacitySliderProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 z-[2000]">
+    <div className="fixed inset-0 z-[2000]" style={{ pointerEvents: 'none' }}>
       <div 
         ref={dialogRef}
         onClick={handleDialogClick}
@@ -43,7 +43,8 @@ const OpacitySlider: React.FC<OpacitySliderProps> = ({
         style={{ 
           left: position.x,
           top: position.y,
-          transition: 'none'
+          transition: 'none',
+          pointerEvents: 'auto'
         }}
       >
         <div 
@@ -89,4 +90,4 @@ const OpacitySlider: React.FC<OpacitySliderProps> = ({
   );
 };
 
-export default OpacitySlider;
+export default OpacityDialog;

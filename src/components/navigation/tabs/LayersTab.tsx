@@ -5,13 +5,13 @@ import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { useAppSelector } from '../../../hooks/useAppSelector';
 import { toggleSection } from '../../../store/slices/uiSlice';
 import { toggleLayer, toggleSingleLayer } from '../../../store/slices/layersSlice';
-import SelectAOIDialog from '../../dialogs/SelectAOIDialog';
+import SelectAOIDialog from '../../aoi/SelectAOIDialog';
 
 const LayersTab: React.FC = () => {
   const dispatch = useAppDispatch();
   const sections = useAppSelector(state => state.ui.sections);
   const { categories } = useAppSelector(state => state.layers);
-  const currentAOI = useAppSelector(state => state.aoi.currentAOI);
+  const currentAOI = useAppSelector(state => state.home.aoi.current);
   const [showDialog, setShowDialog] = useState(false);
 
   // Handle click on the layer text/name - exclusive behavior
@@ -69,6 +69,8 @@ const LayersTab: React.FC = () => {
         return MapIcon;
       case 'wildfire':
         return Flame;
+      case 'elevation':
+        return Mountain;
       case 'landscape':
         return Mountain;
       case 'jurisdictions':
@@ -160,6 +162,20 @@ const LayersTab: React.FC = () => {
           {sections.wildfire && categories.wildfire && (
             <div className="space-y-1">
               {categories.wildfire.layers.map(layer => renderLayerItem(layer, 'wildfire'))}
+            </div>
+          )}
+        </div>
+
+        {/* Elevation Section */}
+        <div>
+          <SectionHeader 
+            title="ELEVATION" 
+            isOpen={sections.elevation} 
+            onToggle={() => dispatch(toggleSection('elevation'))}
+          />
+          {sections.elevation && categories.elevation && (
+            <div className="space-y-1">
+              {categories.elevation.layers.map(layer => renderLayerItem(layer, 'elevation'))}
             </div>
           )}
         </div>

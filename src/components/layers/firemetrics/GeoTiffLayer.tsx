@@ -36,7 +36,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
   const boundsRef = useRef<L.LatLngBounds | null>(null);
   const imageUrlRef = useRef<string | null>(null);
   
-  const currentAOI = useAppSelector(state => state.aoi.currentAOI);
+  const currentAOI = useAppSelector(state => state.home.aoi.current);
   const isCreatingAOI = useAppSelector(state => state.ui.isCreatingAOI);
   
   const opacity = useAppSelector(state => {

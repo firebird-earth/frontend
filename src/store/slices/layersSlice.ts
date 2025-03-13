@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { MapLayer, LayerCategory } from '../../types/map';
-import { TILE_LAYERS, SERVICE_LAYERS, GEOTIFF_LAYERS } from '../../constants/urls';
+import { TILE_LAYERS, WUI_LAYER, CRISIS_AREAS_LAYER, GEOTIFF_LAYERS } from '../../constants/urls';
 
 interface LayersState {
   categories: {
@@ -8,6 +8,7 @@ interface LayersState {
   };
   loading: boolean;
   error: string | null;
+  slopeRenderingRule: string;
 }
 
 const createInitialCategory = (
@@ -36,9 +37,35 @@ const initialState: LayersState = {
       { name: 'Satellite', source: TILE_LAYERS.SATELLITE }
     ]),
     wildfire: createInitialCategory('wildfire', 'Wildfire', [
-      { name: 'WUI', type: 'tile', source: SERVICE_LAYERS.WUI },
-      { name: 'Wildfire Crisis Areas', type: 'vector' },
+      { name: 'WUI', type: 'tile', source: WUI_LAYER },
+      { name: 'Wildfire Crisis Areas', type: 'vector', source: CRISIS_AREAS_LAYER },
       { name: 'Priority Treatment Areas', type: 'vector' }
+    ]),
+    elevation: createInitialCategory('elevation', 'Elevation', [
+      { 
+        name: 'Hillshade', 
+        type: 'dynamic', 
+        source: 'slope',
+        renderingRule: 'Hillshade Gray'
+      },
+      { 
+        name: 'Aspect', 
+        type: 'dynamic', 
+        source: 'slope',
+        renderingRule: 'Aspect Degrees'
+      },
+      { 
+        name: 'Slope Steepness', 
+        type: 'dynamic', 
+        source: 'slope',
+        renderingRule: 'Slope Map'
+      },
+      { 
+        name: 'Contour', 
+        type: 'dynamic', 
+        source: 'slope',
+        renderingRule: 'Contour'
+      }
     ]),
     firemetrics: createInitialCategory('firemetrics', 'Fire Metrics', [
       { 
@@ -86,6 +113,12 @@ const initialState: LayersState = {
         order: 60
       }
     ]),
+    landscape: createInitialCategory('landscape', 'Landscape', [
+      { name: 'Timber Base', type: 'vector' },
+      { name: 'Roadless Areas', type: 'vector' },
+      { name: 'Wilderness Areas', type: 'vector' },
+      { name: 'Cultural Areas', type: 'vector' }
+    ]),
     jurisdictions: createInitialCategory('jurisdictions', 'Jurisdictions', [
       { name: 'US Forest Service', type: 'vector' },
       { name: 'Bureau of Land Management', type: 'vector' },
@@ -95,13 +128,6 @@ const initialState: LayersState = {
       { name: 'Bureau of Indian Affairs', type: 'vector' },
       { name: 'State Owned', type: 'vector' },
       { name: 'Private Land', type: 'vector' }
-    ]),
-    landscape: createInitialCategory('landscape', 'Landscape', [
-      { name: 'Slope Steepness', type: 'raster' },
-      { name: 'Timber Base', type: 'vector' },
-      { name: 'Roadless Areas', type: 'vector' },
-      { name: 'Wilderness Areas', type: 'vector' },
-      { name: 'Cultural Areas', type: 'vector' }
     ]),
     transportation: createInitialCategory('transportation', 'Transportation', [
       { name: 'State DOT Roads', type: 'vector' },
@@ -134,25 +160,8 @@ const initialState: LayersState = {
     ])
   },
   loading: false,
-  error: null
-};
-
-const getHighestLayerOrder = (state: LayersState): number => {
-  let highestOrder = 0;
-  
-  Object.values(state.categories).forEach(cat => {
-    cat.layers.forEach(l => {
-      if (l.type === 'geotiff' && l.order !== undefined) {
-        highestOrder = Math.max(highestOrder, l.order);
-      }
-    });
-  });
-  
-  return highestOrder;
-};
-
-const isGeoTiffLayer = (layer: MapLayer): boolean => {
-  return layer.type === 'geotiff';
+  error: null,
+  slopeRenderingRule: 'Hillshade Gray'
 };
 
 const layersSlice = createSlice({
@@ -172,15 +181,12 @@ const layersSlice = createSlice({
       if (!layer) return;
 
       if (categoryId === 'basemaps') {
+        // Basemaps are always exclusive
         category.layers.forEach(l => {
           l.active = l.id === layerId;
         });
       } else {
-        if (!layer.active && layer.type === 'geotiff') {
-          const highestOrder = getHighestLayerOrder(state);
-          layer.order = highestOrder + 10;
-        }
-        
+        // For all other layers, just toggle the clicked layer
         layer.active = !layer.active;
       }
     },
@@ -189,49 +195,45 @@ const layersSlice = createSlice({
       action: PayloadAction<{ categoryId: string; layerId: number }>
     ) => {
       const { categoryId, layerId } = action.payload;
-      
-      if (categoryId === 'basemaps') {
-        return;
-      }
-
       const category = state.categories[categoryId];
-      if (!category) return;
       
-      const targetLayer = category.layers.find(l => l.id === layerId);
-      if (!targetLayer) return;
+      if (!category) return;
 
-      const isTargetGeoTiff = isGeoTiffLayer(targetLayer);
+      const layer = category.layers.find(l => l.id === layerId);
+      if (!layer) return;
 
-      if (isTargetGeoTiff) {
-        if (state.categories.firemetrics) {
-          state.categories.firemetrics.layers.forEach(layer => {
-            if (isGeoTiffLayer(layer) && !(categoryId === 'firemetrics' && layer.id === layerId)) {
-              layer.active = false;
-            }
-          });
-        }
-        
-        if (state.categories.fuels) {
-          state.categories.fuels.layers.forEach(layer => {
-            if (isGeoTiffLayer(layer) && !(categoryId === 'fuels' && layer.id === layerId)) {
-              layer.active = false;
-            }
-          });
-        }
+      if (categoryId === 'basemaps') {
+        // Basemaps are exclusive only within basemaps
+        category.layers.forEach(l => {
+          l.active = l.id === layerId;
+        });
+      } else if (categoryId === 'firemetrics' || categoryId === 'fuels') {
+        // FireMetrics tab layers (including fuels) are independent
+        layer.active = !layer.active;
       } else {
-        category.layers.forEach(layer => {
-          if (layer.id !== layerId) {
-            layer.active = false;
+        // For layers tab categories (not basemaps):
+        // 1. Turn off all layers in the layers tab (except basemaps)
+        // 2. Toggle the clicked layer
+        Object.entries(state.categories).forEach(([catId, cat]) => {
+          // Skip basemaps and FireMetrics tab categories
+          if (catId !== 'basemaps' && catId !== 'firemetrics' && catId !== 'fuels') {
+            cat.layers.forEach(l => {
+              // If this is the clicked layer, toggle it
+              if (catId === categoryId && l.id === layerId) {
+                l.active = !l.active;
+              } else {
+                // Turn off all other layers in the layers tab
+                l.active = false;
+              }
+            });
           }
         });
+
+        // Update rendering rule for elevation layers
+        if (categoryId === 'elevation' && layer.renderingRule) {
+          state.slopeRenderingRule = layer.renderingRule;
+        }
       }
-      
-      if (isTargetGeoTiff) {
-        const highestOrder = getHighestLayerOrder(state);
-        targetLayer.order = highestOrder + 10;
-      }
-      
-      targetLayer.active = true;
     },
     setLayerOpacity: (
       state,
@@ -266,7 +268,12 @@ const layersSlice = createSlice({
       const layer = category.layers.find(l => l.id === layerId);
       if (!layer || layer.type !== 'geotiff') return;
 
-      const highestOrder = getHighestLayerOrder(state);
+      const highestOrder = Math.max(
+        ...Object.values(state.categories)
+          .flatMap(cat => cat.layers)
+          .filter(l => l.type === 'geotiff' && l.order !== undefined)
+          .map(l => l.order!)
+      );
       
       layer.order = highestOrder + 10;
     },
@@ -285,15 +292,12 @@ const layersSlice = createSlice({
       const layer = category.layers.find(l => l.id === layerId);
       if (!layer || layer.type !== 'geotiff') return;
 
-      let lowestOrder = Infinity;
-      
-      Object.values(state.categories).forEach(cat => {
-        cat.layers.forEach(l => {
-          if (l.type === 'geotiff' && l.order !== undefined) {
-            lowestOrder = Math.min(lowestOrder, l.order);
-          }
-        });
-      });
+      const lowestOrder = Math.min(
+        ...Object.values(state.categories)
+          .flatMap(cat => cat.layers)
+          .filter(l => l.type === 'geotiff' && l.order !== undefined)
+          .map(l => l.order!)
+      );
       
       layer.order = lowestOrder - 10;
     },
@@ -312,32 +316,17 @@ const layersSlice = createSlice({
       const layer = category.layers.find(l => l.id === layerId);
       if (!layer || layer.type !== 'geotiff' || layer.order === undefined) return;
 
-      const allGeoTiffLayers: { layer: MapLayer, categoryId: string }[] = [];
-      
-      Object.entries(state.categories).forEach(([catId, cat]) => {
-        cat.layers.forEach(l => {
-          if (l.type === 'geotiff' && l.order !== undefined) {
-            allGeoTiffLayers.push({ layer: l, categoryId: catId });
-          }
-        });
-      });
-      
-      allGeoTiffLayers.sort((a, b) => {
-        if (a.layer.order === undefined || b.layer.order === undefined) return 0;
-        return a.layer.order - b.layer.order;
-      });
-      
-      for (let i = 0; i < allGeoTiffLayers.length - 1; i++) {
-        if (allGeoTiffLayers[i].layer.id === layer.id && 
-            allGeoTiffLayers[i].categoryId === categoryId) {
-          const nextLayer = allGeoTiffLayers[i + 1].layer;
-          if (nextLayer.order !== undefined) {
-            const temp = layer.order;
-            layer.order = nextLayer.order;
-            nextLayer.order = temp;
-          }
-          break;
-        }
+      const allGeoTiffLayers = Object.values(state.categories)
+        .flatMap(cat => cat.layers)
+        .filter(l => l.type === 'geotiff' && l.order !== undefined)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      const currentIndex = allGeoTiffLayers.findIndex(l => l.id === layer.id);
+      if (currentIndex < allGeoTiffLayers.length - 1) {
+        const nextLayer = allGeoTiffLayers[currentIndex + 1];
+        const tempOrder = layer.order;
+        layer.order = nextLayer.order;
+        nextLayer.order = tempOrder;
       }
     },
     sendLayerBackward: (
@@ -355,32 +344,17 @@ const layersSlice = createSlice({
       const layer = category.layers.find(l => l.id === layerId);
       if (!layer || layer.type !== 'geotiff' || layer.order === undefined) return;
 
-      const allGeoTiffLayers: { layer: MapLayer, categoryId: string }[] = [];
-      
-      Object.entries(state.categories).forEach(([catId, cat]) => {
-        cat.layers.forEach(l => {
-          if (l.type === 'geotiff' && l.order !== undefined) {
-            allGeoTiffLayers.push({ layer: l, categoryId: catId });
-          }
-        });
-      });
-      
-      allGeoTiffLayers.sort((a, b) => {
-        if (a.layer.order === undefined || b.layer.order === undefined) return 0;
-        return a.layer.order - b.layer.order;
-      });
-      
-      for (let i = 1; i < allGeoTiffLayers.length; i++) {
-        if (allGeoTiffLayers[i].layer.id === layer.id && 
-            allGeoTiffLayers[i].categoryId === categoryId) {
-          const prevLayer = allGeoTiffLayers[i - 1].layer;
-          if (prevLayer.order !== undefined) {
-            const temp = layer.order;
-            layer.order = prevLayer.order;
-            prevLayer.order = temp;
-          }
-          break;
-        }
+      const allGeoTiffLayers = Object.values(state.categories)
+        .flatMap(cat => cat.layers)
+        .filter(l => l.type === 'geotiff' && l.order !== undefined)
+        .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+      const currentIndex = allGeoTiffLayers.findIndex(l => l.id === layer.id);
+      if (currentIndex > 0) {
+        const prevLayer = allGeoTiffLayers[currentIndex - 1];
+        const tempOrder = layer.order;
+        layer.order = prevLayer.order;
+        prevLayer.order = tempOrder;
       }
     },
     setLayerBounds: (
@@ -453,6 +427,12 @@ const layersSlice = createSlice({
           defaultMax: max
         };
       }
+    },
+    setSlopeRenderingRule: (
+      state,
+      action: PayloadAction<string>
+    ) => {
+      state.slopeRenderingRule = action.payload;
     }
   }
 });
@@ -468,7 +448,8 @@ export const {
   setLayerBounds,
   clearActiveLayers,
   setLayerValueRange,
-  initializeLayerValueRange
+  initializeLayerValueRange,
+  setSlopeRenderingRule
 } = layersSlice.actions;
 
 export default layersSlice.reducer;

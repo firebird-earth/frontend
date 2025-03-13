@@ -10,10 +10,10 @@ import ErrorBoundary from './common/ErrorBoundary';
 import { useAppDispatch } from '../hooks/useAppDispatch';
 import { useAppSelector } from '../hooks/useAppSelector';
 import { toggleLegend } from '../store/slices/uiSlice';
-import MapClickHandler from './map/components/MapClickHandler';
-import LocationMarkers from './map/components/LocationMarkers';
-import MapControls from './map/components/MapControls';
-import MapLayers from './map/components/MapLayers';
+import MapClickHandler from './map/MapClickHandler';
+import LocationMarkers from './map/LocationMarkers';
+import MapControls from './map/MapControls';
+import MapLayers from './map/MapLayers';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default marker icons in React-Leaflet
@@ -29,7 +29,7 @@ const MapComponent: React.FC = () => {
   const dispatch = useAppDispatch();
   const { center, zoom } = useAppSelector(state => state.map);
   const { isNavOpen, isLegendOpen, isCreatingAOI, showAOIPanel } = useAppSelector(state => state.ui);
-  const currentAOI = useAppSelector(state => state.aoi.currentAOI);
+  const currentAOI = useAppSelector(state => state.home.aoi.current);
   const layers = useAppSelector(state => state.layers);
 
   const hasActiveLayers = Object.entries(layers.categories).some(([categoryId, category]) => 
@@ -71,6 +71,10 @@ const MapComponent: React.FC = () => {
             doubleClickZoom={true}
             dragging={true}
             attributionControl={false}
+            // Add finer zoom control
+            zoomDelta={0.25} // Zoom steps of 0.25 instead of 1
+            zoomSnap={0.25} // Snap to 0.25 zoom levels
+            wheelDebounceTime={100} // Smooth out wheel zooming
           >
             <MapControls />
             <MapClickHandler />
@@ -111,4 +115,4 @@ const MapComponent: React.FC = () => {
   );
 };
 
-export default MapComponent
+export default MapComponent;

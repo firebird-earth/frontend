@@ -5,7 +5,7 @@ import { Location } from '../../../types/map';
 import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { useAppSelector } from '../../../hooks/useAppSelector';
 import { toggleSection, startCreatingAOI } from '../../../store/slices/uiSlice';
-import { setCurrentAOI } from '../../../store/slices/aoiSlice';
+import { setCurrentAOI } from '../../../store/slices/home/actions';
 import { navigateToLocation } from '../../../utils/map';
 import { useAOI } from '../../../hooks/useAOI';
 import locations from '../../../constants/locations';
@@ -13,7 +13,7 @@ import locations from '../../../constants/locations';
 const HomeTab: React.FC = () => {
   const dispatch = useAppDispatch();
   const sections = useAppSelector(state => state.ui.sections);
-  const currentAOI = useAppSelector(state => state.aoi.currentAOI);
+  const currentAOI = useAppSelector(state => state.home.aoi.current);
   const { aois } = useAOI();
 
   const handleLocationClick = (location: Location) => {

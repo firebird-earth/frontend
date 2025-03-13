@@ -30,7 +30,7 @@ const createDefaultSettings = (userId: string): FirebaseUserSettings => ({
         unit: 'acres'
       },
       coordinates: {
-        show: false,
+        show: true,
         format: 'latlon-dd'
       },
       lastLocation: {

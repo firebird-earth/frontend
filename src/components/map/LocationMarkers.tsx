@@ -1,15 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { useAppDispatch } from '../../../hooks/useAppDispatch';
-import { useAppSelector } from '../../../hooks/useAppSelector';
-import { setCurrentAOI } from '../../../store/slices/aoiSlice';
-import { showAOIPanel } from '../../../store/slices/uiSlice';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { useAppSelector } from '../../hooks/useAppSelector';
+import { setCurrentAOI } from '../../store/slices/home/actions';
+import { showAOIPanel } from '../../store/slices/uiSlice';
 
 const LocationMarkers: React.FC = () => {
   const map = useMap();
   const dispatch = useAppDispatch();
-  const { currentAOI } = useAppSelector(state => state.aoi);
+  const { current: currentAOI } = useAppSelector(state => state.home.aoi);
   const markerRef = useRef<L.Marker | null>(null);
 
   useEffect(() => {

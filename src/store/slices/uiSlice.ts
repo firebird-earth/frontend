@@ -35,6 +35,7 @@ const initialState: UIState = {
     restorationClass: false,
     habitat: false,
     wildfire: true,
+    elevation: true,
   },
 };
 

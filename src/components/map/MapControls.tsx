@@ -1,9 +1,9 @@
 import React from 'react';
 import { ZoomControl, ScaleControl } from 'react-leaflet';
-import NorthArrow from '../../controls/NorthArrow';
-import NavigateControl from '../../controls/NavigateControl';
-import GridControl from '../../controls/GridControl';
-import CoordinateControl from '../../controls/CoordinateControl';
+import NorthArrow from '../controls/NorthArrow';
+import NavigateControl from '../controls/NavigateControl';
+import GridControl from '../controls/GridControl';
+import CoordinateControl from '../controls/CoordinateControl';
 
 const MapControls: React.FC = () => {
   return (

@@ -15,8 +15,6 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active,
   const map = useMap();
   const boundaryRef = useRef<L.GeoJSON | null>(null);
   const bufferCircleRef = useRef<L.Circle | null>(null);
-  const boundaryCircleRef = useRef<L.Circle | null>(null);
-  const centroidMarkerRef = useRef<L.Marker | null>(null);
   const opacityRef = useRef<number>(1.0);
   
   const opacity = 1.0;
@@ -24,7 +22,7 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active,
   // Create or remove layers based on active state and center
   useEffect(() => {
     if (!active || !center) {
-      [boundaryRef, bufferCircleRef, boundaryCircleRef, centroidMarkerRef].forEach(ref => {
+      [boundaryRef, bufferCircleRef].forEach(ref => {
         if (ref.current) {
           map.removeLayer(ref.current);
           ref.current = null;
@@ -34,7 +32,7 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active,
     }
 
     // Clean up existing layers
-    [boundaryRef, bufferCircleRef, boundaryCircleRef, centroidMarkerRef].forEach(ref => {
+    [boundaryRef, bufferCircleRef].forEach(ref => {
       if (ref.current) {
         map.removeLayer(ref.current);
         ref.current = null;
@@ -50,7 +48,7 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active,
             color: '#2563eb',
             weight: 2,
             fillColor: '#2563eb',
-            fillOpacity: 0.1 * opacity,
+            fillOpacity: 0,
             opacity: opacity
           }
         });
@@ -68,52 +66,19 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active,
       interactive: false,
       radius: circleResult.radius,
       color: '#2563eb',
-      weight: 1,
+      weight: 2,
       fillColor: '#2563eb',
-      fillOpacity: 0.05 * opacity,
-      opacity: 0.5 * opacity
+      fillOpacity: 0,
+      opacity: opacity
     });
 
     bufferCircle.addTo(map);
     bufferCircleRef.current = bufferCircle;
 
-    if (circleResult.boundaryCircle) {
-      const boundaryCircle = L.circle(
-        circleResult.boundaryCircle.center,
-        {
-          interactive: false,
-          radius: circleResult.boundaryCircle.radius,
-          color: '#ef4444',
-          weight: 1,
-          fillColor: '#ef4444',
-          fillOpacity: 0.05 * opacity,
-          opacity: 0.5 * opacity,
-          dashArray: '5, 5'
-        }
-      );
-
-      boundaryCircle.addTo(map);
-      boundaryCircleRef.current = boundaryCircle;
-      
-      const centroidMarker = L.marker(circleResult.boundaryCircle.center, {
-        icon: L.divIcon({
-          className: 'centroid-marker',
-          html: '<div style="width: 8px; height: 8px; background-color: red; border-radius: 50%; border: 1px solid white;"></div>',
-          iconSize: [8, 8],
-          iconAnchor: [4, 4]
-        }),
-        interactive: false,
-        opacity: opacity
-      });
-      
-      centroidMarker.addTo(map);
-      centroidMarkerRef.current = centroidMarker;
-    }
-
     opacityRef.current = opacity;
 
     return () => {
-      [boundaryRef, bufferCircleRef, boundaryCircleRef, centroidMarkerRef].forEach(ref => {
+      [boundaryRef, bufferCircleRef].forEach(ref => {
         if (ref.current) {
           map.removeLayer(ref.current);
           ref.current = null;
@@ -128,26 +93,15 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active,
       if (boundaryRef.current) {
         boundaryRef.current.setStyle({
           opacity: opacity,
-          fillOpacity: 0.1 * opacity
+          fillOpacity: 0
         });
       }
       
       if (bufferCircleRef.current) {
         bufferCircleRef.current.setStyle({
-          opacity: 0.5 * opacity,
-          fillOpacity: 0.05 * opacity
+          opacity: opacity,
+          fillOpacity: 0
         });
-      }
-      
-      if (boundaryCircleRef.current) {
-        boundaryCircleRef.current.setStyle({
-          opacity: 0.5 * opacity,
-          fillOpacity: 0.05 * opacity
-        });
-      }
-      
-      if (centroidMarkerRef.current) {
-        centroidMarkerRef.current.setOpacity(opacity);
       }
       
       opacityRef.current = opacity;

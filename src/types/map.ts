@@ -21,7 +21,7 @@ export interface MapViewport {
 export interface MapLayer {
   id: number;
   name: string;
-  type: 'tile' | 'vector' | 'raster' | 'geotiff' | 'placeholder';
+  type: 'tile' | 'vector' | 'raster' | 'geotiff' | 'dynamic' | 'placeholder';
   source: string;
   active: boolean;
   opacity?: number;
@@ -36,6 +36,7 @@ export interface MapLayer {
     defaultMin: number;
     defaultMax: number;
   };
+  renderingRule?: string;
 }
 
 export interface LayerCategory {

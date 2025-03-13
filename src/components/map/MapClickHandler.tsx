@@ -1,17 +1,17 @@
 import React, { useEffect, useRef } from 'react';
 import { useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
-import { useAppDispatch } from '../../../hooks/useAppDispatch';
-import { useAppSelector } from '../../../hooks/useAppSelector';
-import { showAOIPanel, toggleLegend } from '../../../store/slices/uiSlice';
-import { setCoordinates, clearAOI } from '../../../store/slices/aoiSlice';
-import { clearActiveLocation } from '../../../store/slices/mapSlice';
-import { clearActiveLayers } from '../../../store/slices/layersSlice';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { useAppSelector } from '../../hooks/useAppSelector';
+import { showAOIPanel, toggleLegend } from '../../store/slices/uiSlice';
+import { setCoordinates, clearAOI } from '../../store/slices/home/actions';
+import { clearActiveLocation } from '../../store/slices/mapSlice';
+import { clearActiveLayers } from '../../store/slices/layersSlice';
 
 const MapClickHandler: React.FC = () => {
   const dispatch = useAppDispatch();
   const { isCreatingAOI } = useAppSelector(state => state.ui);
-  const { coordinates } = useAppSelector(state => state.aoi);
+  const { coordinates } = useAppSelector(state => state.home.aoi);
   const markerRef = useRef<L.Marker | null>(null);
   
   const map = useMapEvents({

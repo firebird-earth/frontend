@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { MapPin, Plus, Navigation } from 'lucide-react';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
-import { setCurrentAOI } from '../../store/slices/aoiSlice';
+import { setCurrentAOI } from '../../store/slices/home/actions';
 import { startCreatingAOI } from '../../store/slices/uiSlice';
 import { useAOI } from '../../hooks/useAOI';
 import { navigateToLocation } from '../../utils/map';
@@ -15,7 +15,7 @@ interface AOISelectorProps {
 const AOISelector: React.FC<AOISelectorProps> = ({ onClose }) => {
   const dispatch = useAppDispatch();
   const { aois } = useAOI();
-  const currentAOI = useAppSelector(state => state.aoi.currentAOI);
+  const currentAOI = useAppSelector(state => state.home.aoi.current);
   const isNavOpen = useAppSelector(state => state.ui.isNavOpen);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
@@ -87,7 +87,7 @@ const AOISelector: React.FC<AOISelectorProps> = ({ onClose }) => {
             )}
           </button>
         ))}
-        
+
         {aois.length > 0 && (
           <>
             <div className="my-2 border-t dark:border-gray-700"></div>

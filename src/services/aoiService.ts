@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { AOI, CreateAOIInput, UpdateAOIInput, AOIState } from '../types/aoi';
 import { store } from '../store';
 import { setActiveLocation } from '../store/slices/mapSlice';
-import { setCurrentAOI } from '../store/slices/aoiSlice';
+import { setCurrentAOI } from '../store/slices/home/actions';
 import { showAOIPanel, toggleLegend } from '../store/slices/uiSlice';
 import { navigateToLocation } from '../utils/map';
 import { clearActiveLayers } from '../store/slices/layersSlice';

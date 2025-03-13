@@ -12,10 +12,8 @@ export const TILE_LAYERS = {
 } as const;
 
 // Service Layer URLs
-export const SERVICE_LAYERS = {
-  WUI: `${USFS_BASE_URL}/EDW/EDW_WUI_2020_01/MapServer/tile/{z}/{y}/{x}`,
-  CRISIS_AREAS: `${USFS_BASE_URL}/EDW/EDW_BILLandscapeInvestments_01/MapServer/0`
-} as const;
+export const WUI_LAYER = `${USFS_BASE_URL}/EDW/EDW_WUI_2020_01/MapServer/tile/{z}/{y}/{x}`;
+export const CRISIS_AREAS_LAYER = `${USFS_BASE_URL}/EDW/EDW_BILLandscapeInvestments_01/MapServer/0`;
 
 // Function to get GeoTIFF URL based on AOI ID
 export function getGeoTiffUrl(aoiId: string | number, layerName: string): string {

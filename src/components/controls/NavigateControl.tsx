@@ -7,7 +7,7 @@ import { locations } from '../../constants/locations';
 
 const NavigateControl = () => {
   const map = useMap();
-  const currentAOI = useAppSelector(state => state.aoi.currentAOI);
+  const currentAOI = useAppSelector(state => state.home.aoi.current);
   const controlRef = useRef<L.Control | null>(null);
 
   useEffect(() => {

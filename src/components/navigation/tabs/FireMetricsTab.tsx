@@ -5,7 +5,7 @@ import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { useAppSelector } from '../../../hooks/useAppSelector';
 import { toggleSection } from '../../../store/slices/uiSlice';
 import { toggleLayer, toggleSingleLayer } from '../../../store/slices/layersSlice';
-import SelectAOIDialog from '../../dialogs/SelectAOIDialog';
+import SelectAOIDialog from '../../aoi/SelectAOIDialog';
 
 const FireMetricsTab: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -13,7 +13,7 @@ const FireMetricsTab: React.FC = () => {
   const firemetricLayers = useAppSelector(state => state.layers.categories.firemetrics?.layers || []);
   const fuelLayers = useAppSelector(state => state.layers.categories.fuels?.layers || []);
   const valueAtRiskLayers = useAppSelector(state => state.layers.categories.valueAtRisk?.layers || []);
-  const currentAOI = useAppSelector(state => state.aoi.currentAOI);
+  const currentAOI = useAppSelector(state => state.home.aoi.current);
   const [showDialog, setShowDialog] = useState(false);
 
   // Handle click on the layer text/name - exclusive behavior

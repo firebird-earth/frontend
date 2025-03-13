@@ -2,14 +2,15 @@ import React, { useState, useEffect } from 'react';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { stopCreatingAOI } from '../../store/slices/uiSlice';
-import { clearAOI } from '../../store/slices/aoiSlice';
+import { clearAOI, setCoordinates } from '../../store/slices/home/actions';
 import { clearActiveLocation } from '../../store/slices/mapSlice';
+import { clearActiveLayers } from '../../store/slices/layersSlice';
 import { useAOI } from '../../hooks/useAOI';
 
 const CreateAOIPanel: React.FC = () => {
   const dispatch = useAppDispatch();
   const { isCreatingAOI } = useAppSelector(state => state.ui);
-  const coordinates = useAppSelector(state => state.aoi.coordinates);
+  const coordinates = useAppSelector(state => state.home.aoi.coordinates);
   const { createAOI } = useAOI();
   
   const [name, setName] = useState('');

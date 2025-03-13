@@ -186,6 +186,26 @@ export const colorSchemes: Record<string, ColorScheme> = {
     ],
     type: 'sequential',
     domain: [0, 100]
+  },
+  
+  slopeGradient: {
+    name: 'slopeGradient',
+    displayName: 'Slope Gradient',
+    description: 'Green (flat) to red (steep) gradient for slope visualization',
+    buckets: 9,
+    colors: [
+      '#2ecc71', // Flat (green)
+      '#52be80',
+      '#76b08f',
+      '#9aa29e',
+      '#beb4ad',
+      '#e2c6bc',
+      '#f5b7b1',
+      '#ec7063',
+      '#e74c3c'  // Steep (red)
+    ],
+    type: 'sequential',
+    domain: [0, 45]  // 0 to 45 degrees
   }
 };
 

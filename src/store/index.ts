@@ -2,16 +2,18 @@ import { configureStore } from '@reduxjs/toolkit';
 import mapReducer from './slices/mapSlice';
 import uiReducer from './slices/uiSlice';
 import layersReducer from './slices/layersSlice';
-import aoiReducer from './slices/aoiSlice';
 import settingsReducer from './slices/settingsSlice';
+import homeReducer from './slices/home';
+import firemetricsReducer from './slices/firemetrics';
 
 export const store = configureStore({
   reducer: {
     map: mapReducer,
     ui: uiReducer,
     layers: layersReducer,
-    aoi: aoiReducer,
     settings: settingsReducer,
+    home: homeReducer,
+    firemetrics: firemetricsReducer
   },
 });
 

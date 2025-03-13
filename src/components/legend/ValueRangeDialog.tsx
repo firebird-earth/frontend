@@ -4,7 +4,7 @@ import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { setLayerValueRange } from '../../store/slices/layersSlice';
 import { useDraggable } from '../../hooks/useDraggable';
 
-interface ValueRangeControlProps {
+interface ValueRangeDialogProps {
   categoryId: string;
   layerId: number;
   initialRange: {
@@ -16,7 +16,7 @@ interface ValueRangeControlProps {
   onClose: () => void;
 }
 
-const ValueRangeControl: React.FC<ValueRangeControlProps> = ({
+const ValueRangeDialog: React.FC<ValueRangeDialogProps> = ({
   categoryId,
   layerId,
   initialRange,
@@ -37,23 +37,23 @@ const ValueRangeControl: React.FC<ValueRangeControlProps> = ({
 
   const handleMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newMin = parseFloat(e.target.value);
-    setMin(Math.max(initialRange.defaultMin, Math.min(newMin, max)));
+    setMin(newMin);
     dispatch(setLayerValueRange({
       categoryId,
       layerId,
-      min: Math.max(initialRange.defaultMin, Math.min(newMin, max)),
+      min: newMin,
       max
     }));
   };
 
   const handleMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newMax = parseFloat(e.target.value);
-    setMax(Math.min(initialRange.defaultMax, Math.max(newMax, min)));
+    setMax(newMax);
     dispatch(setLayerValueRange({
       categoryId,
       layerId,
       min,
-      max: Math.min(initialRange.defaultMax, Math.max(newMax, min))
+      max: newMax
     }));
   };
 
@@ -69,7 +69,7 @@ const ValueRangeControl: React.FC<ValueRangeControlProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 z-[2000]">
+    <div className="fixed inset-0 z-[2000]" style={{ pointerEvents: 'none' }}>
       <div 
         ref={dialogRef}
         onClick={handleDialogClick}
@@ -77,7 +77,8 @@ const ValueRangeControl: React.FC<ValueRangeControlProps> = ({
         style={{ 
           left: position.x,
           top: position.y,
-          transition: 'none'
+          transition: 'none',
+          pointerEvents: 'auto'
         }}
       >
         <div 
@@ -99,7 +100,7 @@ const ValueRangeControl: React.FC<ValueRangeControlProps> = ({
             <input
               type="range"
               min={initialRange.defaultMin}
-              max={max}
+              max={initialRange.defaultMax}
               step={(initialRange.defaultMax - initialRange.defaultMin) / 100}
               value={min}
               onChange={handleMinChange}
@@ -114,7 +115,7 @@ const ValueRangeControl: React.FC<ValueRangeControlProps> = ({
             </div>
             <input
               type="range"
-              min={min}
+              min={initialRange.defaultMin}
               max={initialRange.defaultMax}
               step={(initialRange.defaultMax - initialRange.defaultMin) / 100}
               value={max}
@@ -144,4 +145,4 @@ const ValueRangeControl: React.FC<ValueRangeControlProps> = ({
   );
 };
 
-export default ValueRangeControl;
+export default ValueRangeDialog;

@@ -6,7 +6,7 @@ interface NorthArrowProps {
   position?: L.ControlPosition;
 }
 
-const NorthArrow: React.FC<NorthArrowProps> = ({ position = 'bottomright' }) => {
+const NorthArrow: React.FC<NorthArrowProps> = ({ position = 'bottomleft' }) => {
   const map = useMap();
 
   useEffect(() => {
@@ -21,7 +21,7 @@ const NorthArrow: React.FC<NorthArrowProps> = ({ position = 'bottomright' }) => 
         const arrowContainer = document.createElement('div');
         arrowContainer.className = 'text-gray-700';
         arrowContainer.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="m5 12 7-7 7 7"/>
             <path d="M12 19V5"/>
           </svg>
@@ -29,7 +29,7 @@ const NorthArrow: React.FC<NorthArrowProps> = ({ position = 'bottomright' }) => 
 
         // Create the "N" label
         const label = document.createElement('div');
-        label.className = 'text-xs font-medium text-gray-600 text-center mt-0.5';
+        label.className = 'text-[10px] font-medium text-gray-600 text-center mt-0.5';
         label.textContent = 'N';
 
         // Assemble the components

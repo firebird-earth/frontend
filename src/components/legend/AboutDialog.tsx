@@ -1,6 +1,7 @@
 import React from 'react';
 import { Info } from 'lucide-react';
 import { useDraggable } from '../../hooks/useDraggable';
+import { FIRE_METRICS } from '../../constants/maps';
 
 interface AboutPanelProps {
   metadata: {
@@ -27,6 +28,7 @@ interface AboutPanelProps {
     custom: {
       units?: string;
       description?: string;
+      source?: string;
     };
   };
   range: {
@@ -35,9 +37,11 @@ interface AboutPanelProps {
     mean: number;
   };
   onClose: () => void;
+  layerName?: string;
+  categoryId?: string;
 }
 
-const AboutPanel: React.FC<AboutPanelProps> = ({ metadata, range, onClose }) => {
+const AboutDialog: React.FC<AboutPanelProps> = ({ metadata, range, onClose, layerName, categoryId }) => {
   const { position, handleMouseDown, handleDialogClick, dialogRef } = useDraggable({
     padding: 25,
     initialCorner: 'bottom-right'
@@ -54,8 +58,23 @@ const AboutPanel: React.FC<AboutPanelProps> = ({ metadata, range, onClose }) => 
   const zeroPixels = metadata.standard.zeroCount || 0;
   const validPixels = metadata.standard.nonNullValues;
 
+  // Get layer metadata from constants
+  const getLayerMetadata = () => {
+    if (!layerName || !categoryId) return null;
+
+    if (categoryId === 'firemetrics') {
+      return Object.values(FIRE_METRICS.LANDSCAPE_RISK).find(l => l.name === layerName);
+    }
+    if (categoryId === 'fuels') {
+      return Object.values(FIRE_METRICS.FUELS).find(l => l.name === layerName);
+    }
+    return null;
+  };
+
+  const layerMetadata = getLayerMetadata();
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-30 z-[2000]">
+    <div className="fixed inset-0 z-[2000]" style={{ pointerEvents: 'none' }}>
       <div 
         ref={dialogRef}
         onClick={handleDialogClick}
@@ -63,7 +82,8 @@ const AboutPanel: React.FC<AboutPanelProps> = ({ metadata, range, onClose }) => 
         style={{ 
           left: position.x,
           top: position.y,
-          transition: 'none'
+          transition: 'none',
+          pointerEvents: 'auto'
         }}
       >
         <div 
@@ -212,17 +232,24 @@ const AboutPanel: React.FC<AboutPanelProps> = ({ metadata, range, onClose }) => 
           </div>
         </div>
         
-        <div className="p-4 border-t border-gray-200 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium"
-          >
-            Done
-          </button>
+        <div className="p-4 border-t border-gray-200">
+          <div className="flex justify-between items-center">
+            {layerMetadata?.source && (
+              <span className="text-xs text-gray-500 italic">
+                Source: {layerMetadata.source}
+              </span>
+            )}
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium"
+            >
+              Done
+            </button>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default AboutPanel;
+export default AboutDialog;

@@ -2,7 +2,10 @@ import { createReducer } from '@reduxjs/toolkit';
 import { initialState } from './state';
 import * as actions from './actions';
 import { handleBasemapToggle } from './utils/basemaps';
-import { handleLayersTabToggle } from './utils/layers';
+import { handleLayersTabToggle } from './utils/layerManagement';
+import { handleLayerOrdering } from '../common/utils/ordering';
+import { handleValueRange } from '../common/utils/valueRange';
+import { handleOpacity } from '../common/utils/opacity';
 
 export const layersReducer = createReducer(initialState, (builder) => {
   builder
@@ -32,89 +35,23 @@ export const layersReducer = createReducer(initialState, (builder) => {
     })
     .addCase(actions.setLayerOpacity, (state, action) => {
       const { categoryId, layerId, opacity } = action.payload;
-      const category = state.categories[categoryId];
-      if (!category) return;
-
-      const layer = category.layers.find(l => l.id === layerId);
-      if (layer) {
-        layer.opacity = Math.max(0, Math.min(1, opacity));
-      }
+      handleOpacity(state, categoryId, layerId, opacity);
     })
     .addCase(actions.bringLayerToFront, (state, action) => {
       const { categoryId, layerId } = action.payload;
-      const category = state.categories[categoryId];
-      if (!category) return;
-
-      const layer = category.layers.find(l => l.id === layerId);
-      if (!layer || layer.type !== 'geotiff') return;
-
-      const highestOrder = Math.max(
-        ...Object.values(state.categories)
-          .flatMap(cat => cat.layers)
-          .filter(l => l.type === 'geotiff' && l.order !== undefined)
-          .map(l => l.order!)
-      );
-      
-      layer.order = highestOrder + 10;
+      handleLayerOrdering(state, categoryId, layerId, 'front');
     })
     .addCase(actions.sendLayerToBack, (state, action) => {
       const { categoryId, layerId } = action.payload;
-      const category = state.categories[categoryId];
-      if (!category) return;
-
-      const layer = category.layers.find(l => l.id === layerId);
-      if (!layer || layer.type !== 'geotiff') return;
-
-      const lowestOrder = Math.min(
-        ...Object.values(state.categories)
-          .flatMap(cat => cat.layers)
-          .filter(l => l.type === 'geotiff' && l.order !== undefined)
-          .map(l => l.order!)
-      );
-      
-      layer.order = lowestOrder - 10;
+      handleLayerOrdering(state, categoryId, layerId, 'back');
     })
     .addCase(actions.bringLayerForward, (state, action) => {
       const { categoryId, layerId } = action.payload;
-      const category = state.categories[categoryId];
-      if (!category) return;
-
-      const layer = category.layers.find(l => l.id === layerId);
-      if (!layer || layer.type !== 'geotiff' || layer.order === undefined) return;
-
-      const allGeoTiffLayers = Object.values(state.categories)
-        .flatMap(cat => cat.layers)
-        .filter(l => l.type === 'geotiff' && l.order !== undefined)
-        .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-      const currentIndex = allGeoTiffLayers.findIndex(l => l.id === layer.id);
-      if (currentIndex < allGeoTiffLayers.length - 1) {
-        const nextLayer = allGeoTiffLayers[currentIndex + 1];
-        const tempOrder = layer.order;
-        layer.order = nextLayer.order;
-        nextLayer.order = tempOrder;
-      }
+      handleLayerOrdering(state, categoryId, layerId, 'forward');
     })
     .addCase(actions.sendLayerBackward, (state, action) => {
       const { categoryId, layerId } = action.payload;
-      const category = state.categories[categoryId];
-      if (!category) return;
-
-      const layer = category.layers.find(l => l.id === layerId);
-      if (!layer || layer.type !== 'geotiff' || layer.order === undefined) return;
-
-      const allGeoTiffLayers = Object.values(state.categories)
-        .flatMap(cat => cat.layers)
-        .filter(l => l.type === 'geotiff' && l.order !== undefined)
-        .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-      const currentIndex = allGeoTiffLayers.findIndex(l => l.id === layer.id);
-      if (currentIndex > 0) {
-        const prevLayer = allGeoTiffLayers[currentIndex - 1];
-        const tempOrder = layer.order;
-        layer.order = prevLayer.order;
-        prevLayer.order = tempOrder;
-      }
+      handleLayerOrdering(state, categoryId, layerId, 'backward');
     })
     .addCase(actions.setLayerBounds, (state, action) => {
       const { categoryId, layerId, bounds } = action.payload;
@@ -137,33 +74,53 @@ export const layersReducer = createReducer(initialState, (builder) => {
     })
     .addCase(actions.setLayerValueRange, (state, action) => {
       const { categoryId, layerId, min, max } = action.payload;
-      const category = state.categories[categoryId];
-      if (!category) return;
-
-      const layer = category.layers.find(l => l.id === layerId);
-      if (layer && layer.valueRange) {
-        layer.valueRange.min = min;
-        layer.valueRange.max = max;
-      }
+      handleValueRange(state, categoryId, layerId, min, max);
     })
     .addCase(actions.initializeLayerValueRange, (state, action) => {
       const { categoryId, layerId, min, max } = action.payload;
+      handleValueRange(state, categoryId, layerId, min, max, true);
+    })
+    .addCase(actions.toggleShowValues, (state, action) => {
+      const { categoryId, layerId } = action.payload;
       const category = state.categories[categoryId];
       if (!category) return;
 
       const layer = category.layers.find(l => l.id === layerId);
-      if (layer) {
-        layer.valueRange = {
-          min,
-          max,
-          defaultMin: min,
-          defaultMax: max
-        };
-      }
+      if (!layer) return;
+
+      layer.showValues = !layer.showValues;
+
+      // Turn off showValues for all other layers
+      Object.values(state.categories).forEach(cat => {
+        cat.layers.forEach(l => {
+          if (l !== layer) {
+            l.showValues = false;
+          }
+        });
+      });
+    })
+    .addCase(actions.setLayerMetadata, (state, action) => {
+      const { categoryId, layerId, metadata, range } = action.payload;
+      const category = state.categories[categoryId];
+      if (!category) return;
+
+      const layer = category.layers.find(l => l.id === layerId);
+      if (!layer) return;
+
+      layer.metadata = metadata;
+      layer.range = range;
+    })
+    .addCase(actions.setLayerLoading, (state, action) => {
+      const { categoryId, layerId, loading } = action.payload;
+      const category = state.categories[categoryId];
+      if (!category) return;
+
+      const layer = category.layers.find(l => l.id === layerId);
+      if (!layer) return;
+
+      layer.loading = loading;
     })
     .addCase(actions.setSlopeRenderingRule, (state, action) => {
       state.slopeRenderingRule = action.payload;
     });
 });
-
-export default layersReducer;

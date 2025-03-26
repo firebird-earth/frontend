@@ -4,7 +4,7 @@ import SectionHeader from '../SectionHeader';
 import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { useAppSelector } from '../../../hooks/useAppSelector';
 import { toggleSection } from '../../../store/slices/uiSlice';
-import { toggleLayer, toggleSingleLayer } from '../../../store/slices/layersSlice';
+import { toggleLayer, toggleSingleLayer } from '../../../store/slices/layers';
 import SelectAOIDialog from '../../aoi/SelectAOIDialog';
 
 const LayersTab: React.FC = () => {
@@ -152,6 +152,20 @@ const LayersTab: React.FC = () => {
           )}
         </div>
 
+        {/* Jurisdictions Section */}
+        <div>
+          <SectionHeader 
+            title="JURISDICTIONS" 
+            isOpen={sections.jurisdictions} 
+            onToggle={() => dispatch(toggleSection('jurisdictions'))}
+          />
+          {sections.jurisdictions && categories.jurisdictions && (
+            <div className="space-y-1">
+              {categories.jurisdictions.layers.map(layer => renderLayerItem(layer, 'jurisdictions'))}
+            </div>
+          )}
+        </div>
+
         {/* Wildfire Section */}
         <div>
           <SectionHeader 
@@ -190,20 +204,6 @@ const LayersTab: React.FC = () => {
           {sections.landscape && categories.landscape && (
             <div className="space-y-1">
               {categories.landscape.layers.map(layer => renderLayerItem(layer, 'landscape'))}
-            </div>
-          )}
-        </div>
-
-        {/* Jurisdictions Section */}
-        <div>
-          <SectionHeader 
-            title="JURISDICTIONS" 
-            isOpen={sections.jurisdictions} 
-            onToggle={() => dispatch(toggleSection('jurisdictions'))}
-          />
-          {sections.jurisdictions && categories.jurisdictions && (
-            <div className="space-y-1">
-              {categories.jurisdictions.layers.map(layer => renderLayerItem(layer, 'jurisdictions'))}
             </div>
           )}
         </div>

@@ -1,20 +1,25 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { navigateToLocation } from '../../utils/map';
-import { locations } from '../../constants/locations';
+import SelectAOIDialog from '../aoi/SelectAOIDialog';
 
-const NavigateControl = () => {
+interface NavigateControlProps {
+  position?: L.ControlPosition;
+}
+
+const NavigateControl: React.FC<NavigateControlProps> = ({ position = 'topright' }) => {
   const map = useMap();
-  const currentAOI = useAppSelector(state => state.home.aoi.current);
   const controlRef = useRef<L.Control | null>(null);
+  const currentAOI = useAppSelector(state => state.home.aoi.current);
+  const [showDialog, setShowDialog] = useState(false);
 
   useEffect(() => {
     if (!controlRef.current) {
       const NavigateControl = L.Control.extend({
         options: {
-          position: 'topright'
+          position
         },
         onAdd: () => {
           const container = L.DomUtil.create('div', 'leaflet-control leaflet-control-navigate');
@@ -24,25 +29,27 @@ const NavigateControl = () => {
           
           button.innerHTML = `
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M12 8v8"/>
-              <path d="M8 12h8"/>
+              <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
+              <circle cx="12" cy="10" r="3"/>
             </svg>
           `;
 
           button.addEventListener('click', () => {
-            if (currentAOI) {
-              if ('location' in currentAOI) {
-                // User AOI
-                navigateToLocation({
-                  id: parseInt(currentAOI.id),
-                  name: currentAOI.name,
-                  coordinates: currentAOI.location.center
-                });
-              } else {
-                // Static location
-                navigateToLocation(currentAOI);
-              }
+            if (!currentAOI) {
+              setShowDialog(true);
+              return;
+            }
+
+            if ('location' in currentAOI) {
+              // User AOI
+              navigateToLocation({
+                id: parseInt(currentAOI.id),
+                name: currentAOI.name,
+                coordinates: currentAOI.location.center
+              });
+            } else if ('coordinates' in currentAOI) {
+              // Static location
+              navigateToLocation(currentAOI);
             }
           });
 
@@ -62,9 +69,15 @@ const NavigateControl = () => {
         controlRef.current = null;
       }
     };
-  }, [map, currentAOI]);
+  }, [map, position, currentAOI]);
 
-  return null;
+  return (
+    <>
+      {showDialog && (
+        <SelectAOIDialog onClose={() => setShowDialog(false)} />
+      )}
+    </>
+  );
 };
 
 export default NavigateControl;

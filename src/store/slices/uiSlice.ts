@@ -15,27 +15,27 @@ const initialState: UIState = {
   activeTab: 'home',
   isNavOpen: true,
   isLegendOpen: true,
-  theme: 'dark',
+  theme: 'light',
   showSettings: false,
   isCreatingAOI: false,
   showAOIPanel: false,
   sections: {
-    aois: true,
-    treatments: true,
-    scenarios: true,
-    valueAtRisk: true,
-    landscapeRisk: true,
-    fuels: true,
+    aois: true, // Locations section open by default
+    treatments: false,
+    scenarios: false,
     basemaps: false,
     jurisdictions: false,
+    wildfire: false,
+    elevation: false,
+    valueAtRisk: true, // FireMetrics sections open by default
+    landscapeRisk: true,
+    fuels: true,
     landscape: false,
     transportation: false,
     water: false,
     infrastructure: false,
     restorationClass: false,
-    habitat: false,
-    wildfire: true,
-    elevation: true,
+    habitat: false
   },
 };
 

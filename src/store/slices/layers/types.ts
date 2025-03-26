@@ -45,3 +45,43 @@ export interface InitializeLayerValueRangePayload {
   min: number;
   max: number;
 }
+
+export interface ToggleShowValuesPayload {
+  categoryId: string;
+  layerId: number;
+}
+
+export interface SetLayerMetadataPayload {
+  categoryId: string;
+  layerId: number;
+  metadata: {
+    width: number;
+    height: number;
+    bounds: [[number, number], [number, number]];
+    noDataValue: number | null;
+    sourceCRS: string;
+    tiepoint: number[];
+    scale: number[];
+    transform?: number[];
+    rawBounds?: [number, number, number, number];
+    stats?: {
+      min: number;
+      max: number;
+      mean: number;
+      validCount: number;
+      noDataCount: number;
+      zeroCount: number;
+    };
+  };
+  range: {
+    min: number;
+    max: number;
+    mean: number;
+  };
+}
+
+export interface SetLayerLoadingPayload {
+  categoryId: string;
+  layerId: number;
+  loading: boolean;
+}

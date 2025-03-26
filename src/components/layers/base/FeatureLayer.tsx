@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import * as EsriLeaflet from 'esri-leaflet';
@@ -14,6 +14,21 @@ interface FeatureLayerProps {
   onError?: (error: Error) => void;
 }
 
+interface LayerMetadata {
+  name: string;
+  description: string;
+  copyrightText?: string;
+  defaultSymbol?: any;
+  drawingInfo?: any;
+  geometryType: string;
+  sourceDescription?: string;
+  fields: Array<{
+    name: string;
+    type: string;
+    alias: string;
+  }>;
+}
+
 const FeatureLayer: React.FC<FeatureLayerProps> = ({
   active,
   opacity = 1,
@@ -25,43 +40,119 @@ const FeatureLayer: React.FC<FeatureLayerProps> = ({
   onError
 }) => {
   const map = useMap();
-  const layerRef = useRef<L.Layer | null>(null);
-  const opacityRef = useRef<number>(opacity);
+  const layerRef = useRef<EsriLeaflet.FeatureLayer | null>(null);
+  const opacityRef = useRef(opacity);
+  const styleRef = useRef(style);
+  const pendingUpdateRef = useRef<number | null>(null);
+  const visibleFeaturesRef = useRef<Set<string>>(new Set());
 
-  // Create or remove the layer based on active state
+  // Create base style once
+  const baseStyle = useCallback((feature?: any) => {
+    const customStyle = styleRef.current?.(feature) || {
+      color: '#374151',
+      weight: 1,
+      fillColor: '#374151',
+      fillOpacity: 0.1,
+      opacity: 1
+    };
+
+    return {
+      ...customStyle,
+      opacity: opacityRef.current,
+      fillOpacity: (customStyle.fillOpacity || 0.1) * opacityRef.current
+    };
+  }, []);
+
+  // Update opacity with debouncing, only for visible features
+  useEffect(() => {
+    if (!layerRef.current || opacityRef.current === opacity) return;
+
+    opacityRef.current = opacity;
+
+    if (pendingUpdateRef.current) {
+      cancelAnimationFrame(pendingUpdateRef.current);
+    }
+
+    pendingUpdateRef.current = requestAnimationFrame(() => {
+      if (layerRef.current) {
+        const bounds = map.getBounds();
+        
+        layerRef.current.eachFeature((feature) => {
+          // Only update features that intersect with the current viewport
+          if (feature.getBounds().intersects(bounds)) {
+            feature.setStyle(baseStyle(feature.feature));
+          }
+        });
+      }
+      pendingUpdateRef.current = null;
+    });
+  }, [opacity, baseStyle, map]);
+
+  // Update style ref when style prop changes
+  useEffect(() => {
+    styleRef.current = style;
+  }, [style]);
+
+  // Create or remove layer
   useEffect(() => {
     if (!active) {
       if (layerRef.current) {
         map.removeLayer(layerRef.current);
         layerRef.current = null;
       }
+      visibleFeaturesRef.current.clear();
       return;
     }
 
-    // Only create a new layer if one doesn't exist
     if (!layerRef.current) {
-      const layer = EsriLeaflet.featureLayer({
+      console.log('Creating feature layer for URL:', url);
+      
+      const layer = new EsriLeaflet.FeatureLayer({
         url,
         simplifyFactor,
         precision,
         where,
-        style: style || (() => ({
-          opacity,
-          fillOpacity: opacity * 0.25
-        }))
+        style: baseStyle,
+        minZoom: 4,
+        maxZoom: 16,
+        timeFilter: false,
+        cacheLayers: true,
+        fields: ['OBJECTID'],
+        fetchAllFeatures: false,
+        maxFeatures: 2000,
+        ignoreRenderer: true,
+        tolerance: 5,
+        deduplicate: true,
+        snapToZoom: true,
+        interactive: false,
+        bubblingMouseEvents: false,
+        pane: 'overlayPane',
+        attribution: null
       });
 
-      layer.addTo(map);
-      layerRef.current = layer;
-      opacityRef.current = opacity;
+      // Track visible features on viewport changes
+      layer.on('load', () => {
+        const bounds = map.getBounds();
+        visibleFeaturesRef.current.clear();
+        
+        layer.eachFeature((feature) => {
+          if (feature.getBounds().intersects(bounds)) {
+            visibleFeaturesRef.current.add(feature.feature.id);
+          }
+        });
+      });
 
-      // Handle errors
       layer.on('error', (error) => {
-        console.warn('Error loading feature layer:', error);
+        console.error('Feature layer error:', error);
         if (onError) {
           onError(error instanceof Error ? error : new Error('Failed to load layer'));
         }
       });
+
+      layer.addTo(map);
+      layerRef.current = layer;
+      
+      console.log('Feature layer created and added to map');
     }
 
     return () => {
@@ -69,40 +160,14 @@ const FeatureLayer: React.FC<FeatureLayerProps> = ({
         map.removeLayer(layerRef.current);
         layerRef.current = null;
       }
+      if (pendingUpdateRef.current) {
+        cancelAnimationFrame(pendingUpdateRef.current);
+      }
+      visibleFeaturesRef.current.clear();
     };
-  }, [active, map, url, simplifyFactor, precision, where, style]);
-
-  // Separate effect to handle opacity changes
-  useEffect(() => {
-    // For Esri layers, we need to recreate the layer when opacity changes
-    if (layerRef.current && opacityRef.current !== opacity) {
-      map.removeLayer(layerRef.current);
-      
-      const layer = EsriLeaflet.featureLayer({
-        url,
-        simplifyFactor,
-        precision,
-        where,
-        style: style || (() => ({
-          opacity,
-          fillOpacity: opacity * 0.25
-        }))
-      });
-
-      layer.addTo(map);
-      layerRef.current = layer;
-      opacityRef.current = opacity;
-
-      layer.on('error', (error) => {
-        console.warn('Error loading feature layer:', error);
-        if (onError) {
-          onError(error instanceof Error ? error : new Error('Failed to load layer'));
-        }
-      });
-    }
-  }, [opacity, map, url, simplifyFactor, precision, where, style]);
+  }, [active, map, url, simplifyFactor, precision, where, baseStyle]);
 
   return null;
 };
 
-export default FeatureLayer;
+export default React.memo(FeatureLayer);

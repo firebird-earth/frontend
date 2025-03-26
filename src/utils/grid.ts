@@ -26,7 +26,7 @@ export function calculateGridZoomThreshold(size: number, unit: 'acres' | 'meters
   const metersPerPixelAtZoom0 = 40075016.686 / 256; // Earth circumference / tile size
 
   // Calculate the zoom level where the cell would be 25 pixels
-  const targetPixels = 25;
+  const targetPixels = 15;
   const targetMetersPerPixel = sizeInMeters / targetPixels;
   const targetZoom = Math.log2(metersPerPixelAtZoom0 / targetMetersPerPixel);
 

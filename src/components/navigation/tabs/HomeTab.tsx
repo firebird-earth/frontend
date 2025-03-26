@@ -8,7 +8,7 @@ import { toggleSection, startCreatingAOI } from '../../../store/slices/uiSlice';
 import { setCurrentAOI } from '../../../store/slices/home/actions';
 import { navigateToLocation } from '../../../utils/map';
 import { useAOI } from '../../../hooks/useAOI';
-import locations from '../../../constants/locations';
+import locations from '../../../constants/places/locations';
 
 const HomeTab: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -33,7 +33,6 @@ const HomeTab: React.FC = () => {
   const handleCreateAOI = (e: React.MouseEvent) => {
     e.stopPropagation();
     dispatch(startCreatingAOI());
-    // Don't clear layers or close legend here - this will happen when the user drops a pin or saves
   };
 
   const isActive = (id: number | string) => {
@@ -48,7 +47,7 @@ const HomeTab: React.FC = () => {
     <div className="space-y-3">
       <div>
         <SectionHeader 
-          title="AOIs" 
+          title="LOCATIONS" 
           isOpen={sections.aois} 
           onToggle={() => dispatch(toggleSection('aois'))}
           showAdd

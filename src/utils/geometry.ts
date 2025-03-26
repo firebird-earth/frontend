@@ -1,7 +1,6 @@
 import { GeoJSON } from 'geojson';
 import L from 'leaflet';
 import proj4 from 'proj4';
-import { GeoTiffBounds } from './geotif/types';
 
 // Register common projections
 // NAD83 / UTM zone 13N (used in Colorado)
@@ -69,11 +68,6 @@ export function calculateBufferCircle(
       };
     }
     
-    console.debug('Boundary analysis:', {
-      points: points.length,
-      bounds
-    });
-    
     // Calculate the center of the bounding box
     const centerLat = (bounds.minLat + bounds.maxLat) / 2;
     const centerLng = (bounds.minLng + bounds.maxLng) / 2;
@@ -91,12 +85,6 @@ export function calculateBufferCircle(
       }
     }
     
-    console.debug('Circle calculation:', {
-      center: boundaryCenter,
-      maxRadius: maxDistance,
-      furthestPoint
-    });
-    
     // Create the boundary circle
     const boundaryCircle = {
       center: boundaryCenter,
@@ -113,7 +101,6 @@ export function calculateBufferCircle(
       boundaryCircle
     };
   } catch (error) {
-    console.warn('Error calculating buffer circle:', error);
     // Fallback to default radius on error
     return {
       center,

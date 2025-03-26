@@ -20,7 +20,6 @@ export const FUELS = {
     name: 'Canopy Bulk Density',
     description: 'Forest canopy bulk density',
     units: 'kg/m³',
-    source: 'LANDFIRE 2022',
     colorScheme: 'greenYellowRed',
     source: GEOTIFF_LAYERS.CANOPY_BULK_DENSITY
   },

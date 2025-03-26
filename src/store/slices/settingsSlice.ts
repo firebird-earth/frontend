@@ -15,7 +15,7 @@ const createDefaultSettings = (userId: string): FirebaseUserSettings => ({
   updatedAt: new Date().toISOString(),
   preferences: {
     theme: {
-      mode: 'dark',
+      mode: 'light',
       updatedAt: new Date().toISOString()
     },
     map: {

@@ -23,10 +23,10 @@ const SelectAOIDialog: React.FC<SelectAOIDialogProps> = ({ onClose }) => {
             <AlertTriangle className="h-6 w-6 text-amber-500" />
           </div>
           <div className="flex-1">
-            <h3 className="text-lg font-medium text-gray-900">No AOI Selected</h3>
+            <h3 className="text-lg font-medium text-gray-900">No Location Selected</h3>
             <p className="mt-2 text-sm text-gray-600">
-              You need to select an Area of Interest (AOI) before viewing fire metrics. 
-              Please go to the Home tab and select an existing AOI or create a new one.
+              You need to select a location before viewing fire metrics. 
+              Please go to the Home tab and select an existing location or create a new one.
             </p>
             <div className="mt-4 flex justify-end space-x-3">
               <button

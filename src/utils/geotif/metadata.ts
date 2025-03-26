@@ -1,6 +1,7 @@
 import * as GeoTIFF from 'geotiff';
 import { GeoTiffMetadata } from './types';
 import { validateGeoTiff } from './validation';
+import { getGeoTiffBounds } from './bounds';
 
 export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadata> {
   try {
@@ -30,7 +31,7 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
     const height = image.getHeight();
     console.log('Reading raster data...');
     const rasters = await image.readRasters();
-    const data = rasters[0];
+    const data = rasters[0] as Int16Array | Float32Array;
 
     if (!data) {
       throw new Error('No raster data found');
@@ -51,74 +52,7 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
     
     console.log('Parsed NODATA value:', noDataValue);
 
-    // Calculate resolution and origin
-    let resolution = { x: NaN, y: NaN };
-    let origin: [number, number] | null = null;
-
-    console.log('Model transformation tags:', {
-      pixelScale: image.fileDirectory.ModelPixelScaleTag,
-      tiepoint: image.fileDirectory.ModelTiepointTag,
-      transform: image.fileDirectory.ModelTransformationTag
-    });
-    
-    if (image.fileDirectory.ModelTransformationTag) {
-      const matrix = image.fileDirectory.ModelTransformationTag;
-      resolution = {
-        x: Math.sqrt(matrix[0] * matrix[0] + matrix[1] * matrix[1]),
-        y: Math.sqrt(matrix[4] * matrix[4] + matrix[5] * matrix[5])
-      };
-      origin = [matrix[3], matrix[7]];
-      console.log('Resolution and origin from ModelTransformationTag:', { resolution, origin });
-    } else if (image.fileDirectory.ModelTiepointTag && image.fileDirectory.ModelPixelScaleTag) {
-      const [scaleX, scaleY] = image.fileDirectory.ModelPixelScaleTag;
-      const [i, j, k, x, y, z] = image.fileDirectory.ModelTiepointTag;
-      resolution = {
-        x: Math.abs(scaleX),
-        y: Math.abs(scaleY)
-      };
-      origin = [x, y];
-      console.log('Resolution and origin from ModelTiepointTag + ModelPixelScaleTag:', { resolution, origin });
-    } else if (image.fileDirectory.ModelTiepointTag) {
-      const [i, j, k, x, y, z] = image.fileDirectory.ModelTiepointTag;
-      origin = [x, y];
-      const bbox = image.getBoundingBox();
-      if (bbox && bbox.length === 4) {
-        const [minX, minY, maxX, maxY] = bbox;
-        resolution = {
-          x: Math.abs(maxX - minX) / width,
-          y: Math.abs(maxY - minY) / height
-        };
-      }
-      console.log('Resolution and origin from ModelTiepointTag + bbox:', { resolution, origin });
-    } else {
-      const bbox = image.getBoundingBox();
-      if (bbox && bbox.length === 4) {
-        const [minX, minY, maxX, maxY] = bbox;
-        resolution = {
-          x: Math.abs(maxX - minX) / width,
-          y: Math.abs(maxY - minY) / height
-        };
-        origin = [minX, maxY];
-        console.log('Resolution and origin from bbox:', { resolution, origin });
-      }
-    }
-
-    // Get bounding box and log details
-    const bbox = image.getBoundingBox();
-    console.log('Raw bounding box:', bbox);
-    
-    if (bbox && bbox.length === 4) {
-      const [minX, minY, maxX, maxY] = bbox;
-      console.log('Bounding box coordinates:', {
-        minX, minY, maxX, maxY,
-        width: Math.abs(maxX - minX),
-        height: Math.abs(maxY - minY)
-      });
-    } else {
-      console.warn('Invalid or missing bounding box');
-    }
-
-    // Extract CRS information
+    // Get GeoKeys for CRS information
     const geoKeys = image.geoKeys || {};
     console.log('GeoKeys:', geoKeys);
     
@@ -139,28 +73,32 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
       console.log('Geographic CRS:', { crs, datum });
     }
 
-    // Compute statistics
+    // Get transformation information
+    const tiepoint = image.fileDirectory.ModelTiepointTag;
+    const scale = image.fileDirectory.ModelPixelScaleTag;
+    const transform = image.fileDirectory.ModelTransformationTag;
+
+    console.log('Transformation info:', {
+      tiepoint: tiepoint ? Array.from(tiepoint) : null,
+      scale: scale ? Array.from(scale) : null,
+      transform: transform ? Array.from(transform) : null
+    });
+
+    // Get bounds information
+    const boundsInfo = await getGeoTiffBounds(image);
+
+    // Calculate statistics
     console.log('Computing raster statistics...');
     let min = Infinity;
     let max = -Infinity;
     let sum = 0;
     let validCount = 0;
-    let zeroCount = 0;
     let noDataCount = 0;
-    let nanCount = 0;
-    let infCount = 0;
+    let zeroCount = 0;
 
     for (let i = 0; i < data.length; i++) {
       const value = data[i];
-      if (value !== undefined) {
-        if (isNaN(value)) {
-          nanCount++;
-          continue;
-        }
-        if (!isFinite(value)) {
-          infCount++;
-          continue;
-        }
+      if (value !== undefined && !isNaN(value) && isFinite(value)) {
         if (noDataValue !== null && value === noDataValue) {
           noDataCount++;
           continue;
@@ -182,19 +120,10 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
       max,
       mean,
       validCount,
-      zeroCount,
       noDataCount,
-      nanCount,
-      infCount,
+      zeroCount,
       totalPixels: width * height
     });
-
-    // Extract model transform information
-    const modelTransform = {
-      matrix: image.fileDirectory.ModelTransformationTag,
-      tiepoint: image.fileDirectory.ModelTiepointTag,
-      origin
-    };
 
     // Get custom metadata
     const customMetadata = {
@@ -218,6 +147,7 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
       }
     }
 
+    // Construct the final metadata object
     const metadata: GeoTiffMetadata = {
       metadata: {
         standard: {
@@ -225,15 +155,27 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
           imageHeight: height,
           bitsPerSample: image.fileDirectory.BitsPerSample || [],
           compression: image.fileDirectory.Compression || null,
-          modelTransform,
-          resolution,
+          modelTransform: {
+            matrix: transform,
+            tiepoint: tiepoint,
+            origin: boundsInfo.transform ? [boundsInfo.transform[3], boundsInfo.transform[7]] : null
+          },
+          resolution: {
+            x: scale ? Math.abs(scale[0]) : NaN,
+            y: scale ? Math.abs(scale[1]) : NaN
+          },
           noData: noDataValue,
           nonNullValues: validCount,
           totalPixels: width * height,
           zeroCount,
           crs,
           projectionName,
-          datum
+          datum,
+          rawBounds: boundsInfo.rawBounds,
+          sourceCRS: boundsInfo.sourceCRS,
+          tiepoint,
+          scale,
+          transform
         },
         custom: customMetadata
       },
@@ -244,7 +186,20 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
       }
     };
 
-    console.log('Final metadata:', metadata);
+    console.log('Final metadata:', {
+      dimensions: `${width}x${height}`,
+      bounds: boundsInfo.bounds,
+      sourceCRS: boundsInfo.sourceCRS,
+      stats: {
+        min,
+        max,
+        mean,
+        validCount,
+        noDataCount,
+        zeroCount
+      }
+    });
+
     return metadata;
   } catch (error) {
     console.error('GeoTIFF Metadata extraction failed:', error);

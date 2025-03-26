@@ -1,7 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import mapReducer from './slices/mapSlice';
 import uiReducer from './slices/uiSlice';
-import layersReducer from './slices/layersSlice';
+import layersReducer from './slices/layers';
 import settingsReducer from './slices/settingsSlice';
 import homeReducer from './slices/home';
 import firemetricsReducer from './slices/firemetrics';

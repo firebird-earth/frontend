@@ -1,16 +1,18 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { setCurrentAOI } from '../../store/slices/home/actions';
 import { showAOIPanel } from '../../store/slices/uiSlice';
+import SelectAOIDialog from '../aoi/SelectAOIDialog';
 
 const LocationMarkers: React.FC = () => {
   const map = useMap();
   const dispatch = useAppDispatch();
   const { current: currentAOI } = useAppSelector(state => state.home.aoi);
   const markerRef = useRef<L.Marker | null>(null);
+  const [showDialog, setShowDialog] = useState(false);
 
   useEffect(() => {
     // Clean up existing marker
@@ -49,6 +51,13 @@ const LocationMarkers: React.FC = () => {
         if (marker.getElement()) {
           marker.getElement()!.blur();
         }
+        
+        // Show dialog if no AOI is selected
+        if (!currentAOI) {
+          setShowDialog(true);
+          return;
+        }
+
         dispatch(setCurrentAOI(currentAOI));
         dispatch(showAOIPanel());
       });
@@ -65,7 +74,13 @@ const LocationMarkers: React.FC = () => {
     };
   }, [currentAOI, map, dispatch]);
 
-  return null;
+  return (
+    <>
+      {showDialog && (
+        <SelectAOIDialog onClose={() => setShowDialog(false)} />
+      )}
+    </>
+  );
 };
 
 export default LocationMarkers;

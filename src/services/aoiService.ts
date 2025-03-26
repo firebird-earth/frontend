@@ -5,7 +5,7 @@ import { setActiveLocation } from '../store/slices/mapSlice';
 import { setCurrentAOI } from '../store/slices/home/actions';
 import { showAOIPanel, toggleLegend } from '../store/slices/uiSlice';
 import { navigateToLocation } from '../utils/map';
-import { clearActiveLayers } from '../store/slices/layersSlice';
+import { clearActiveLayers } from '../store/slices/layers';
 
 class AOIService {
   private static instance: AOIService;

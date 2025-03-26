@@ -184,9 +184,8 @@ function findMinimumEnclosingCircle(points: [number, number][]): { center: [numb
           // Check if all previous points are inside this circle
           for (let k = 1; k < j; k++) {
             if (!isPointInCircle(shuffledPoints[k], circle)) {
-              // This shouldn't happen with three points defining the circle,
-              // but if it does, fall back to a simpler approach
-              circle = findApproximateMinimumEnclosingCircle(shuffledPoints);
+              // This shouldn't happen with three points defining the circle
+              circle = circleFrom2Points(shuffledPoints[0], shuffledPoints[1]);
               break;
             }
           }
@@ -196,30 +195,4 @@ function findMinimumEnclosingCircle(points: [number, number][]): { center: [numb
   }
   
   return circle;
-}
-
-// A simpler, approximate algorithm for finding the minimum enclosing circle
-function findApproximateMinimumEnclosingCircle(points: [number, number][]): { center: [number, number], radius: number } {
-  // Calculate the centroid
-  let sumLat = 0;
-  let sumLng = 0;
-  
-  for (const point of points) {
-    sumLat += point[0];
-    sumLng += point[1];
-  }
-  
-  const centerLat = sumLat / points.length;
-  const centerLng = sumLng / points.length;
-  const center: [number, number] = [centerLat, centerLng];
-  
-  // Find the farthest point from the centroid
-  let maxDistance = 0;
-  
-  for (const point of points) {
-    const dist = distance(center, point);
-    maxDistance = Math.max(maxDistance, dist);
-  }
-  
-  return { center, radius: maxDistance };
 }

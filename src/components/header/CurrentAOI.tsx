@@ -22,7 +22,7 @@ const CurrentAOI: React.FC = () => {
         
         <div className="flex items-center">
           <span className="text-sm font-medium truncate max-w-[224px] text-gray-700 dark:text-gray-300">
-            {currentAOI ? currentAOI.name : 'Select AOI'}
+            {currentAOI ? currentAOI.name : 'Select Location'}
           </span>
           <ChevronDown className="h-3.5 w-3.5 ml-1 text-gray-500 dark:text-gray-400" />
         </div>

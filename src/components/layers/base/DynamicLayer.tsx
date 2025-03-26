@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { buildServiceUrl } from '../../../services/maps';
+import * as EsriLeaflet from 'esri-leaflet';
 import { MapServiceConfig } from '../../../services/maps/types';
 
 interface DynamicLayerProps {
@@ -11,6 +11,9 @@ interface DynamicLayerProps {
   renderingRule: string;
   className?: string;
   onError?: (error: Error) => void;
+  onLayerCreate?: (layer: EsriLeaflet.ImageMapLayer) => void;
+  categoryId: string;
+  layerId: number;
 }
 
 const DynamicLayer: React.FC<DynamicLayerProps> = ({
@@ -19,181 +22,95 @@ const DynamicLayer: React.FC<DynamicLayerProps> = ({
   serviceConfig,
   renderingRule,
   className = 'dynamic-layer',
-  onError
+  onError,
+  onLayerCreate,
+  categoryId,
+  layerId
 }) => {
   const map = useMap();
-  const layerRef = useRef<L.ImageOverlay | null>(null);
-  const nextLayerRef = useRef<L.ImageOverlay | null>(null);
-  const updateTimeoutRef = useRef<number | null>(null);
-  const lastBoundsRef = useRef<string | null>(null);
-  const loadingRef = useRef<boolean>(false);
+  const layerRef = useRef<EsriLeaflet.ImageMapLayer | null>(null);
   const opacityRef = useRef<number>(opacity);
 
-  // Log layer lifecycle events
-  useEffect(() => {
-    console.log('DynamicLayer lifecycle event:', {
-      renderingRule,
-      active,
-      opacity,
-      hasExistingLayer: !!layerRef.current,
-      hasNextLayer: !!nextLayerRef.current,
-      timestamp: new Date().toISOString()
-    });
-  }, [active, opacity, renderingRule]);
-
-  // Handle opacity changes separately
-  useEffect(() => {
-    if (layerRef.current && opacityRef.current !== opacity) {
-      console.log('Updating layer opacity:', {
-        renderingRule,
-        from: opacityRef.current,
-        to: opacity
-      });
-      
-      layerRef.current.setOpacity(opacity);
-      opacityRef.current = opacity;
-    }
-  }, [opacity, renderingRule]);
-
+  // Create or update layer
   useEffect(() => {
     if (!active) {
-      console.log('Removing inactive layer:', {
-        renderingRule,
-        hadLayer: !!layerRef.current,
-        hadNextLayer: !!nextLayerRef.current
-      });
-
       if (layerRef.current) {
         map.removeLayer(layerRef.current);
         layerRef.current = null;
-      }
-      if (nextLayerRef.current) {
-        map.removeLayer(nextLayerRef.current);
-        nextLayerRef.current = null;
       }
       return;
     }
 
-    const updateLayer = async () => {
-      if (loadingRef.current) {
-        console.log('Layer update skipped - already loading:', renderingRule);
-        return;
-      }
-
-      const bounds = map.getBounds();
-      const paddedBounds = bounds.pad(0.1);
-
-      const boundsString = `${paddedBounds.toBBoxString()}-${map.getSize().x}-${map.getSize().y}-${renderingRule}`;
-      
-      if (boundsString === lastBoundsRef.current) {
-        console.log('Layer update skipped - bounds unchanged:', renderingRule);
-        return;
-      }
-      
-      console.log('Updating layer:', {
-        renderingRule,
-        bounds: boundsString,
-        previousBounds: lastBoundsRef.current
-      });
-
-      lastBoundsRef.current = boundsString;
-
-      if (updateTimeoutRef.current) {
-        window.clearTimeout(updateTimeoutRef.current);
-        updateTimeoutRef.current = null;
-      }
-
+    try {
+      // Parse the rendering rule if it's a string
+      let parsedRule: any;
       try {
-        loadingRef.current = true;
-        const size = map.getSize();
+        parsedRule = typeof renderingRule === 'string' ? 
+          JSON.parse(renderingRule) : renderingRule;
+      } catch (e) {
+        console.error('Failed to parse rendering rule:', e);
+        parsedRule = renderingRule;
+      }
 
-        const config = {
-          ...serviceConfig,
-          defaultParams: {
-            ...serviceConfig.defaultParams,
-            renderingRule: JSON.stringify({
-              rasterFunction: renderingRule
-            })
-          }
-        };
-
-        const url = buildServiceUrl(config, {
-          bounds: paddedBounds,
-          width: size.x,
-          height: size.y,
-          map
+      // Create new layer if it doesn't exist or if rendering rule changed
+      if (!layerRef.current || layerRef.current.options.renderingRule !== parsedRule) {
+        console.log('Creating new image layer:', {
+          url: serviceConfig.serviceUrl,
+          renderingRule: parsedRule
         });
 
-        const exactBounds = L.latLngBounds(
-          L.latLng(paddedBounds.getSouth(), paddedBounds.getWest()),
-          L.latLng(paddedBounds.getNorth(), paddedBounds.getEast())
-        );
-
-        console.log('Creating new layer:', {
-          renderingRule,
-          url: url.substring(0, 100) + '...',
-          bounds: exactBounds.toBBoxString()
-        });
-
-        const newLayer = L.imageOverlay(url, exactBounds, {
+        // Create the layer
+        const layer = EsriLeaflet.imageMapLayer({
+          url: serviceConfig.serviceUrl,
           opacity: opacity,
-          interactive: false,
-          className
+          useCors: false,
+          renderingRule: parsedRule,
+          format: 'png32',
+          f: 'json',
+          updateInterval: 300,
+          updateWhenIdle: true,
+          updateWhenZooming: false,
+          maxZoom: 22,
+          minZoom: 4,
+          attribution: null
         });
 
-        newLayer.addTo(map);
-        nextLayerRef.current = newLayer;
-
-        if (layerRef.current) {
-          console.log('Removing previous layer:', renderingRule);
-          map.removeLayer(layerRef.current);
-        }
-
-        layerRef.current = nextLayerRef.current;
-        nextLayerRef.current = null;
-
-      } catch (error) {
-        console.error('Error loading dynamic layer:', {
-          renderingRule,
-          error
+        // Add error handling
+        layer.on('error', (error: any) => {
+          console.error('Layer error:', error);
+          if (onError) {
+            onError(new Error(`Failed to load layer: ${error.error?.message || 'Unknown error'}`));
+          }
         });
-        if (onError) {
-          onError(error instanceof Error ? error : new Error('Failed to load layer'));
+
+        // Add to map
+        layer.addTo(map);
+        layerRef.current = layer;
+        opacityRef.current = opacity;
+
+        // Notify parent about layer creation
+        if (onLayerCreate) {
+          onLayerCreate(layer);
         }
-      } finally {
-        loadingRef.current = false;
+      } else if (opacityRef.current !== opacity) {
+        // Just update opacity if that's all that changed
+        layerRef.current.setOpacity(opacity);
+        opacityRef.current = opacity;
       }
-    };
-
-    updateLayer();
-
-    const handleMapChange = () => {
-      if (updateTimeoutRef.current) {
-        window.clearTimeout(updateTimeoutRef.current);
+    } catch (error) {
+      console.error('Failed to create/update layer:', error);
+      if (onError) {
+        onError(error instanceof Error ? error : new Error('Failed to create layer'));
       }
-      updateTimeoutRef.current = window.setTimeout(updateLayer, 250);
-    };
-
-    map.on('moveend', handleMapChange);
-    map.on('zoomend', handleMapChange);
+    }
 
     return () => {
-      console.log('Cleaning up layer:', renderingRule);
-      map.off('moveend', handleMapChange);
-      map.off('zoomend', handleMapChange);
-      if (updateTimeoutRef.current) {
-        window.clearTimeout(updateTimeoutRef.current);
-      }
       if (layerRef.current) {
         map.removeLayer(layerRef.current);
         layerRef.current = null;
       }
-      if (nextLayerRef.current) {
-        map.removeLayer(nextLayerRef.current);
-        nextLayerRef.current = null;
-      }
     };
-  }, [map, active, renderingRule, serviceConfig, className, onError, opacity]);
+  }, [map, active, serviceConfig, renderingRule, opacity, onError, onLayerCreate]);
 
   return null;
 };

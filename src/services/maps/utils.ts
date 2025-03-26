@@ -15,13 +15,6 @@ export function buildServiceUrl(service: MapServiceConfig, options: MapServiceOp
   // Get bounds in minx,miny,maxx,maxy format
   const bbox = `${sw.x},${sw.y},${ne.x},${ne.y}`;
 
-  console.log('Building service URL:', {
-    service: service.baseUrl,
-    bounds: bbox,
-    size: `${width},${height}`,
-    params: service.defaultParams
-  });
-
   // Combine default and custom params
   const params: MapServiceParams = {
     ...service.defaultParams,

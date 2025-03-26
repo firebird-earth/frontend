@@ -6,7 +6,7 @@ import { useAppSelector } from '../../hooks/useAppSelector';
 import { showAOIPanel, toggleLegend } from '../../store/slices/uiSlice';
 import { setCoordinates, clearAOI } from '../../store/slices/home/actions';
 import { clearActiveLocation } from '../../store/slices/mapSlice';
-import { clearActiveLayers } from '../../store/slices/layersSlice';
+import { clearActiveLayers } from '../../store/slices/layers';
 
 const MapClickHandler: React.FC = () => {
   const dispatch = useAppDispatch();

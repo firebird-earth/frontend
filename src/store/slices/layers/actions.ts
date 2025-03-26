@@ -4,7 +4,10 @@ import {
   SetLayerOpacityPayload,
   SetLayerBoundsPayload,
   SetLayerValueRangePayload,
-  InitializeLayerValueRangePayload
+  InitializeLayerValueRangePayload,
+  ToggleShowValuesPayload,
+  SetLayerMetadataPayload,
+  SetLayerLoadingPayload
 } from './types';
 
 // Layer actions
@@ -15,6 +18,9 @@ export const setLayerBounds = createAction<SetLayerBoundsPayload>('layers/setLay
 export const clearActiveLayers = createAction('layers/clearActiveLayers');
 export const setLayerValueRange = createAction<SetLayerValueRangePayload>('layers/setLayerValueRange');
 export const initializeLayerValueRange = createAction<InitializeLayerValueRangePayload>('layers/initializeLayerValueRange');
+export const toggleShowValues = createAction<ToggleShowValuesPayload>('layers/toggleShowValues');
+export const setLayerMetadata = createAction<SetLayerMetadataPayload>('layers/setLayerMetadata');
+export const setLayerLoading = createAction<SetLayerLoadingPayload>('layers/setLayerLoading');
 
 // Layer ordering actions
 export const bringLayerToFront = createAction<ToggleLayerPayload>('layers/bringLayerToFront');

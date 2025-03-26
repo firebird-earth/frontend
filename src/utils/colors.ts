@@ -14,6 +14,53 @@ export interface ColorScheme {
 }
 
 /**
+ * Convert a hex color to RGB components
+ * @param hex The hex color string (e.g., "#ff0000")
+ * @returns An object with r, g, b components (0-255)
+ */
+export function hexToRgb(hex: string | undefined): { r: number, g: number, b: number } {
+  // Handle undefined or invalid input
+  if (!hex) {
+    console.warn('Invalid hex color value:', hex);
+    return { r: 0, g: 0, b: 0 };
+  }
+
+  // Remove # if present
+  const cleanHex = hex.startsWith('#') ? hex.slice(1) : hex;
+
+  // Validate hex format
+  if (!/^[0-9A-Fa-f]{6}$/.test(cleanHex)) {
+    console.warn('Invalid hex color format:', hex);
+    return { r: 0, g: 0, b: 0 };
+  }
+  
+  try {
+    // Parse the hex values
+    const r = parseInt(cleanHex.substring(0, 2), 16);
+    const g = parseInt(cleanHex.substring(2, 4), 16);
+    const b = parseInt(cleanHex.substring(4, 6), 16);
+
+    // Validate parsed values
+    if (isNaN(r) || isNaN(g) || isNaN(b)) {
+      throw new Error('Failed to parse hex color components');
+    }
+    
+    return { r, g, b };
+  } catch (error) {
+    console.warn('Error parsing hex color:', error);
+    return { r: 0, g: 0, b: 0 };
+  }
+}
+
+// GeoTIFF specific colors
+export const GeoTiffNoDataColor = { 
+  r: 0,    // Red: 0
+  g: 0,    // Green: 0 
+  b: 0,    // Blue: 0
+  a: 0     // Alpha: 0 (completely transparent)
+}; // Transparent - will show background
+
+/**
  * Collection of color schemes
  */
 export const colorSchemes: Record<string, ColorScheme> = {
@@ -192,17 +239,18 @@ export const colorSchemes: Record<string, ColorScheme> = {
     name: 'slopeGradient',
     displayName: 'Slope Gradient',
     description: 'Green (flat) to red (steep) gradient for slope visualization',
-    buckets: 9,
+    buckets: 10,
     colors: [
-      '#2ecc71', // Flat (green)
-      '#52be80',
-      '#76b08f',
-      '#9aa29e',
-      '#beb4ad',
-      '#e2c6bc',
-      '#f5b7b1',
-      '#ec7063',
-      '#e74c3c'  // Steep (red)
+      "#D0D0D0", // Flat (0-5°)
+      "#F1E9C6",
+      "#F5D73F",
+      "#F8C129",
+      "#F79E19", // Moderate (20-25°)
+      "#F77516",
+      "#F44911",
+      "#E91C0A",
+      "#E30F05", // Steep (40-45°)
+      "#9E0000"
     ],
     type: 'sequential',
     domain: [0, 45]  // 0 to 45 degrees
@@ -252,23 +300,6 @@ export function getColorForValue(scheme: ColorScheme, value: number): string {
   const normalizedValue = (value - min) / (max - min);
   
   return getColorFromScheme(scheme, normalizedValue);
-}
-
-/**
- * Convert a hex color to RGB components
- * @param hex The hex color string (e.g., "#ff0000")
- * @returns An object with r, g, b components (0-255)
- */
-export function hexToRgb(hex: string): { r: number, g: number, b: number } {
-  // Remove # if present
-  const cleanHex = hex.startsWith('#') ? hex.slice(1) : hex;
-  
-  // Parse the hex values
-  const r = parseInt(cleanHex.substring(0, 2), 16);
-  const g = parseInt(cleanHex.substring(2, 4), 16);
-  const b = parseInt(cleanHex.substring(4, 6), 16);
-  
-  return { r, g, b };
 }
 
 /**

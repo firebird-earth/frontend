@@ -1,12 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { MapPin, Plus, Navigation } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { MapPin, Plus, Navigation, MapPinOff } from 'lucide-react';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { setCurrentAOI } from '../../store/slices/home/actions';
 import { startCreatingAOI } from '../../store/slices/uiSlice';
 import { useAOI } from '../../hooks/useAOI';
 import { navigateToLocation } from '../../utils/map';
-import locations from '../../constants/locations';
+import locations from '../../constants/places/locations';
 
 interface AOISelectorProps {
   onClose: () => void;
@@ -48,6 +48,18 @@ const AOISelector: React.FC<AOISelectorProps> = ({ onClose }) => {
     dispatch(startCreatingAOI());
     onClose();
   };
+
+  const handleAOIClick = (aoi: any) => {
+    if (aoi && aoi.location?.center) {
+      dispatch(setCurrentAOI(aoi));
+      navigateToLocation({
+        id: parseInt(aoi.id),
+        name: aoi.name,
+        coordinates: aoi.location.center
+      });
+      onClose();
+    }
+  };
   
   const isActive = (id: number | string) => {
     if (!currentAOI) return false;
@@ -82,52 +94,52 @@ const AOISelector: React.FC<AOISelectorProps> = ({ onClose }) => {
               <Navigation className={`h-4 w-4 ${isActive(location.id) ? 'text-blue-500 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
               <span className="text-sm">{location.name}</span>
             </div>
-            {isActive(location.id) && (
+            {isActive(location.id) ? (
               <MapPin className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+            ) : (
+              <MapPinOff className="h-4 w-4" />
             )}
           </button>
         ))}
 
-        {aois.length > 0 && (
-          <>
-            <div className="my-2 border-t dark:border-gray-700"></div>
-            <div className="mb-2 px-2 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
-              Your AOIs
+        {aois.map(aoi => (
+          <div
+            key={aoi.id}
+            onClick={() => handleAOIClick(aoi)}
+            className={`
+              flex items-center justify-between p-1 rounded-lg cursor-pointer
+              ${isActive(aoi.id)
+                ? 'bg-blue-50 dark:bg-blue-900/20' 
+                : 'hover:bg-gray-50 dark:hover:bg-gray-700'
+              }
+            `}
+          >
+            <div className="flex items-center space-x-2">
+              <Navigation className={`h-4 w-4 ${isActive(aoi.id) ? 'text-blue-500 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
+              <span className={`text-sm ${isActive(aoi.id) ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
+                {aoi.name}
+              </span>
             </div>
-            
-            {aois.map(aoi => (
-              <button
-                key={aoi.id}
-                onClick={() => handleSelectLocation(aoi)}
-                className={`
-                  w-full flex items-center justify-between px-3 py-2 rounded-md text-left
-                  ${isActive(aoi.id)
-                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}
-                `}
-              >
-                <div className="flex items-center space-x-2">
-                  <Navigation className={`h-4 w-4 ${isActive(aoi.id) ? 'text-blue-500 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
-                  <span className="text-sm truncate max-w-[224px]">{aoi.name}</span>
-                </div>
-                {isActive(aoi.id) && (
-                  <MapPin className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-                )}
-              </button>
-            ))}
-          </>
-        )}
-        
-        <div className="my-2 border-t dark:border-gray-700"></div>
-        
-        <button
-          onClick={handleCreateAOI}
-          className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md text-left"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Create New AOI</span>
-        </button>
+            <div className="text-gray-400 dark:text-gray-500">
+              {isActive(aoi.id) ? (
+                <MapPin className="h-4 w-4 text-blue-500 dark:text-blue-400" />
+              ) : (
+                <MapPinOff className="h-4 w-4" />
+              )}
+            </div>
+          </div>
+        ))}
       </div>
+
+      <div className="my-2 border-t dark:border-gray-700"></div>
+      
+      <button
+        onClick={handleCreateAOI}
+        className="w-full flex items-center space-x-2 px-3 py-2 text-sm text-blue-600 dark:text-blue-400 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md text-left"
+      >
+        <Plus className="h-4 w-4" />
+        <span>Create New AOI</span>
+      </button>
     </div>
   );
 };

@@ -62,20 +62,20 @@ const App: React.FC = () => {
             <div className="flex items-center space-x-3">
               <button 
                 onClick={() => dispatch(toggleNav())}
-                className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 dark:text-white"
+                className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg dark:text-white"
               >
                 <Menu className="h-5 w-5" />
               </button>
               <button 
                 onClick={handleLogoClick}
-                className="focus:outline-none"
+                className="focus:outline-none mt-1"
               >
                 <img 
                   src={firebirdLogo}
                   alt="Firebird"
-                  width="120"
-                  height="24"
-                  className="h-6 w-[120px] object-contain"
+                  width="102"
+                  height="20"
+                  className="h-5 w-[102px] object-contain"
                 />
               </button>
             </div>

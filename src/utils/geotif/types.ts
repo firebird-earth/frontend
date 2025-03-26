@@ -9,20 +9,6 @@ export interface BufferCircleResult {
   };
 }
 
-export interface GeoTiffSummary {
-  width: number;
-  height: number;
-  data: Float32Array | Uint16Array | Uint8Array;
-  min: number;
-  max: number;
-  mean: number;
-  noDataValue: number | null;
-  latMin: number;
-  latMax: number;
-  lonMin: number;
-  lonMax: number;
-}
-
 export interface GeoTiffMetadata {
   metadata: {
     standard: {
@@ -46,6 +32,13 @@ export interface GeoTiffMetadata {
       crs: string;
       projectionName: string;
       datum: string;
+      rawBounds?: [number, number, number, number]; // [minX, minY, maxX, maxY] in source CRS
+      data?: Int16Array | Float32Array;
+      bounds?: L.LatLngBounds;
+      sourceCRS?: string;
+      tiepoint?: number[];
+      scale?: number[];
+      transform?: number[];
     };
     custom: {
       units?: string;

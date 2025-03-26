@@ -34,12 +34,14 @@ const LayerItem: React.FC<LayerItemProps> = ({
         {name}
       </span>
     </div>
-    <button 
-      onClick={onEyeClick}
-      className={`${active ? 'text-blue-500 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'} hover:text-gray-600 dark:hover:text-gray-300`}
-    >
-      {active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-    </button>
+    <div className="flex items-center pr-1">
+      <button 
+        onClick={onEyeClick}
+        className={`${active ? 'text-blue-500 dark:text-blue-400' : 'text-gray-400 dark:text-gray-500'} hover:text-gray-600 dark:hover:text-gray-300`}
+      >
+        {active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+      </button>
+    </div>
   </div>
 );
 

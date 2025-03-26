@@ -7,7 +7,7 @@ import { useAOI } from '../../hooks/useAOI';
 
 const ViewAOIPanel: React.FC = () => {
   const dispatch = useAppDispatch();
-  const { currentAOI } = useAppSelector(state => state.aoi);
+  const { current: currentAOI } = useAppSelector(state => state.home.aoi);
   const showPanel = useAppSelector(state => state.ui.showAOIPanel);
   const { updateAOI, deleteAOI } = useAOI();
   

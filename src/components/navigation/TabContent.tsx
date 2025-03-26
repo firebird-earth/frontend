@@ -22,9 +22,14 @@ const TabButton: React.FC<TabButtonProps> = ({ icon: Icon, label, isActive, onCl
   >
     <div className="flex items-center justify-center">
       <Icon className="h-4 w-4" />
-      <span className="absolute bottom-full mb-2 hidden group-hover:block bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
-        {label}
-      </span>
+      <div className="absolute left-1/2 -translate-x-1/2 top-full mt-1 pointer-events-none">
+        <div className="hidden group-hover:block relative">
+          <div className="absolute left-1/2 -translate-x-1/2 top-0 w-2 h-2 bg-gray-800 transform rotate-45 -translate-y-1"></div>
+          <div className="bg-gray-800 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+            {label}
+          </div>
+        </div>
+      </div>
     </div>
   </button>
 );
@@ -34,25 +39,27 @@ const TabContent: React.FC = () => {
   const activeTab = useAppSelector(state => state.ui.activeTab);
 
   return (
-    <div className="flex border-t dark:border-gray-700 mt-auto">
-      <TabButton
-        icon={Home}
-        label="Home"
-        isActive={activeTab === 'home'}
-        onClick={() => dispatch(setActiveTab('home'))}
-      />
-      <TabButton
-        icon={Flame}
-        label="Fire Metrics"
-        isActive={activeTab === 'firemetrics'}
-        onClick={() => dispatch(setActiveTab('firemetrics'))}
-      />
-      <TabButton
-        icon={Layers}
-        label="Layers"
-        isActive={activeTab === 'layers'}
-        onClick={() => dispatch(setActiveTab('layers'))}
-      />
+    <div className="border-b border-gray-200 dark:border-gray-700">
+      <div className="flex">
+        <TabButton
+          icon={Home}
+          label="Home"
+          isActive={activeTab === 'home'}
+          onClick={() => dispatch(setActiveTab('home'))}
+        />
+        <TabButton
+          icon={Flame}
+          label="Wildfire Risk"
+          isActive={activeTab === 'firemetrics'}
+          onClick={() => dispatch(setActiveTab('firemetrics'))}
+        />
+        <TabButton
+          icon={Layers}
+          label="Layers"
+          isActive={activeTab === 'layers'}
+          onClick={() => dispatch(setActiveTab('layers'))}
+        />
+      </div>
     </div>
   );
 };

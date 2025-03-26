@@ -11,22 +11,26 @@ const Navigation: React.FC = () => {
   return (
     <div className={`bg-white dark:bg-gray-800 border-r dark:border-gray-700 h-full flex flex-col relative z-[900] ${isNavOpen ? 'w-64' : 'w-0'}`}>
       <div className={`h-full flex flex-col ${isNavOpen ? '' : 'hidden'}`}>
+        {/* Fixed tab bar at top with overflow visible for tooltips */}
+        <div className="overflow-visible">
+          <TabContent />
+        </div>
+
+        {/* Scrollable content area */}
         <div className="flex-1 overflow-hidden">
           <div className="h-full flex flex-col">
-            {/* Scrollable content area */}
-            <div className="flex-1 overflow-y-auto p-4">
-              {activeTab === 'home' && <HomeTab />}
-              {activeTab === 'layers' && <LayersTab />}
-              {activeTab === 'firemetrics' && <FireMetricsTab />}
+            <div className="flex-1 overflow-y-auto">
+              <div className="px-4 py-4 pr-2">
+                {activeTab === 'home' && <HomeTab />}
+                {activeTab === 'layers' && <LayersTab />}
+                {activeTab === 'firemetrics' && <FireMetricsTab />}
+              </div>
             </div>
-
-            {/* Fixed tab bar at bottom */}
-            <TabContent />
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default Navigation;

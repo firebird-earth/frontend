@@ -19,10 +19,11 @@ export function useDraggable({
   const [position, setPosition] = useState<Position>(initialPosition || { x: 0, y: 0 });
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const dragStartRef = useRef<Position | null>(null);
+  const initializedRef = useRef(false);
 
   // Initialize position
   useEffect(() => {
-    if (!dialogRef.current) return;
+    if (!dialogRef.current || initializedRef.current) return;
 
     const dialog = dialogRef.current;
     const rect = dialog.getBoundingClientRect();
@@ -31,17 +32,23 @@ export function useDraggable({
       height: window.innerHeight
     };
 
+    // Set initial position based on corner preference
+    let initialX: number;
+    let initialY: number;
+
     if (initialCorner === 'bottom-right') {
-      setPosition({
-        x: viewport.width - rect.width - padding,
-        y: viewport.height - rect.height - padding
-      });
+      initialX = viewport.width - rect.width - padding;
+      initialY = viewport.height - rect.height - padding;
     } else {
-      setPosition({
-        x: (viewport.width - rect.width) / 2,
-        y: (viewport.height - rect.height) / 2
-      });
+      initialX = (viewport.width - rect.width) / 2;
+      initialY = (viewport.height - rect.height) / 2;
     }
+
+    // Set position immediately
+    dialog.style.left = `${initialX}px`;
+    dialog.style.top = `${initialY}px`;
+    setPosition({ x: initialX, y: initialY });
+    initializedRef.current = true;
   }, [padding, initialCorner]);
 
   // Handle drag start

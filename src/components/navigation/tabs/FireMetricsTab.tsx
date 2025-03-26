@@ -4,7 +4,7 @@ import SectionHeader from '../SectionHeader';
 import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { useAppSelector } from '../../../hooks/useAppSelector';
 import { toggleSection } from '../../../store/slices/uiSlice';
-import { toggleLayer, toggleSingleLayer } from '../../../store/slices/layersSlice';
+import { toggleLayer, toggleSingleLayer } from '../../../store/slices/layers';
 import SelectAOIDialog from '../../aoi/SelectAOIDialog';
 
 const FireMetricsTab: React.FC = () => {
@@ -13,6 +13,7 @@ const FireMetricsTab: React.FC = () => {
   const firemetricLayers = useAppSelector(state => state.layers.categories.firemetrics?.layers || []);
   const fuelLayers = useAppSelector(state => state.layers.categories.fuels?.layers || []);
   const valueAtRiskLayers = useAppSelector(state => state.layers.categories.valueAtRisk?.layers || []);
+  const landscapeRiskLayers = useAppSelector(state => state.layers.categories.landscapeRisk?.layers || []);
   const currentAOI = useAppSelector(state => state.home.aoi.current);
   const [showDialog, setShowDialog] = useState(false);
 
@@ -20,49 +21,24 @@ const FireMetricsTab: React.FC = () => {
   const handleLayerClick = (categoryId: string, layerId: number) => {
     // Check if an AOI is selected
     if (!currentAOI) {
-      // Show the dialog instead of an alert
       setShowDialog(true);
       return;
     }
     
-    // Get the current layer to check if it's already active
-    const category = categoryId === 'firemetrics' 
-      ? firemetricLayers 
-      : categoryId === 'fuels' 
-        ? fuelLayers 
-        : valueAtRiskLayers;
-    
-    const layer = category.find(l => l.id === layerId);
-    
-    // If the layer is already active and it's the only active one, do nothing
-    // This prevents the flashing effect when clicking on an already active layer
-    if (layer && layer.active) {
-      // Check if this is the only active layer in firemetrics and fuels categories
-      const activeFiremetricsCount = firemetricLayers.filter(l => l.active).length;
-      const activeFuelsCount = fuelLayers.filter(l => l.active).length;
-      
-      if (activeFiremetricsCount + activeFuelsCount === 1) {
-        // This is the only active layer, so don't toggle it off
-        return;
-      }
-    }
-    
-    // Use toggleSingleLayer to make it exclusive (turn off other layers)
+    // Use toggleSingleLayer for exclusive behavior
     dispatch(toggleSingleLayer({ categoryId, layerId }));
   };
 
   // Handle click on the eye icon - non-exclusive behavior
   const handleEyeClick = (e: React.MouseEvent, categoryId: string, layerId: number) => {
-    e.stopPropagation(); // Prevent the parent onClick from firing
+    e.stopPropagation();
     
-    // Check if an AOI is selected
     if (!currentAOI) {
-      // Show the dialog instead of an alert
       setShowDialog(true);
       return;
     }
     
-    // Use toggleLayer to make it non-exclusive (keep other layers on)
+    // Use toggleLayer for non-exclusive behavior
     dispatch(toggleLayer({ categoryId, layerId }));
   };
 
@@ -142,22 +118,6 @@ const FireMetricsTab: React.FC = () => {
     );
   };
 
-  // Placeholder layers for Value At Risk section
-  const valueAtRiskItems = [
-    { id: 1, name: 'Firesheds', active: false },
-    { id: 2, name: 'Structure Burn Frequency', active: false },
-    { id: 3, name: 'Structure Burn Hazard', active: false },
-    { id: 4, name: 'Structure Burn Influence', active: false }
-  ];
-
-  // Placeholder layers for additional Landscape Risk items
-  const additionalLandscapeRiskItems = [
-    { id: 100, name: 'Fire Intensity', active: false },
-    { id: 101, name: 'Suppression Difficulty', active: false },
-    { id: 102, name: 'Transmission Index', active: false },
-    { id: 103, name: 'Transmission Influence', active: false }
-  ];
-
   return (
     <div className="space-y-3">
       {/* Value At Risk Section */}
@@ -169,7 +129,7 @@ const FireMetricsTab: React.FC = () => {
         />
         {sections.valueAtRisk && (
           <div className="space-y-1">
-            {valueAtRiskItems.map(item => renderLayerItem(item, 'valueAtRisk'))}
+            {valueAtRiskLayers.map(layer => renderLayerItem(layer, 'valueAtRisk'))}
           </div>
         )}
       </div>
@@ -184,7 +144,7 @@ const FireMetricsTab: React.FC = () => {
         {sections.landscapeRisk && (
           <div className="space-y-1">
             {firemetricLayers.map(layer => renderLayerItem(layer, 'firemetrics'))}
-            {additionalLandscapeRiskItems.map(item => renderLayerItem(item, 'firemetrics'))}
+            {landscapeRiskLayers.map(layer => renderLayerItem(layer, 'landscapeRisk'))}
           </div>
         )}
       </div>

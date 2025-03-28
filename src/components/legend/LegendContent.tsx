@@ -78,7 +78,10 @@ const LegendContent: React.FC<LegendContentProps> = ({
               <h4 className="text-sm font-semibold text-gray-800">{layer.name}</h4>
               <div className="relative">
                 <button
-                  onClick={(e) => onMenuClick(e, categoryId, layer.id)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMenuClick(e, categoryId, layer.id);
+                  }}
                   className="p-1 hover:bg-gray-100 rounded-lg text-gray-600"
                   title="More options"
                 >

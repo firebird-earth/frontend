@@ -9,6 +9,7 @@ interface UIState {
   isCreatingAOI: boolean;
   showAOIPanel: boolean;
   sections: { [key: string]: boolean };
+  isCancellingTooltip: boolean;
 }
 
 const initialState: UIState = {
@@ -20,14 +21,14 @@ const initialState: UIState = {
   isCreatingAOI: false,
   showAOIPanel: false,
   sections: {
-    aois: true, // Locations section open by default
+    aois: true,
     treatments: false,
     scenarios: false,
     basemaps: false,
     jurisdictions: false,
     wildfire: false,
     elevation: false,
-    valueAtRisk: true, // FireMetrics sections open by default
+    valueAtRisk: true,
     landscapeRisk: true,
     fuels: true,
     landscape: false,
@@ -37,6 +38,7 @@ const initialState: UIState = {
     restorationClass: false,
     habitat: false
   },
+  isCancellingTooltip: false
 };
 
 const uiSlice = createSlice({
@@ -50,7 +52,6 @@ const uiSlice = createSlice({
       state.isNavOpen = !state.isNavOpen;
     },
     toggleLegend: (state, action?: PayloadAction<boolean>) => {
-      // If a specific value is provided, use it; otherwise toggle
       if (action?.payload !== undefined) {
         state.isLegendOpen = action.payload;
       } else {
@@ -79,6 +80,9 @@ const uiSlice = createSlice({
     },
     hideAOIPanel: (state) => {
       state.showAOIPanel = false;
+    },
+    setIsCancellingTooltip: (state, action: PayloadAction<boolean>) => {
+      state.isCancellingTooltip = action.payload;
     }
   },
 });
@@ -93,7 +97,8 @@ export const {
   startCreatingAOI,
   stopCreatingAOI,
   showAOIPanel,
-  hideAOIPanel
+  hideAOIPanel,
+  setIsCancellingTooltip
 } = uiSlice.actions;
 
 export default uiSlice.reducer;

@@ -80,15 +80,15 @@ export const layersReducer = createReducer(initialState, (builder) => {
       const { categoryId, layerId, min, max } = action.payload;
       handleValueRange(state, categoryId, layerId, min, max, true);
     })
-    .addCase(actions.toggleShowValues, (state, action) => {
-      const { categoryId, layerId } = action.payload;
+    .addCase(actions.setShowMapValues, (state, action) => {
+      const { categoryId, layerId, showValues } = action.payload;
       const category = state.categories[categoryId];
       if (!category) return;
 
       const layer = category.layers.find(l => l.id === layerId);
       if (!layer) return;
 
-      layer.showValues = !layer.showValues;
+      layer.showValues = showValues;
 
       // Turn off showValues for all other layers
       Object.values(state.categories).forEach(cat => {

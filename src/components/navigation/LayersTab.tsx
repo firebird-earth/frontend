@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { MapIcon, LandPlot, Mountain, AtSign as RoadSign, Waves, Droplets, Factory, Leaf, Bird, Shield, Workflow, Flame, Plus, Building, Eye, EyeOff } from 'lucide-react';
-import SectionHeader from '../SectionHeader';
-import { useAppDispatch } from '../../../hooks/useAppDispatch';
-import { useAppSelector } from '../../../hooks/useAppSelector';
-import { toggleSection } from '../../../store/slices/uiSlice';
-import { toggleLayer, toggleSingleLayer } from '../../../store/slices/layers';
-import SelectAOIDialog from '../../aoi/SelectAOIDialog';
+import SectionHeader from './SectionHeader';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { useAppSelector } from '../../hooks/useAppSelector';
+import { toggleSection } from '../../store/slices/uiSlice';
+import { toggleLayer, toggleSingleLayer } from '../../store/slices/layers';
+import SelectAOIDialog from '../aoi/SelectAOIDialog';
 
 const LayersTab: React.FC = () => {
   const dispatch = useAppDispatch();

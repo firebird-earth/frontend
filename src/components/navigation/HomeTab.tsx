@@ -1,14 +1,14 @@
 import React from 'react';
 import { Navigation as NavigationIcon, Activity, MapPin, MapPinOff, Zap } from 'lucide-react';
-import SectionHeader from '../SectionHeader';
-import { Location } from '../../../types/map';
-import { useAppDispatch } from '../../../hooks/useAppDispatch';
-import { useAppSelector } from '../../../hooks/useAppSelector';
-import { toggleSection, startCreatingAOI } from '../../../store/slices/uiSlice';
-import { setCurrentAOI } from '../../../store/slices/home/actions';
-import { navigateToLocation } from '../../../utils/map';
-import { useAOI } from '../../../hooks/useAOI';
-import locations from '../../../constants/places/locations';
+import SectionHeader from './SectionHeader';
+import { Location } from '../../types/map';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { useAppSelector } from '../../hooks/useAppSelector';
+import { toggleSection, startCreatingAOI } from '../../store/slices/uiSlice';
+import { setCurrentAOI } from '../../store/slices/home/actions';
+import { navigateToLocation } from '../../utils/map';
+import { useAOI } from '../../hooks/useAOI';
+import locations from '../../constants/places/locations';
 
 const HomeTab: React.FC = () => {
   const dispatch = useAppDispatch();

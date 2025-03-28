@@ -5,7 +5,7 @@ import {
   SetLayerBoundsPayload,
   SetLayerValueRangePayload,
   InitializeLayerValueRangePayload,
-  ToggleShowValuesPayload,
+  SetShowMapValuesPayload,
   SetLayerMetadataPayload,
   SetLayerLoadingPayload
 } from './types';
@@ -18,7 +18,7 @@ export const setLayerBounds = createAction<SetLayerBoundsPayload>('layers/setLay
 export const clearActiveLayers = createAction('layers/clearActiveLayers');
 export const setLayerValueRange = createAction<SetLayerValueRangePayload>('layers/setLayerValueRange');
 export const initializeLayerValueRange = createAction<InitializeLayerValueRangePayload>('layers/initializeLayerValueRange');
-export const toggleShowValues = createAction<ToggleShowValuesPayload>('layers/toggleShowValues');
+export const setShowMapValues = createAction<SetShowMapValuesPayload>('layers/setShowMapValues');
 export const setLayerMetadata = createAction<SetLayerMetadataPayload>('layers/setLayerMetadata');
 export const setLayerLoading = createAction<SetLayerLoadingPayload>('layers/setLayerLoading');
 

@@ -42,18 +42,19 @@ const DynamicLayer: React.FC<DynamicLayerProps> = ({
     }
 
     try {
-      // Parse the rendering rule if it's a string
-      let parsedRule: any;
-      try {
-        parsedRule = typeof renderingRule === 'string' ? 
-          JSON.parse(renderingRule) : renderingRule;
-      } catch (e) {
-        console.error('Failed to parse rendering rule:', e);
-        parsedRule = renderingRule;
+      // Parse the rendering rule if it's a non-empty string
+      let parsedRule: any = {};
+      if (renderingRule && renderingRule.trim()) {
+        try {
+          parsedRule = typeof renderingRule === 'string' ? 
+            JSON.parse(renderingRule) : renderingRule;
+        } catch (e) {
+          console.error('Failed to parse rendering rule:', e);
+        }
       }
 
       // Create new layer if it doesn't exist or if rendering rule changed
-      if (!layerRef.current || layerRef.current.options.renderingRule !== parsedRule) {
+      if (!layerRef.current || JSON.stringify(layerRef.current.options.renderingRule) !== JSON.stringify(parsedRule)) {
         console.log('Creating new image layer:', {
           url: serviceConfig.serviceUrl,
           renderingRule: parsedRule

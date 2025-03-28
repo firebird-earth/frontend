@@ -31,6 +31,7 @@ export const CrisisAreasLayer = createFeatureLayer('wildfire', WILDFIRE.CRISIS_A
 export const WUILayer = createTileLayer('wildfire', WILDFIRE.WUI);
 
 // Dynamic Layers (Elevation)
+export const ElevationLayer = createDynamicLayer('elevation', ELEVATION.ELEVATION);
 export const HillshadeLayer = createDynamicLayer('elevation', ELEVATION.HILLSHADE);
 export const AspectLayer = createDynamicLayer('elevation', ELEVATION.ASPECT);
 export const SlopeLayer = createDynamicLayer('elevation', ELEVATION.SLOPE);

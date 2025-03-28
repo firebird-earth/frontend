@@ -4,7 +4,6 @@ import { LayerType } from '../../../types/map';
 import { ELEVATION_SERVICE } from '../../../services/maps/services';
 import { getGradientForScheme, getColorScheme } from '../../../utils/colors';
 import ArcGISTiffLayer from './ArcGISTiffLayer';
-import ValueTooltipControl from '../../controls/ValueTooltipControl';
 
 interface LayerConfig {
   name: string;
@@ -14,6 +13,7 @@ interface LayerConfig {
   renderingRule: string;
   units: string;
   colorScheme?: string;
+  order?: number;
 }
 
 interface ArcGISDynamicLayerProps {
@@ -82,54 +82,34 @@ const ArcGISDynamicLayer: React.FC<ArcGISDynamicLayerProps> = ({
     return layer?.opacity ?? 1.0;
   });
 
-  const showValues = useAppSelector(state => {
-    const category = state.layers.categories[categoryId];
-    if (!category) return false;
-    const layer = category.layers.find(l => l.name === layerName);
-    return layer?.showValues ?? false;
-  });
-
-  const layerId = layerName === 'Slope Steepness' ? 1 : 
-                 layerName === 'Aspect' ? 2 : 
-                 layerName === 'Hillshade' ? 3 : 4;
-
-  // Get color scheme based on layer type
-  const colorScheme = layerName === 'Slope Steepness' ? 'slopeGradient' :
-                     layerName === 'Aspect' ? 'redBlue' :
-                     'greenYellowRed';
-
-  // Get metadata for the layer
-  const metadata = useAppSelector(state => {
+  // Get layer configuration from state
+  const layer = useAppSelector(state => {
     const category = state.layers.categories[categoryId];
     if (!category) return null;
-    const layer = category.layers.find(l => l.name === layerName);
-    return layer?.metadata;
+    return category.layers.find(l => l.name === layerName);
   });
 
-  return (
-    <>
-      <ArcGISTiffLayer
-        active={active}
-        opacity={opacity}
-        serviceConfig={ELEVATION_SERVICE}
-        renderingRule={renderingRule}
-        colorScheme={colorScheme}
-        categoryId={categoryId}
-        layerId={layerId}
-      />
+  if (!layer) {
+    console.warn(`Layer not found: ${layerName} in category ${categoryId}`);
+    return null;
+  }
 
-      {showValues && active && (
-        <ValueTooltipControl
-          categoryId={categoryId}
-          layerId={layerId}
-          layer={{
-            name: layerName,
-            type: LayerType.ArcGISImageService,
-            metadata: metadata || {}
-          }}
-        />
-      )}
-    </>
+  // Use the layer's order property
+  const layerId = layer.order || 1;
+
+  // Get color scheme from layer configuration, fallback to greenYellowRed if none specified
+  const colorScheme = layer.colorScheme || 'greenYellowRed';
+
+  return (
+    <ArcGISTiffLayer
+      active={active}
+      opacity={opacity}
+      serviceConfig={ELEVATION_SERVICE}
+      renderingRule={renderingRule}
+      colorScheme={colorScheme}
+      categoryId={categoryId}
+      layerId={layerId}
+    />
   );
 };
 

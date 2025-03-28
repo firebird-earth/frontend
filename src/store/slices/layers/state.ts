@@ -4,6 +4,7 @@ import { TILE_LAYERS, WUI_LAYER, CRISIS_AREAS_LAYER, GEOTIFF_LAYERS } from '../.
 import { createInitialCategory } from '../common/utils/utils';
 import { JURISDICTIONS } from '../../../constants/maps/layers/jurisdictions';
 import { WILDFIRE } from '../../../constants/maps/layers/wildfire';
+import { ELEVATION } from '../../../constants/maps/layers/elevation';
 
 export const initialState: LayersState = {
   categories: {
@@ -33,10 +34,11 @@ export const initialState: LayersState = {
       { name: 'Priority Treatment Areas', type: LayerType.Vector }
     ]),
     elevation: createInitialCategory('elevation', 'Elevation', [
-      { name: 'Slope Steepness', type: LayerType.ArcGISImageService, source: 'slope', renderingRule: 'Slope Map' },
-      { name: 'Aspect', type: LayerType.ArcGISImageService, source: 'slope', renderingRule: 'Aspect Degrees' },
-      { name: 'Hillshade', type: LayerType.ArcGISImageService, source: 'slope', renderingRule: 'Hillshade Gray' },
-      { name: 'Contour', type: LayerType.ArcGISImageService, source: 'slope', renderingRule: 'Contour' }
+      { name: ELEVATION.ELEVATION.name, type: LayerType.ArcGISImageService, source: ELEVATION.ELEVATION.source, renderingRule: ELEVATION.ELEVATION.renderingRule, order: 1 },
+      { name: ELEVATION.SLOPE.name, type: LayerType.ArcGISImageService, source: ELEVATION.SLOPE.source, renderingRule: ELEVATION.SLOPE.renderingRule, order: 2 },
+      { name: ELEVATION.ASPECT.name, type: LayerType.ArcGISImageService, source: ELEVATION.ASPECT.source, renderingRule: ELEVATION.ASPECT.renderingRule, order: 3 },
+      { name: ELEVATION.HILLSHADE.name, type: LayerType.ArcGISImageService, source: ELEVATION.HILLSHADE.source, renderingRule: ELEVATION.HILLSHADE.renderingRule, order: 4 },
+      { name: ELEVATION.CONTOUR.name, type: LayerType.ArcGISImageService, source: ELEVATION.CONTOUR.source, renderingRule: ELEVATION.CONTOUR.renderingRule, order: 5 }
     ]),
     valueAtRisk: createInitialCategory('valueAtRisk', 'Value At Risk', [
       { name: 'Firesheds', type: LayerType.Vector },

@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
+import * as GeoTIFF from 'geotiff';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { useAppSelector } from '../../../hooks/useAppSelector';
@@ -8,9 +9,7 @@ import { setLayerBounds, initializeLayerValueRange, setLayerMetadata, setLayerLo
 import { getColorScheme, getColorFromScheme, hexToRgb, GeoTiffNoDataColor } from '../../../utils/colors';
 import { validateTiff } from '../../../utils/tiff';
 import { MapServiceConfig } from '../../../services/maps/types';
-import * as GeoTIFF from 'geotiff';
-import ValueTooltipTiffControl from '../../controls/ValueTooltipTiffControl';
-import { LayerType } from '../../../types/map';
+import { rasterDataCache } from '../../../utils/geotif/cache';
 
 interface ArcGISTiffLayerProps {
   active: boolean;
@@ -23,7 +22,7 @@ interface ArcGISTiffLayerProps {
   onError?: (error: Error) => void;
 }
 
-const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
+const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({ 
   active,
   opacity = 1,
   serviceConfig,
@@ -42,25 +41,13 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const imageDataRef = useRef<string | null>(null);
   const boundsRef = useRef<L.LatLngBounds | null>(null);
-  const rasterDataRef = useRef<{
-    data: Float32Array;
-    width: number;
-    height: number;
-    noDataValue: number;
-  } | null>(null);
+  const loadTimeoutRef = useRef<number | null>(null);
 
   const valueRange = useAppSelector(state => {
     const category = state.layers.categories[categoryId];
     if (!category) return null;
     const layer = category.layers.find(l => l.id === layerId);
     return layer?.valueRange;
-  });
-
-  const showValues = useAppSelector(state => {
-    const category = state.layers.categories[categoryId];
-    if (!category) return false;
-    const layer = category.layers.find(l => l.id === layerId);
-    return layer?.showValues ?? false;
   });
 
   // Cleanup function
@@ -73,8 +60,16 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
       canvasRef.current = null;
     }
     imageDataRef.current = null;
-    rasterDataRef.current = null;
     boundsRef.current = null;
+
+    // Clear raster data from cache
+    rasterDataCache.delete(`${categoryId}-${layerId}`);
+
+    // Clear any pending timeouts
+    if (loadTimeoutRef.current) {
+      window.clearTimeout(loadTimeoutRef.current);
+      loadTimeoutRef.current = null;
+    }
   };
 
   // Cleanup when component unmounts or layer becomes inactive
@@ -88,7 +83,7 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
     }
 
     return () => cleanup();
-  }, [active, map]);
+  }, [active, map, categoryId, layerId]);
 
   // Update the loading state in Redux when loading changes
   useEffect(() => {
@@ -98,8 +93,6 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
   // Handle map movement events
   useEffect(() => {
     if (!active) return;
-
-    const loadTimeoutRef = { current: 0 };
 
     const handleMapMove = () => {
       // Clear any pending load timeout
@@ -151,12 +144,19 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
       const bbox = image.getBoundingBox();
       const rawBounds = bbox || [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
 
-      rasterDataRef.current = {
+      // Get the nodata value from the image metadata
+      const rawNoData = image.fileDirectory.GDAL_NODATA;
+      const noDataValue = rawNoData !== undefined ? Number(rawNoData.replace('\x00', '')) : null;
+
+      const rasterData = {
         data,
         width,
         height,
-        noDataValue: -9999
+        noDataValue
       };
+
+      // Store in raster cache
+      rasterDataCache.set(`${categoryId}-${layerId}`, rasterData);
 
       boundsRef.current = bounds;
 
@@ -170,7 +170,7 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
       
       for (let i = 0; i < data.length; i++) {
         const value = data[i];
-        if (value === -9999) {
+        if (noDataValue !== null && value === noDataValue) {
           noDataCount++;
           continue;
         }
@@ -195,12 +195,13 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
           width,
           height,
           bounds: [[bounds.getSouth(), bounds.getWest()], [bounds.getNorth(), bounds.getEast()]],
-          noDataValue: -9999,
+          noDataValue,
           sourceCRS: 'EPSG:4326',
           tiepoint: image.fileDirectory.ModelTiepointTag || [],
           scale: image.fileDirectory.ModelPixelScaleTag || [],
           transform: image.fileDirectory.ModelTransformationTag,
-          rawBounds, // Include the raw bounds from the image metadata
+          rawBounds,
+          rawBoundsCRS: 'EPSG:4326', // ArcGIS Image Services use WGS84
           stats: {
             min,
             max,
@@ -241,7 +242,7 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
   };
 
   const updateVisualization = () => {
-    if (!rasterDataRef.current || !valueRange || !boundsRef.current) return;
+    if (!valueRange || !boundsRef.current) return;
 
     // Remove existing image overlay before creating a new one
     if (imageOverlayRef.current) {
@@ -249,7 +250,10 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
       imageOverlayRef.current = null;
     }
 
-    const { data, width, height, noDataValue } = rasterDataRef.current;
+    const rasterData = rasterDataCache.get(`${categoryId}-${layerId}`);
+    if (!rasterData) return;
+
+    const { data, width, height, noDataValue } = rasterData;
     const canvas = document.createElement('canvas');
     canvasRef.current = canvas;
     canvas.width = width;
@@ -260,6 +264,8 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
 
     const imageData = ctx.createImageData(width, height);
     const scheme = getColorScheme(colorScheme);
+
+    console.log('Tiff color scheme: ', scheme)
     
     if (!scheme) return;
 
@@ -274,7 +280,7 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
         value === undefined ||
         isNaN(value) ||
         !isFinite(value) ||
-        value === noDataValue ||
+        (noDataValue !== null && value === noDataValue) ||
         value < valueRange.min ||
         value > valueRange.max
       ) {
@@ -311,7 +317,7 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
   };
 
   useEffect(() => {
-    if (rasterDataRef.current && valueRange) {
+    if (valueRange) {
       updateVisualization();
     }
   }, [valueRange]);
@@ -364,7 +370,7 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
         imageSR: '4326',
         format: 'tiff',
         pixelType: 'F32',
-        noDataValue: '-9999',
+        noData: '',  // Let the service determine the nodata value
         compression: 'LZW',
         bandIds: '',
         mosaicRule: '',
@@ -429,33 +435,7 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
     );
   }
 
-  return (
-    <>
-      {showValues && active && rasterDataRef.current && boundsRef.current && (
-        <ValueTooltipTiffControl
-          categoryId={categoryId}
-          layerId={layerId}
-          name="Slope Steepness"
-          metadata={{
-            width: rasterDataRef.current.width,
-            height: rasterDataRef.current.height,
-            bounds: [
-              [boundsRef.current.getSouth(), boundsRef.current.getWest()],
-              [boundsRef.current.getNorth(), boundsRef.current.getEast()]
-            ],
-            rawBounds: [
-              boundsRef.current.getWest(),
-              boundsRef.current.getSouth(),
-              boundsRef.current.getEast(),
-              boundsRef.current.getNorth()
-            ],
-            data: rasterDataRef.current.data,
-            noDataValue: rasterDataRef.current.noDataValue
-          }}
-        />
-      )}
-    </>
-  );
+  return null;
 };
 
 export default ArcGISTiffLayer;

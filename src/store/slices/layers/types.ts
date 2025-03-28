@@ -46,9 +46,10 @@ export interface InitializeLayerValueRangePayload {
   max: number;
 }
 
-export interface ToggleShowValuesPayload {
+export interface SetShowMapValuesPayload {
   categoryId: string;
   layerId: number;
+  showValues: boolean;
 }
 
 export interface SetLayerMetadataPayload {

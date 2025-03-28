@@ -7,11 +7,10 @@ import { loadGeoTiffFromUrl, validateGeoTiff, getGeoTiffBounds } from '../../../
 import { getColorScheme, getColorFromScheme, hexToRgb, GeoTiffNoDataColor } from '../../../utils/colors';
 import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { useAppSelector } from '../../../hooks/useAppSelector';
-import { setLayerBounds, initializeLayerValueRange, setLayerMetadata } from '../../../store/slices/layers';
-import { getGeoTiffUrl } from '../../../constants/urls';
+import { setLayerBounds, initializeLayerValueRange, setLayerMetadata, setLayerLoading } from '../../../store/slices/layers';
 import { LayerType, GeoTiffRasterData, SerializableBounds } from '../../../types/map';
 import { rasterDataCache } from '../../../utils/geotif/cache';
-import ValueTooltipTiffControl from '../../controls/ValueTooltipTiffControl';
+import proj4 from 'proj4';
 
 interface GeoTiffLayerProps {
   url: string;
@@ -37,7 +36,6 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
   const [progress, setProgress] = useState(0);
   const imageDataRef = useRef<string | null>(null);
   const boundsRef = useRef<L.LatLngBounds | null>(null);
-  const rasterDataRef = useRef<GeoTiffRasterData | null>(null);
   
   const currentAOI = useAppSelector(state => state.home.aoi.current);
   const isCreatingAOI = useAppSelector(state => state.ui.isCreatingAOI);
@@ -56,21 +54,6 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
     if (!category) return null;
     const layer = category.layers.find(l => l.id === layerId);
     return layer?.valueRange;
-  });
-
-  const showValues = useAppSelector(state => {
-    if (!categoryId || !layerId) return false;
-    const category = state.layers.categories[categoryId];
-    if (!category) return false;
-    const layer = category.layers.find(l => l.id === layerId);
-    return layer?.showValues ?? false;
-  });
-
-  const layer = useAppSelector(state => {
-    if (!categoryId || !layerId) return null;
-    const category = state.layers.categories[categoryId];
-    if (!category) return null;
-    return category.layers.find(l => l.id === layerId);
   });
 
   // Debug logging for layer state changes
@@ -95,7 +78,6 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
       canvasRef.current = null;
     }
     imageDataRef.current = null;
-    rasterDataRef.current = null;
     
     // Clear raster data from cache when layer is removed
     if (categoryId && layerId) {
@@ -105,9 +87,12 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
 
   // Function to update visualization based on current value range
   const updateVisualization = () => {
-    if (!rasterDataRef.current || !valueRange) return;
+    if (!valueRange) return;
 
-    const { data, width, height, noDataValue } = rasterDataRef.current;
+    const rasterData = rasterDataCache.get(`${categoryId}-${layerId}`);
+    if (!rasterData) return;
+
+    const { data, width, height, noDataValue } = rasterData;
 
     // Create new canvas for this update
     const canvas = document.createElement('canvas');
@@ -185,7 +170,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
 
   // Effect for value range changes
   useEffect(() => {
-    if (rasterDataRef.current && valueRange) {
+    if (valueRange) {
       updateVisualization();
     }
   }, [valueRange]);
@@ -226,7 +211,10 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
         const height = image.getHeight();
 
         const boundsInfo = await getGeoTiffBounds(image);
-        const serializableBounds: SerializableBounds = boundsInfo.bounds;
+    
+        let serializableBounds: SerializableBounds;
+        serializableBounds = boundsInfo.bounds;
+
         const leafletBounds = L.latLngBounds(
           L.latLng(serializableBounds[0][0], serializableBounds[0][1]),
           L.latLng(serializableBounds[1][0], serializableBounds[1][1])
@@ -239,6 +227,21 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
         const noDataValue = rawNoData !== undefined
           ? Number(rawNoData.replace('\x00', ''))
           : null;
+
+        const rasterData: GeoTiffRasterData = {
+          data,
+          width,
+          height,
+          noDataValue
+        };
+
+        // Store in raster cache
+        if (categoryId && layerId) {
+          rasterDataCache.set(`${categoryId}-${layerId}`, rasterData);
+        }
+
+        // Store bounds
+        boundsRef.current = leafletBounds;
 
         let min = Infinity;
         let max = -Infinity;
@@ -269,22 +272,6 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
 
         const mean = validCount > 0 ? sum / validCount : 0;
 
-        // Store raster data in memory (not in Redux)
-        rasterDataRef.current = {
-          data,
-          width,
-          height,
-          noDataValue
-        };
-
-        // Store in global cache for other components to access
-        if (categoryId && layerId) {
-          rasterDataCache.set(`${categoryId}-${layerId}`, rasterDataRef.current);
-        }
-
-        // Store bounds
-        boundsRef.current = leafletBounds;
-
         if (categoryId && layerId) {
           // Update layer metadata (serializable only)
           dispatch(setLayerMetadata({
@@ -300,6 +287,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
               scale: boundsInfo.pixelScale || [],
               transform: boundsInfo.transform,
               rawBounds: boundsInfo.rawBounds,
+              rawBoundsCRS: boundsInfo.sourceCRS,
               stats: {
                 min,
                 max,
@@ -363,7 +351,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
         
         console.log('Layer loaded successfully');
       } catch (error) {
-        console.error('Error loading layer:', error);
+        console.error('Failed to load layer:', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         setError(message);
         setLoading(false);
@@ -427,33 +415,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
     );
   }
 
-  return (
-    <>
-      {showValues && active && rasterDataRef.current && boundsRef.current && layer && (
-        <ValueTooltipTiffControl
-          categoryId={categoryId!}
-          layerId={layerId!}
-          name={layer.name}
-          metadata={{
-            width: rasterDataRef.current.width,
-            height: rasterDataRef.current.height,
-            bounds: [
-              [boundsRef.current.getSouth(), boundsRef.current.getWest()],
-              [boundsRef.current.getNorth(), boundsRef.current.getEast()]
-            ],
-            rawBounds: [
-              boundsRef.current.getWest(),
-              boundsRef.current.getSouth(),
-              boundsRef.current.getEast(),
-              boundsRef.current.getNorth()
-            ],
-            data: rasterDataRef.current.data,
-            noDataValue: rasterDataRef.current.noDataValue
-          }}
-        />
-      )}
-    </>
-  );
+  return null;
 };
 
 export default GeoTiffLayer;

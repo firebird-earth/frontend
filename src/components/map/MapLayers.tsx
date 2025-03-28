@@ -13,9 +13,11 @@ import {
   SlopeLayer,
   ContourLayer,
   WUILayer,
+  ElevationLayer,
   GeoTiffLayer
 } from '../layers/maps';
 import AOIBoundaryLayer from '../layers/home/AOIBoundaryLayer';
+import ValueTooltipControl from '../controls/ValueTooltipControl';
 import { getOrderedGeoTiffLayers } from '../../store/slices/layers';
 
 const MapLayers: React.FC = () => {
@@ -33,6 +35,7 @@ const MapLayers: React.FC = () => {
   const usfwsLayer = categories.jurisdictions?.layers.find(l => l.name === 'US Fish and Wildlife');
   
   // Get elevation layers
+  const elevationLayer = categories.elevation?.layers.find(l => l.name === 'Elevation');
   const hillshadeLayer = categories.elevation?.layers.find(l => l.name === 'Hillshade');
   const aspectLayer = categories.elevation?.layers.find(l => l.name === 'Aspect');
   const slopeLayer = categories.elevation?.layers.find(l => l.name === 'Slope Steepness');
@@ -40,6 +43,15 @@ const MapLayers: React.FC = () => {
   
   // Get active GeoTIFF layers in order
   const activeGeoTiffLayers = getOrderedGeoTiffLayers(categories);
+
+  // Find any layer with showValues enabled
+  const layerWithValues = React.useMemo(() => {
+    return Object.entries(categories).flatMap(([categoryId, category]) => 
+      category.layers
+        .filter(layer => layer.showValues && layer.active)
+        .map(layer => ({ categoryId, layer }))
+    )[0];
+  }, [categories]);
 
   if (!activeBasemap) return null;
 
@@ -61,7 +73,6 @@ const MapLayers: React.FC = () => {
   return (
     <>
       <TileLayer
-        key={`basemap-${activeBasemap.name}`}
         url={activeBasemap.source}
         maxZoom={22}
         minZoom={4}
@@ -76,9 +87,10 @@ const MapLayers: React.FC = () => {
       <USFWSLayer active={usfwsLayer?.active || false} />
       
       {/* Elevation Layers */}
+      <ElevationLayer active={elevationLayer?.active || false} />
+      <SlopeLayer active={slopeLayer?.active || false} />
       <HillshadeLayer active={hillshadeLayer?.active || false} />
       <AspectLayer active={aspectLayer?.active || false} />
-      <SlopeLayer active={slopeLayer?.active || false} />
       <ContourLayer active={contourLayer?.active || false} />
       
       {displayCoords && (
@@ -100,6 +112,14 @@ const MapLayers: React.FC = () => {
           layerId={layer.id}
         />
       ))}
+
+      {layerWithValues && (
+        <ValueTooltipControl
+          categoryId={layerWithValues.categoryId}
+          layerId={layerWithValues.layer.id}
+          layer={layerWithValues.layer}
+        />
+      )}
     </>
   );
 };

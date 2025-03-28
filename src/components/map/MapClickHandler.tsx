@@ -16,7 +16,11 @@ const MapClickHandler: React.FC = () => {
   
   const map = useMapEvents({
     click(e) {
-      if (!isCreatingAOI) return;
+      e.originalEvent.stopPropagation();
+      
+      if (!isCreatingAOI) {
+        return;
+      }
 
       // Clear any existing AOI and active location
       dispatch(clearAOI());

@@ -5,7 +5,7 @@ import { useAppSelector } from '../../hooks/useAppSelector';
 import { 
   toggleLayer,
   toggleSingleLayer,
-  toggleShowValues
+  setShowMapValues
 } from '../../store/slices/layers';
 import { isEsriLayer } from '../../store/slices/common/utils/utils';
 import OpacityControl from '../controls/OpacityControl';
@@ -61,7 +61,7 @@ const LayerMenu: React.FC<LayerMenuProps> = ({
   // Handle click on Show Values
   const handleShowValuesClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    dispatch(toggleShowValues({ categoryId, layerId }));
+    dispatch(setShowMapValues({ categoryId, layerId, showValues: true }));
     onClose();
   };
 
@@ -80,21 +80,49 @@ const LayerMenu: React.FC<LayerMenuProps> = ({
         </div>
       )}
 
-      {/* Value Range Control */}
+      {/* Value Range Control and Show Map Values for GeoTIFF layers */}
       {isGeoTiff && layer?.valueRange && (
+        <>
+          <div className="px-4 py-2">
+            <ValueRangeControl
+              categoryId={categoryId}
+              layerId={layerId}
+              range={layer.valueRange}
+              showLabel={true}
+              showValue={true}
+            />
+          </div>
+          <button
+            onClick={handleShowValuesClick}
+            className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center space-x-2 ${
+              layer?.showValues ? 'text-blue-600' : 'text-gray-700'
+            }`}
+          >
+            <BarChart2 className="h-4 w-4" />
+            <span>Show Map Values</span>
+          </button>
+          <div className="my-1 border-t border-gray-200"></div>
+        </>
+      )}
+      
+      {/* Layer ordering actions - only for GeoTIFF layers */}
+      {isGeoTiff && (
         <div className="px-4 py-2">
-          <ValueRangeControl
+          <LayerOrderControl
             categoryId={categoryId}
             layerId={layerId}
-            range={layer.valueRange}
-            showLabel={true}
-            showValue={true}
+            onOrderChange={onClose}
           />
         </div>
       )}
 
-      {/* Show Map Values option - Moved here */}
+      {/* Menu break before About */}
       {(isGeoTiff || isFeatureLayer || isArcGISImageService) && (
+        <div className="my-1 border-t border-gray-200"></div>
+      )}
+
+      {/* Show Map Values for non-GeoTIFF layers */}
+      {(isFeatureLayer || isArcGISImageService) && (
         <button
           onClick={handleShowValuesClick}
           className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center space-x-2 ${
@@ -104,17 +132,6 @@ const LayerMenu: React.FC<LayerMenuProps> = ({
           <BarChart2 className="h-4 w-4" />
           <span>Show Map Values</span>
         </button>
-      )}
-      
-      {/* Layer ordering actions - only for GeoTIFF layers */}
-      {isGeoTiff && (
-        <div className="px-4 py-2 border-t border-gray-200">
-          <LayerOrderControl
-            categoryId={categoryId}
-            layerId={layerId}
-            onOrderChange={onClose}
-          />
-        </div>
       )}
 
       {/* About Panel */}
@@ -131,7 +148,7 @@ const LayerMenu: React.FC<LayerMenuProps> = ({
             }
             onClose();
           }}
-          className="w-full px-4 py-2 text-left text-sm text-[#333333] hover:bg-gray-100 flex items-center border-t border-gray-200"
+          className="w-full px-4 py-2 text-left text-sm text-[#333333] hover:bg-gray-100 flex items-center"
         >
           <Info className="h-4 w-4 mr-2" />
           About

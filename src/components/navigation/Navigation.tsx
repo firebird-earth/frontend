@@ -1,8 +1,8 @@
 import React from 'react';
 import TabContent from './TabContent';
-import HomeTab from './tabs/HomeTab';
-import LayersTab from './tabs/LayersTab';
-import FireMetricsTab from './tabs/FireMetricsTab';
+import HomeTab from './HomeTab';
+import LayersTab from './LayersTab';
+import FireMetricsTab from './FireMetricsTab';
 import { useAppSelector } from '../../hooks/useAppSelector';
 
 const Navigation: React.FC = () => {

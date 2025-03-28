@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { Building, Home, Warehouse, Share2, Flame, Zap, Ruler, ThermometerSun, Shield, Network, Trees, Skull, Eye, EyeOff } from 'lucide-react';
-import SectionHeader from '../SectionHeader';
-import { useAppDispatch } from '../../../hooks/useAppDispatch';
-import { useAppSelector } from '../../../hooks/useAppSelector';
-import { toggleSection } from '../../../store/slices/uiSlice';
-import { toggleLayer, toggleSingleLayer } from '../../../store/slices/layers';
-import SelectAOIDialog from '../../aoi/SelectAOIDialog';
+import SectionHeader from './SectionHeader';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { useAppSelector } from '../../hooks/useAppSelector';
+import { toggleSection } from '../../store/slices/uiSlice';
+import { toggleLayer, toggleSingleLayer } from '../../store/slices/layers';
+import SelectAOIDialog from '../aoi/SelectAOIDialog';
 
 const FireMetricsTab: React.FC = () => {
   const dispatch = useAppDispatch();

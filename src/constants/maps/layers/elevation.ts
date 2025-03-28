@@ -3,6 +3,25 @@ import { LayerType } from '../../../types/map';
 import { ELEVATION_SERVICE } from '../../../services/maps/services';
 
 // Define rendering rules for each layer type
+
+const ELEVATION_RULE = {
+  "rasterFunction": "None",
+  "rasterFunctionArguments": {
+    "Raster": "$$"
+  }
+};
+
+const SLOPE_RULE = {
+  "rasterFunction": "Slope",
+  "rasterFunctionArguments": {
+    "Raster": "$$",
+    "ZFactor": 1,
+    "SlopeType": 0,
+    "PixelSizeFactor": 1,
+    "PixelSizePower": 1
+  }
+};
+
 const HILLSHADE_RULE = {
   "rasterFunction": "Hillshade",
   "rasterFunctionArguments": {
@@ -21,17 +40,6 @@ const ASPECT_RULE = {
   }
 };
 
-const SLOPE_RULE = {
-  "rasterFunction": "Slope",
-  "rasterFunctionArguments": {
-    "Raster": "$$",
-    "ZFactor": 1,
-    "SlopeType": 0,
-    "PixelSizeFactor": 1,
-    "PixelSizePower": 1
-  }
-};
-
 const CONTOUR_RULE = {
   "rasterFunction": "Contour",
   "rasterFunctionArguments": {
@@ -46,6 +54,24 @@ const CONTOUR_RULE = {
 };
 
 export const ELEVATION = {
+  ELEVATION: {
+    name: 'Elevation',
+    description: 'USGS 3DEP Elevation',
+    source: ELEVATION_SERVICE.baseUrl,
+    units: 'meters',
+    colorScheme: 'none',
+    type: LayerType.ArcGISImageService,
+    renderingRule: JSON.stringify(ELEVATION_RULE)
+  },
+  SLOPE: {
+    name: 'Slope Steepness',
+    description: 'USGS 3DEP Elevation',
+    source: ELEVATION_SERVICE.baseUrl,
+    units: 'degrees',
+    colorScheme: 'slopeGradient',
+    type: LayerType.ArcGISImageService,
+    renderingRule: JSON.stringify(SLOPE_RULE)
+  },
   HILLSHADE: {
     name: 'Hillshade',
     description: 'USGS 3DEP Elevation',
@@ -63,15 +89,6 @@ export const ELEVATION = {
     colorScheme: 'redBlue',
     type: LayerType.ArcGISImageService,
     renderingRule: JSON.stringify(ASPECT_RULE)
-  },
-  SLOPE: {
-    name: 'Slope Steepness',
-    description: 'USGS 3DEP Elevation',
-    source: ELEVATION_SERVICE.baseUrl,
-    units: 'degrees',
-    colorScheme: 'slopeGradient',
-    type: LayerType.ArcGISImageService,
-    renderingRule: JSON.stringify(SLOPE_RULE)
   },
   CONTOUR: {
     name: 'Contour',

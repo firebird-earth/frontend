@@ -43,7 +43,7 @@ const MapControls: React.FC = () => {
       <LoadingControl 
         show={isElevationLoading} 
         position="topleft"
-        message="Loading elevation data..."
+        message="Loading elevation..."
       />
 
       {layerWithValues && (

@@ -50,6 +50,22 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
     return layer?.valueRange;
   });
 
+  const layer = useAppSelector(state => {
+    const category = state.layers.categories[categoryId];
+    if (!category) return null;
+    return category.layers.find(l => l.id === layerId);
+  });
+
+  // Debug logging for props and state
+  console.log('ArcGISTiffLayer props:', {
+    active,
+    opacity,
+    colorScheme,
+    categoryId,
+    layerId,
+    renderingRule: renderingRule ? renderingRule.substring(0, 100) + '...' : null
+  });
+
   // Cleanup function
   const cleanup = () => {
     if (imageOverlayRef.current) {
@@ -242,7 +258,7 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
   };
 
   const updateVisualization = () => {
-    if (!valueRange || !boundsRef.current) return;
+    if (!valueRange || !boundsRef.current || !layer) return;
 
     // Remove existing image overlay before creating a new one
     if (imageOverlayRef.current) {
@@ -263,14 +279,24 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
     if (!ctx) return;
 
     const imageData = ctx.createImageData(width, height);
-    const scheme = getColorScheme(colorScheme);
-
-    console.log('Tiff color scheme: ', scheme)
     
-    if (!scheme) return;
+    const scheme = getColorScheme(colorScheme);
+    if (!scheme) {
+      console.error('No color scheme found for:', colorScheme);
+      return;
+    }
 
-    const fullRange = valueRange.defaultMax - valueRange.defaultMin;
-    if (fullRange === 0) return;
+    console.log('Using color scheme:', {
+      name: scheme.name,
+      type: scheme.type,
+      buckets: scheme.buckets,
+      colors: scheme.colors,
+      domain: layer.domain
+    });
+
+    // Use layer domain for normalization if available, otherwise use full range
+    const domain = layer.domain || [valueRange.defaultMin, valueRange.defaultMax];
+    const fullRange = domain[1] - domain[0];
 
     for (let i = 0; i < data.length; i++) {
       const value = data[i];
@@ -291,7 +317,8 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
         continue;
       }
 
-      const normalizedValue = (value - valueRange.defaultMin) / fullRange;
+      // Normalize based on domain range
+      const normalizedValue = (value - domain[0]) / fullRange;
       const color = getColorFromScheme(scheme, normalizedValue);
       const { r, g, b } = hexToRgb(color);
       
@@ -306,14 +333,14 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
     imageDataRef.current = dataUrl;
 
     // Create new image overlay
-    const layer = L.imageOverlay(dataUrl, boundsRef.current, {
+    const imageOverlay = L.imageOverlay(dataUrl, boundsRef.current, {
       opacity: opacity,
       interactive: false,
       className: 'geotiff-high-quality'
     });
 
-    layer.addTo(map);
-    imageOverlayRef.current = layer;
+    imageOverlay.addTo(map);
+    imageOverlayRef.current = imageOverlay;
   };
 
   useEffect(() => {

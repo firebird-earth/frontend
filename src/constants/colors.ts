@@ -147,8 +147,7 @@ export const colorSchemes: Record<string, ColorScheme> = {
       '#e31a1c',
       '#b10026'  // Dark red (highest intensity)
     ],
-    type: 'sequential',
-    domain: [0, 100]
+    type: 'sequential'
   },
   
   burnProbability: {
@@ -163,8 +162,7 @@ export const colorSchemes: Record<string, ColorScheme> = {
       '#f03b20',
       '#bd0026'  // Dark red (highest probability)
     ],
-    type: 'sequential',
-    domain: [0, 1]
+    type: 'sequential'
   },
   
   canopyCover: {
@@ -179,8 +177,7 @@ export const colorSchemes: Record<string, ColorScheme> = {
       '#31a354',
       '#006d2c'  // Dark green (highest cover)
     ],
-    type: 'sequential',
-    domain: [0, 100]
+    type: 'sequential'
   },
   
   slopeGradient: {
@@ -200,7 +197,8 @@ export const colorSchemes: Record<string, ColorScheme> = {
       "#E30F05", // Steep (40-45°)
       "#9E0000"
     ],
-    type: 'sequential',
-    domain: [0, 45]  // 0 to 45 degrees
+    type: 'sequential'
   }
 };
+
+export const defaultColorScheme = colorSchemes.blueToRed.name;

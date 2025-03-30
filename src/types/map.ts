@@ -1,22 +1,22 @@
 import { GeoJSON } from 'geojson';
 
-export interface Coordinates {
-  lat: number;
-  lng: number;
-}
-
 export enum LayerType {
   Basemap = 'basemap',
   ArcGISFeatureService = 'ArcGIS_featureService',
   ArcGISMapService = 'ArcGIS_mapService',
   ArcGISImageService = 'ArcGIS_imageService',
-  GeoTiff = 'geoTiff',
   DynamicService = 'dynamicService',
+  GeoTiff = 'geoTiff',
   WMS = 'wms',
   Vector = 'vector',
   Raster = 'raster',
   TileLayer = 'tileLayer',
   Placeholder = 'placeholder'
+}
+
+export interface Coordinates {
+  lat: number;
+  lng: number;
 }
 
 // Serializable bounds format
@@ -73,6 +73,9 @@ export interface MapLayer {
   renderingRule?: string;
   showValues?: boolean;
   metadata?: GeoTiffMetadata; // Only serializable metadata
+  colorScheme?: string; // Added colorScheme property
+  domain?: [number, number]; // Added domain property
+  units?: string; // Added units property
 }
 
 export interface LayerCategory {
@@ -89,3 +92,12 @@ export interface Location {
 }
 
 export type MapTheme = 'light' | 'dark';
+
+export interface ColorScheme {
+  name: string;
+  displayName: string;
+  description: string;
+  buckets: number;
+  colors: string[];
+  type: 'sequential' | 'diverging' | 'qualitative';
+}

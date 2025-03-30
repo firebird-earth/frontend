@@ -4,7 +4,6 @@ import { useAppSelector } from '../../../hooks/useAppSelector';
 import { getColorScheme, getGradientForScheme } from '../../../utils/colors';
 import { geotiffService } from '../../../services/geotiffService';
 import { getGeoTiffUrl } from '../../../constants/urls';
-import { FIRE_METRICS } from '../../../constants/maps';
 
 interface GeoTiffLegendProps {
   url: string;
@@ -26,8 +25,9 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({
   const currentAOI = useAppSelector(state => state.home.aoi.current);
   const isCreatingAOI = useAppSelector(state => state.ui.isCreatingAOI);
   const layer = useAppSelector(state => {
-    if (!categoryId || !layerId) return null;
-    return state.layers.categories[categoryId]?.layers.find(l => l.id === layerId);
+    const category = state.layers.categories[categoryId];
+    if (!category) return null;
+    return category.layers.find(l => l.id === layerId);
   });
 
   // Debug logging
@@ -39,34 +39,15 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({
       name: layer.name,
       type: layer.type,
       source: layer.source,
-      valueRange: layer.valueRange
+      valueRange: layer.valueRange,
+      colorScheme: layer.colorScheme,
+      domain: layer.domain,
+      units: layer.units
     } : null,
     currentAOI: currentAOI ? {
       id: currentAOI.id,
       name: currentAOI.name
     } : null
-  });
-
-  // Get layer metadata from constants
-  const getLayerMetadata = () => {
-    if (!layer) return null;
-
-    if (categoryId === 'firemetrics') {
-      return Object.values(FIRE_METRICS.LANDSCAPE_RISK).find(l => l.name === layer.name);
-    }
-    if (categoryId === 'fuels') {
-      return Object.values(FIRE_METRICS.FUELS).find(l => l.name === layer.name);
-    }
-    return null;
-  };
-
-  const layerMetadata = getLayerMetadata();
-
-  // Debug logging for layer metadata
-  console.log('Layer metadata:', {
-    layerMetadata,
-    colorScheme: layerMetadata?.colorScheme,
-    units: layerMetadata?.units
   });
 
   useEffect(() => {
@@ -123,7 +104,7 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({
     );
   }
 
-  if (error || !metadata?.standard || !dataRange) {
+  if (error || !metadata?.standard || !dataRange || !layer?.colorScheme) {
     return (
       <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
         <div className="flex items-start space-x-2">
@@ -141,18 +122,11 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({
     );
   }
 
-  const valueRange = layer?.valueRange;
-  const colorScheme = layerMetadata?.colorScheme ? getColorScheme(layerMetadata.colorScheme) : null;
-
-  // Debug logging for rendering
-  console.log('Rendering legend with:', {
-    valueRange,
-    colorScheme,
-    dataRange
-  });
+  const valueRange = layer.valueRange;
+  const colorScheme = getColorScheme(layer.colorScheme);
 
   if (!colorScheme) {
-    console.warn('No color scheme found for layer:', layer?.name);
+    console.warn('No color scheme found for layer:', layer.name);
     return null;
   }
 
@@ -168,7 +142,7 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({
           <span>{valueRange ? valueRange.max.toFixed(3) : dataRange.max.toFixed(3)}</span>
         </div>
         <div className="text-xs text-gray-600 text-center">
-          {layerMetadata?.units || metadata.custom?.units || 'units'}
+          {layer.units || metadata.custom?.units || 'units'}
         </div>
       </div>
     </div>

@@ -41,7 +41,7 @@ const MapLayers: React.FC = () => {
   const slopeLayer = categories.elevation?.layers.find(l => l.name === 'Slope Steepness');
   const contourLayer = categories.elevation?.layers.find(l => l.name === 'Contour');
   
-  // Get active GeoTIFF layers in order
+  // Get active GeoTIFF layers in order with their categories
   const activeGeoTiffLayers = getOrderedGeoTiffLayers(categories);
 
   // Find any layer with showValues enabled
@@ -102,13 +102,13 @@ const MapLayers: React.FC = () => {
         />
       )}
 
-      {activeGeoTiffLayers.map(layer => (
+      {activeGeoTiffLayers.map(({ layer, categoryId }) => (
         <GeoTiffLayer
-          key={`${layer.id}-${layer.name}-${layer.active}-${layer.order}`}
+          key={`${categoryId}-${layer.id}-${layer.name}-${layer.active}-${layer.order}`}
           url={layer.source}
           active={layer.active}
           zIndex={layer.order || 0}
-          categoryId={layer.name.includes('Canopy') ? 'fuels' : 'firemetrics'}
+          categoryId={categoryId}
           layerId={layer.id}
         />
       ))}

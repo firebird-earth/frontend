@@ -8,12 +8,12 @@ import firemetricsReducer from './slices/firemetrics';
 
 export const store = configureStore({
   reducer: {
-    map: mapReducer,
     ui: uiReducer,
-    layers: layersReducer,
-    settings: settingsReducer,
+    map: mapReducer,
     home: homeReducer,
-    firemetrics: firemetricsReducer
+    firemetrics: firemetricsReducer,
+    layers: layersReducer,
+    settings: settingsReducer
   },
 });
 

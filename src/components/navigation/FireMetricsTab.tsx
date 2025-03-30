@@ -6,6 +6,13 @@ import { useAppSelector } from '../../hooks/useAppSelector';
 import { toggleSection } from '../../store/slices/uiSlice';
 import { toggleLayer, toggleSingleLayer } from '../../store/slices/layers';
 import SelectAOIDialog from '../aoi/SelectAOIDialog';
+import { FIRE_METRICS } from '../../constants/maps';
+
+const SECTIONS = {
+  VALUE_AT_RISK: 'valueAtRisk',
+  LANDSCAPE_RISK: 'landscapeRisk', 
+  FUELS: 'fuels'
+} as const;
 
 const FireMetricsTab: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -16,6 +23,31 @@ const FireMetricsTab: React.FC = () => {
   const landscapeRiskLayers = useAppSelector(state => state.layers.categories.landscapeRisk?.layers || []);
   const currentAOI = useAppSelector(state => state.home.aoi.current);
   const [showDialog, setShowDialog] = useState(false);
+
+  const getLayerIcon = (name: string) => {
+    // Value at Risk icons
+    if (name === FIRE_METRICS.VALUE_AT_RISK.FIRESHEDS.name) return Building;
+    if (name === FIRE_METRICS.VALUE_AT_RISK.STRUCTURE_BURN_FREQUENCY.name) return Home;
+    if (name === FIRE_METRICS.VALUE_AT_RISK.STRUCTURE_BURN_HAZARD.name) return Home;
+    if (name === FIRE_METRICS.VALUE_AT_RISK.STRUCTURE_BURN_INFLUENCE.name) return Share2;
+
+    // Landscape Risk icons
+    if (name === FIRE_METRICS.LANDSCAPE_RISK.BURN_PROBABILITY.name) return Flame;
+    if (name === FIRE_METRICS.LANDSCAPE_RISK.FLAME_LENGTH.name) return Ruler;
+    if (name === FIRE_METRICS.LANDSCAPE_RISK.FIRE_INTENSITY.name) return ThermometerSun;
+    if (name === FIRE_METRICS.LANDSCAPE_RISK.SUPPRESSION_DIFFICULTY.name) return Shield;
+    if (name === FIRE_METRICS.LANDSCAPE_RISK.TRANSMISSION_INDEX.name) return Network;
+    if (name === FIRE_METRICS.LANDSCAPE_RISK.TRANSMISSION_INFLUENCE.name) return Network;
+
+    // Fuels icons
+    if (name === FIRE_METRICS.FUELS.CANOPY_BULK_DENSITY.name) return Trees;
+    if (name === FIRE_METRICS.FUELS.CANOPY_COVER.name) return Trees;
+    if (name === FIRE_METRICS.FUELS.CANOPY_HEIGHT.name) return Trees;
+    if (name === FIRE_METRICS.FUELS.MORTALITY.name) return Skull;
+
+    // Default icon
+    return Flame;
+  };
 
   // Handle click on the layer text/name - exclusive behavior
   const handleLayerClick = (categoryId: string, layerId: number) => {
@@ -40,39 +72,6 @@ const FireMetricsTab: React.FC = () => {
     
     // Use toggleLayer for non-exclusive behavior
     dispatch(toggleLayer({ categoryId, layerId }));
-  };
-
-  const getLayerIcon = (name: string) => {
-    switch (name) {
-      case 'Burn Probability':
-        return Flame;
-      case 'Initial Fire Size':
-        return Zap;
-      case 'Flame Length':
-        return Ruler;
-      case 'Fire Intensity':
-        return ThermometerSun;
-      case 'Suppression Difficulty':
-        return Shield;
-      case 'Transmission Index':
-      case 'Transmission Influence':
-        return Network;
-      case 'Canopy Bulk Density':
-      case 'Canopy Cover':
-      case 'Canopy Height':
-        return Trees;
-      case 'Mortality':
-        return Skull;
-      case 'Firesheds':
-        return Building;
-      case 'Structure Burn Frequency':
-      case 'Structure Burn Hazard':
-        return Home;
-      case 'Structure Burn Influence':
-        return Share2;
-      default:
-        return Flame;
-    }
   };
 
   // Helper function to render a layer item with consistent styling

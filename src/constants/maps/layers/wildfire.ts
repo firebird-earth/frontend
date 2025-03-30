@@ -1,5 +1,8 @@
 import { LayerMetadata } from '../types';
-import { WUI_LAYER, CRISIS_AREAS_LAYER } from '../../urls';
+import { LayerType } from '../../../types/map';
+import { LayerCategory } from '../../../store/slices/layers/types';
+import { createInitialCategory } from '../../../store/slices/common/utils/utils';
+import { WUI_LAYER, CRISIS_AREAS_LAYER } from '../../../constants/urls';
 
 export const WILDFIRE = {
   WUI: {
@@ -38,5 +41,32 @@ export const WILDFIRE = {
         }
       ]
     }
+  },
+  PRIORITY_AREAS: {
+    name: 'Priority Treatment Areas',
+    description: 'Priority areas for wildfire treatment',
+    units: 'category',
+    colorScheme: 'none',
+    type: 'vector'
   }
 } as const;
+
+// Layer category constant
+export const WILDFIRE_CATEGORY: LayerCategory = createInitialCategory('wildfire', 'Wildfire', [
+  { 
+    name: WILDFIRE.WUI.name, 
+    type: LayerType.TileLayer, 
+    source: WUI_LAYER, 
+    colorScheme: WILDFIRE.WUI.colorScheme 
+  },
+  { 
+    name: WILDFIRE.CRISIS_AREAS.name, 
+    type: LayerType.ArcGISFeatureService, 
+    source: CRISIS_AREAS_LAYER, 
+    colorScheme: WILDFIRE.CRISIS_AREAS.colorScheme 
+  },
+  { 
+    name: WILDFIRE.PRIORITY_AREAS.name, 
+    type: LayerType.Vector 
+  }
+]);

@@ -51,44 +51,42 @@ export function handleLayerOrdering(state: LayersState, categoryId: string, laye
 
 /**
  * Returns GeoTIFF layers in a consistent order for both the map and legend
- * This ensures that the layers are displayed in the same order in both places
- * 
  * @param categories The layer categories from the Redux store
- * @returns An array of GeoTIFF layers in the correct order
+ * @returns An array of GeoTIFF layers with their category IDs
  */
-export function getOrderedGeoTiffLayers(categories: any): MapLayer[] {
-  // Get all ACTIVE GeoTIFF layers from firemetrics and fuels categories
-  const firemetricsLayers = categories.firemetrics?.layers.filter(
-    (l: MapLayer) => l.active && l.type === LayerType.GeoTiff
-  ) || [];
-  
-  const fuelsLayers = categories.fuels?.layers.filter(
-    (l: MapLayer) => l.active && l.type === LayerType.GeoTiff
-  ) || [];
+export function getOrderedGeoTiffLayers(categories: any): { layer: MapLayer; categoryId: string }[] {
+  // Get all ACTIVE GeoTIFF layers from all categories
+  const layersWithCategories = Object.entries(categories)
+    .flatMap(([categoryId, category]) => {
+      const activeLayers = category.layers.filter(
+        (l: MapLayer) => l.active && l.type === LayerType.GeoTiff
+      );
+      // Return layers with their category ID
+      return activeLayers.map(layer => ({
+        layer,
+        categoryId
+      }));
+    });
 
-  // Combine the layers in a specific order
-  const allLayers = [...firemetricsLayers, ...fuelsLayers];
-  
   // Sort by order property if available
-  return sortLayersByOrder(allLayers);
+  return sortLayersByOrder(layersWithCategories);
 }
 
 /**
- * Sorts layers by their order property if available
- * 
- * @param layers Array of layers to sort
- * @returns Sorted array of layers
+ * Sorts layers by their order property
+ * @param layers Array of layers with category IDs to sort
+ * @returns Sorted array of layers with category IDs
  */
-export function sortLayersByOrder(layers: MapLayer[]): MapLayer[] {
+export function sortLayersByOrder(layers: { layer: MapLayer; categoryId: string }[]): { layer: MapLayer; categoryId: string }[] {
   return [...layers].sort((a, b) => {
     // If both layers have an order property, sort by that
-    if (a.order !== undefined && b.order !== undefined) {
-      return b.order - a.order; // Higher order values appear on top (first in the array)
+    if (a.layer.order !== undefined && b.layer.order !== undefined) {
+      return b.layer.order - a.layer.order; // Higher order values appear on top (first in the array)
     }
     
     // If only one layer has an order property, prioritize it
-    if (a.order !== undefined) return -1;
-    if (b.order !== undefined) return 1;
+    if (a.layer.order !== undefined) return -1;
+    if (b.layer.order !== undefined) return 1;
     
     // Otherwise, maintain the original order
     return 0;

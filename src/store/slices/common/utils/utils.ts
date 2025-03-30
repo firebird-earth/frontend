@@ -1,5 +1,6 @@
 import { LayerCategory, LayersState } from '../types';
 import { MapLayer } from '../../../../types/map';
+import { isLayersTab, isFiremetricsTab } from '../../../../constants/maps';
 
 export function createInitialCategory(
   id: string,
@@ -46,12 +47,4 @@ export function isEsriLayer(categoryId: string, layerId: number, categories: any
 
 export function findCategory(state: LayersState, categoryId: string): LayerCategory | undefined {
   return state.categories[categoryId];
-}
-
-export function isLayersTabCategory(categoryId: string): boolean {
-  return !['basemaps', 'firemetrics', 'fuels'].includes(categoryId);
-}
-
-export function isFireMetricsTabCategory(categoryId: string): boolean {
-  return ['firemetrics', 'fuels'].includes(categoryId);
 }

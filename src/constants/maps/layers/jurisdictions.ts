@@ -1,6 +1,8 @@
 import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
-import { STATES_LAYER, COUNTIES_LAYER, FEDERAL_LANDS_LAYER, USFS_LANDS_LAYER, USFWS_LANDS_LAYER } from '../../urls';
+import { LayerCategory } from '../../../store/slices/layers/types';
+import { createInitialCategory } from '../../../store/slices/common/utils/utils';
+import { STATES_LAYER, COUNTIES_LAYER, FEDERAL_LANDS_LAYER, USFS_LANDS_LAYER, USFWS_LANDS_LAYER } from '../../../constants/urls';
 
 export const JURISDICTIONS = {
   STATES: {
@@ -13,11 +15,11 @@ export const JURISDICTIONS = {
     legend: {
       items: [
         { 
+          label: 'State Boundary',
           color: '#374151',
           weight: 2,
           fillColor: 'none',
-          fillOpacity: 0.1,
-          label: 'State Boundary'
+          fillOpacity: 0.1
         }
       ]
     }
@@ -32,11 +34,11 @@ export const JURISDICTIONS = {
     legend: {
       items: [
         {
+          label: 'County Boundary',
           color: '#374151',
           weight: 1,
           fillColor: 'none',
-          fillOpacity: 0.1,
-          label: 'County Boundary'
+          fillOpacity: 0.1
         }
       ]
     }
@@ -51,11 +53,11 @@ export const JURISDICTIONS = {
     legend: {
       items: [
         {
+          label: 'Federal Land',
           color: '#4B5563',
           weight: 1,
           fillColor: '#4B5563',
-          fillOpacity: 0.1,
-          label: 'Federal Land'
+          fillOpacity: 0.1
         }
       ]
     }
@@ -70,11 +72,11 @@ export const JURISDICTIONS = {
     legend: {
       items: [
         {
+          label: 'National Forest System Land',
           color: '#166534',
           weight: 1,
           fillColor: '#166534',
-          fillOpacity: 0.15,
-          label: 'National Forest System Land'
+          fillOpacity: 0.15
         }
       ]
     }
@@ -89,11 +91,11 @@ export const JURISDICTIONS = {
     legend: {
       items: [
         {
+          label: 'Fish and Wildlife Service Land',
           color: '#0369a1',
           weight: 1,
           fillColor: '#0369a1',
-          fillOpacity: 0.15,
-          label: 'Fish and Wildlife Service Land'
+          fillOpacity: 0.15
         }
       ]
     }
@@ -107,11 +109,11 @@ export const JURISDICTIONS = {
     legend: {
       items: [
         {
+          label: 'BLM Land',
           color: '#92400E',
           weight: 1,
           fillColor: '#92400E',
-          fillOpacity: 0.15,
-          label: 'BLM Land'
+          fillOpacity: 0.15
         }
       ]
     }
@@ -125,11 +127,11 @@ export const JURISDICTIONS = {
     legend: {
       items: [
         {
+          label: 'National Park Service Land',
           color: '#064E3B',
           weight: 1,
           fillColor: '#064E3B',
-          fillOpacity: 0.15,
-          label: 'National Park Service Land'
+          fillOpacity: 0.15
         }
       ]
     }
@@ -143,11 +145,11 @@ export const JURISDICTIONS = {
     legend: {
       items: [
         {
+          label: 'Bureau of Reclamation Land',
           color: '#1E40AF',
           weight: 1,
           fillColor: '#1E40AF',
-          fillOpacity: 0.15,
-          label: 'Bureau of Reclamation Land'
+          fillOpacity: 0.15
         }
       ]
     }
@@ -161,11 +163,11 @@ export const JURISDICTIONS = {
     legend: {
       items: [
         {
+          label: 'Bureau of Indian Affairs Land',
           color: '#7C2D12',
           weight: 1,
           fillColor: '#7C2D12',
-          fillOpacity: 0.15,
-          label: 'Bureau of Indian Affairs Land'
+          fillOpacity: 0.15
         }
       ]
     }
@@ -179,11 +181,11 @@ export const JURISDICTIONS = {
     legend: {
       items: [
         {
+          label: 'State Managed Land',
           color: '#1F2937',
           weight: 1,
           fillColor: '#1F2937',
-          fillOpacity: 0.15,
-          label: 'State Managed Land'
+          fillOpacity: 0.15
         }
       ]
     }
@@ -197,13 +199,71 @@ export const JURISDICTIONS = {
     legend: {
       items: [
         {
+          label: 'Private Land',
           color: '#6B7280',
           weight: 1,
           fillColor: '#6B7280',
-          fillOpacity: 0.15,
-          label: 'Private Land'
+          fillOpacity: 0.15
         }
       ]
     }
   }
 } as const;
+
+// Layer category constant
+export const JURISDICTIONS_CATEGORY: LayerCategory = createInitialCategory('jurisdictions', 'Jurisdictions', [
+  { 
+    name: JURISDICTIONS.STATES.name, 
+    type: LayerType.ArcGISFeatureService, 
+    source: JURISDICTIONS.STATES.source, 
+    colorScheme: JURISDICTIONS.STATES.colorScheme 
+  },
+  { 
+    name: JURISDICTIONS.COUNTIES.name, 
+    type: LayerType.ArcGISFeatureService, 
+    source: JURISDICTIONS.COUNTIES.source, 
+    colorScheme: JURISDICTIONS.COUNTIES.colorScheme 
+  },
+  { 
+    name: JURISDICTIONS.FEDERAL_LANDS.name, 
+    type: LayerType.ArcGISFeatureService, 
+    source: JURISDICTIONS.FEDERAL_LANDS.source, 
+    colorScheme: JURISDICTIONS.FEDERAL_LANDS.colorScheme 
+  },
+  { 
+    name: JURISDICTIONS.USFS.name, 
+    type: LayerType.ArcGISFeatureService, 
+    source: JURISDICTIONS.USFS.source, 
+    colorScheme: JURISDICTIONS.USFS.colorScheme 
+  },
+  { 
+    name: JURISDICTIONS.USFWS.name, 
+    type: LayerType.ArcGISFeatureService, 
+    source: JURISDICTIONS.USFWS.source, 
+    colorScheme: JURISDICTIONS.USFWS.colorScheme 
+  },
+  { 
+    name: JURISDICTIONS.BLM.name, 
+    type: LayerType.Vector 
+  },
+  { 
+    name: JURISDICTIONS.NPS.name, 
+    type: LayerType.Vector 
+  },
+  { 
+    name: JURISDICTIONS.BOR.name, 
+    type: LayerType.Vector 
+  },
+  { 
+    name: JURISDICTIONS.BIA.name, 
+    type: LayerType.Vector 
+  },
+  { 
+    name: JURISDICTIONS.STATE.name, 
+    type: LayerType.Vector 
+  },
+  { 
+    name: JURISDICTIONS.PRIVATE.name, 
+    type: LayerType.Vector 
+  }
+]);

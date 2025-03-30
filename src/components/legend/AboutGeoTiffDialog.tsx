@@ -1,7 +1,6 @@
 import React from 'react';
 import { Info } from 'lucide-react';
 import { useDraggable } from '../../hooks/useDraggable';
-import { FIRE_METRICS } from '../../constants/maps';
 
 interface AboutGeoTiffDialogProps {
   metadata: {
@@ -63,21 +62,6 @@ const AboutGeoTiffDialog: React.FC<AboutGeoTiffDialogProps> = ({
   const noDataPixels = metadata.standard.totalPixels - metadata.standard.nonNullValues;
   const zeroPixels = metadata.standard.zeroCount || 0;
   const validPixels = metadata.standard.nonNullValues;
-
-  // Get layer metadata from constants
-  const getLayerMetadata = () => {
-    if (!layerName || !categoryId) return null;
-
-    if (categoryId === 'firemetrics') {
-      return Object.values(FIRE_METRICS.LANDSCAPE_RISK).find(l => l.name === layerName);
-    }
-    if (categoryId === 'fuels') {
-      return Object.values(FIRE_METRICS.FUELS).find(l => l.name === layerName);
-    }
-    return null;
-  };
-
-  const layerMetadata = getLayerMetadata();
 
   return (
     <div className="fixed inset-0 z-[2000]" style={{ pointerEvents: 'none' }}>
@@ -240,9 +224,9 @@ const AboutGeoTiffDialog: React.FC<AboutGeoTiffDialogProps> = ({
         
         <div className="p-4 border-t border-gray-200">
           <div className="flex justify-between items-center">
-            {layerMetadata?.source && (
+            {metadata.custom?.source && (
               <span className="text-xs text-gray-500 italic">
-                Source: {layerMetadata.source}
+                Source: {metadata.custom.source}
               </span>
             )}
             <button

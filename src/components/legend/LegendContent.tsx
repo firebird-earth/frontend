@@ -14,6 +14,7 @@ import {
   USFSLayer,
   USFWSLayer,
   CrisisAreasLayer,
+  ElevationLayer,
   HillshadeLayer,
   AspectLayer,
   SlopeLayer,
@@ -52,10 +53,7 @@ const LegendContent: React.FC<LegendContentProps> = ({
     return [];
   });
 
-  const geoTiffLayers = getOrderedGeoTiffLayers(categories).map(layer => ({
-    categoryId: layer.name.includes('Canopy') ? 'fuels' : 'firemetrics',
-    layer
-  }));
+  const geoTiffLayers = getOrderedGeoTiffLayers(categories);
   
   const otherLayers = allActiveLayers.filter(
     ({ layer }) => layer.type !== LayerType.GeoTiff
@@ -134,6 +132,7 @@ const LegendContent: React.FC<LegendContentProps> = ({
               </div>
             )}
             {layer.name === MAP_LAYERS.WILDFIRE.CRISIS_AREAS.name && <CrisisAreasLayer.Legend />}
+            {layer.name === 'Elevation' && <ElevationLayer.Legend />}
             {layer.name === 'Slope Steepness' && <SlopeLayer.Legend />}
             {layer.name === 'Aspect' && <AspectLayer.Legend />}
             {layer.name === 'Hillshade' && <HillshadeLayer.Legend />}

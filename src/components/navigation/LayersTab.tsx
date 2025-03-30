@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { MapIcon, LandPlot, Mountain, AtSign as RoadSign, Waves, Droplets, Factory, Leaf, Bird, Shield, Workflow, Flame, Plus, Building, Eye, EyeOff } from 'lucide-react';
+import { MoreVertical } from 'lucide-react';
 import SectionHeader from './SectionHeader';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { toggleSection } from '../../store/slices/uiSlice';
 import { toggleLayer, toggleSingleLayer } from '../../store/slices/layers';
 import SelectAOIDialog from '../aoi/SelectAOIDialog';
+import { getIconForLayer } from '../../utils/icons';
+import { isLayersTab, isFiremetricsTab } from '../../constants/maps';
 
 const LayersTab: React.FC = () => {
-  const dispatch = useAppDispatch();
+  const dispatch = store.dispatch;
   const sections = useAppSelector(state => state.ui.sections);
   const { categories } = useAppSelector(state => state.layers);
   const currentAOI = useAppSelector(state => state.home.aoi.current);
@@ -23,7 +25,7 @@ const LayersTab: React.FC = () => {
     }
 
     // For non-basemap layers, check if an AOI is selected for GeoTIFF layers
-    if ((categoryId === 'firemetrics' || categoryId === 'fuels') && !currentAOI) {
+    if (isFiremetricsTab(categoryId) && !currentAOI) {
       setShowDialog(true);
       return;
     }
@@ -54,42 +56,13 @@ const LayersTab: React.FC = () => {
     e.stopPropagation(); // Prevent the parent onClick from firing
     
     // For GeoTIFF layers, check if an AOI is selected
-    if ((categoryId === 'firemetrics' || categoryId === 'fuels') && !currentAOI) {
+    if (isFiremetricsTab(categoryId) && !currentAOI) {
       setShowDialog(true);
       return;
     }
     
     // Use toggleLayer to make it non-exclusive (keep other layers on)
     dispatch(toggleLayer({ categoryId, layerId }));
-  };
-
-  const getIconForLayer = (categoryId: string, layerName: string) => {
-    switch (categoryId) {
-      case 'basemaps':
-        return MapIcon;
-      case 'wildfire':
-        return Flame;
-      case 'elevation':
-        return Mountain;
-      case 'landscape':
-        return Mountain;
-      case 'jurisdictions':
-        return LandPlot;
-      case 'transportation':
-        return RoadSign;
-      case 'water':
-        return layerName.includes('Watersheds') ? Waves : Droplets;
-      case 'infrastructure':
-        return layerName.includes('Building') ? Building : Factory;
-      case 'restorationClass':
-        return Leaf;
-      case 'habitat':
-        return layerName.includes('Deer') ? Shield :
-               layerName.includes('Grouse') ? Bird :
-               layerName.includes('Migration') ? Workflow : Shield;
-      default:
-        return MapIcon;
-    }
   };
 
   // Helper function to render a layer item with consistent styling

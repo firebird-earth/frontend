@@ -4,6 +4,8 @@ import { LayerType } from '../../../types/map';
 import { ELEVATION_SERVICE } from '../../../services/maps/services';
 import { getGradientForScheme, getColorScheme } from '../../../utils/colors';
 import ArcGISTiffLayer from './ArcGISTiffLayer';
+import { defaultColorScheme } from '../../../constants/colors';
+import { useLayerFromCategory } from '../../../hooks/useLayerFromCategory';
 
 interface LayerConfig {
   name: string;
@@ -42,6 +44,8 @@ export function createDynamicLayer(categoryId: string, config: LayerConfig) {
       const colorScheme = getColorScheme(config.colorScheme!);
       if (!colorScheme) return null;
 
+      const layer = useLayerFromCategory(categoryId, config.name);
+
       return (
         <div className="space-y-2">
           <div className="space-y-1">
@@ -50,8 +54,8 @@ export function createDynamicLayer(categoryId: string, config: LayerConfig) {
               style={{ background: getGradientForScheme(colorScheme) }}
             />
             <div className="flex justify-between text-xs text-gray-600">
-              <span>{colorScheme.domain?.[0] || 0}</span>
-              <span>{colorScheme.domain?.[1] || 100}</span>
+              <span>{layer?.range?.min || colorScheme.domain?.[0] || 0}</span>
+              <span>{layer?.range?.max || colorScheme.domain?.[1] || 100}</span>
             </div>
             <div className="text-xs text-gray-600 text-center">
               {config.units}
@@ -83,11 +87,7 @@ const ArcGISDynamicLayer: React.FC<ArcGISDynamicLayerProps> = ({
   });
 
   // Get layer configuration from state
-  const layer = useAppSelector(state => {
-    const category = state.layers.categories[categoryId];
-    if (!category) return null;
-    return category.layers.find(l => l.name === layerName);
-  });
+  const layer = useLayerFromCategory(categoryId, layerName);
 
   if (!layer) {
     console.warn(`Layer not found: ${layerName} in category ${categoryId}`);
@@ -98,7 +98,7 @@ const ArcGISDynamicLayer: React.FC<ArcGISDynamicLayerProps> = ({
   const layerId = layer.order || 1;
 
   // Get color scheme from layer configuration, fallback to greenYellowRed if none specified
-  const colorScheme = layer.colorScheme || 'greenYellowRed';
+  const colorScheme = layer.colorScheme || defaultColorScheme;
 
   return (
     <ArcGISTiffLayer

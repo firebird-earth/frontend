@@ -11,6 +11,7 @@ import { setLayerBounds, initializeLayerValueRange, setLayerMetadata, setLayerLo
 import { LayerType, GeoTiffRasterData, SerializableBounds } from '../../../types/map';
 import { rasterDataCache } from '../../../utils/geotif/cache';
 import proj4 from 'proj4';
+import { defaultColorScheme } from '../../../constants/colors';
 
 interface GeoTiffLayerProps {
   url: string;
@@ -56,6 +57,13 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
     return layer?.valueRange;
   });
 
+  const layer = useAppSelector(state => {
+    if (!categoryId || !layerId) return null;
+    const category = state.layers.categories[categoryId];
+    if (!category) return null;
+    return category.layers.find(l => l.id === layerId);
+  });
+
   // Debug logging for layer state changes
   useEffect(() => {
     console.log('[GeoTiffLayer] State change:', {
@@ -87,7 +95,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
 
   // Function to update visualization based on current value range
   const updateVisualization = () => {
-    if (!valueRange) return;
+    if (!valueRange || !layer) return;
 
     const rasterData = rasterDataCache.get(`${categoryId}-${layerId}`);
     if (!rasterData) return;
@@ -108,23 +116,36 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
 
     const imageData = ctx.createImageData(width, height);
     
+    // Debug logging for color scheme lookup
+    console.log('Color scheme lookup:', {
+      layerName: layer.name,
+      colorScheme: layer.colorScheme,
+      domain: layer.domain,
+      valueRange: {
+        min: valueRange.min,
+        max: valueRange.max,
+        defaultMin: valueRange.defaultMin,
+        defaultMax: valueRange.defaultMax
+      }
+    });
+
     let colorScheme;
-    if (url.includes('burn_probability')) {
-      colorScheme = getColorScheme('burnProbability');
-    } else if (url.includes('canopy_cover')) {
-      colorScheme = getColorScheme('canopyCover');
-    } else if (url.includes('flame_length')) {
-      colorScheme = getColorScheme('fireIntensity');
+    if (layer && layer.colorScheme) {
+      colorScheme = getColorScheme(layer.colorScheme);
+      console.log('Retrieved color scheme:', {
+        name: colorScheme?.name,
+        colors: colorScheme?.colors,
+        type: colorScheme?.type
+      });
     } else {
-      colorScheme = getColorScheme('greenYellowRed');
+      console.error('Failed to lookup colorscheme, use greenYellowRed');
+      colorScheme = getColorScheme(defaultColorScheme);
     }
     
-    if (!colorScheme) {
-      colorScheme = getColorScheme('greenYellowRed');
-    }
-
-    // Use full data range for normalization
-    const fullRange = valueRange.defaultMax - valueRange.defaultMin;
+    // Use layer domain for normalization if available, otherwise use full range
+    const domain = layer.domain || [valueRange.defaultMin, valueRange.defaultMax];
+    console.log('Using domain:', domain);
+    const fullRange = domain[1] - domain[0];
 
     for (let i = 0; i < data.length; i++) {
       const value = data[i];
@@ -145,8 +166,8 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
         continue;
       }
 
-      // Normalize based on full data range, not selected range
-      const normalizedValue = (value - valueRange.defaultMin) / fullRange;
+      // Normalize based on domain range
+      const normalizedValue = (value - domain[0]) / fullRange;
       const color = getColorFromScheme(colorScheme, normalizedValue);
       const { r, g, b } = hexToRgb(color);
       

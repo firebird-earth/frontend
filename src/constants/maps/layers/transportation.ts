@@ -1,22 +1,77 @@
 import { LayerMetadata } from '../types';
+import { LayerType } from '../../../types/map';
+import { LayerCategory } from '../../../store/slices/layers/types';
+import { createInitialCategory } from '../../../store/slices/common/utils/utils';
 
 export const TRANSPORTATION = {
   STATE_ROADS: {
     name: 'State DOT Roads',
     description: 'State Department of Transportation roads',
     units: 'category',
-    colorScheme: 'none'
+    colorScheme: 'none',
+    legend: {
+      items: [
+        {
+          color: '#E53935',
+          weight: 2,
+          fillColor: 'none',
+          fillOpacity: 0,
+          label: 'State Highway'
+        }
+      ]
+    }
   },
   COUNTY_ROADS: {
     name: 'County Roads',
     description: 'County maintained roads',
     units: 'category',
-    colorScheme: 'none'
+    colorScheme: 'none',
+    legend: {
+      items: [
+        {
+          color: '#FB8C00',
+          weight: 1.5,
+          fillColor: 'none',
+          fillOpacity: 0,
+          label: 'County Road'
+        }
+      ]
+    }
   },
   USFS_ROADS: {
     name: 'National Forest Service Roads',
     description: 'USFS maintained roads',
     units: 'category',
-    colorScheme: 'none'
+    colorScheme: 'none',
+    legend: {
+      items: [
+        {
+          color: '#43A047',
+          weight: 1,
+          fillColor: 'none',
+          fillOpacity: 0,
+          label: 'Forest Service Road'
+        }
+      ]
+    }
   }
 } as const;
+
+// Layer category constant
+export const TRANSPORTATION_CATEGORY: LayerCategory = createInitialCategory('transportation', 'Transportation', [
+  { 
+    name: TRANSPORTATION.STATE_ROADS.name, 
+    type: LayerType.Vector,
+    colorScheme: TRANSPORTATION.STATE_ROADS.colorScheme
+  },
+  { 
+    name: TRANSPORTATION.COUNTY_ROADS.name, 
+    type: LayerType.Vector,
+    colorScheme: TRANSPORTATION.COUNTY_ROADS.colorScheme
+  },
+  { 
+    name: TRANSPORTATION.USFS_ROADS.name, 
+    type: LayerType.Vector,
+    colorScheme: TRANSPORTATION.USFS_ROADS.colorScheme
+  }
+]);

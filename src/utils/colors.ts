@@ -69,19 +69,15 @@ export function getColorFromScheme(scheme: ColorScheme, normalizedValue: number)
 }
 
 /**
- * Get a color from a scheme based on a raw value and the scheme's domain
+ * Get a color from a scheme based on a raw value and domain range
  * @param scheme The color scheme to use
  * @param value The raw value
+ * @param range Optional domain range [min, max]. Defaults to [0, 100]
  * @returns The color as a hex string
  */
-export function getColorForValue(scheme: ColorScheme, value: number): string {
-  if (!scheme.domain) {
-    throw new Error(`Color scheme ${scheme.name} does not have a domain defined`);
-  }
-  
-  const [min, max] = scheme.domain;
+export function getColorForValue(scheme: ColorScheme, value: number, range?: [number, number]): string {
+  const [min, max] = range || [0, 100];
   const normalizedValue = (value - min) / (max - min);
-  
   return getColorFromScheme(scheme, normalizedValue);
 }
 

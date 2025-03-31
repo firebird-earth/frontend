@@ -22,6 +22,10 @@ class GeoTiffService {
     return GeoTiffService.instance;
   }
 
+  public getCache(): Map<string, GeoTiffCache> {
+    return this.cache;
+  }
+
   public async getGeoTiffData(url: string, onProgress?: (progress: number) => void): Promise<ArrayBuffer> {
     // Check if we're already loading this URL
     if (this.loadingPromises.has(url)) {

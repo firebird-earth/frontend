@@ -1,24 +1,17 @@
 import React from 'react';
-import AboutGeoTiffDialog from './AboutGeoTiffDialog';
 import AboutFeatureDialog from './AboutFeatureDialog';
-import AboutArcGISDialog from './AboutArcGISDialog';
+import AboutGeoTiffDialog from './AboutGeoTiffDialog';
 import AboutTiffDialog from './AboutTiffDialog';
 
 interface LegendDialogsProps {
-  showAboutPanel: {
-    metadata: any;
-    range: any;
-    layerName: string;
-    categoryId: string;
-  } | null;
   showFeatureAboutPanel: {
     metadata: any;
     layerName: string;
   } | null;
-  showArcGISAboutPanel: {
-    metadata: any;
+  showGeoTiffAboutPanel: {
     layerName: string;
-    renderingRule: string;
+    layerId: number;
+    categoryId: string;
   } | null;
   showTiffAboutPanel: {
     metadata: any;
@@ -26,34 +19,21 @@ interface LegendDialogsProps {
     layerName: string;
     renderingRule?: string;
   } | null;
-  onCloseAbout: () => void;
   onCloseFeatureAbout: () => void;
-  onCloseArcGISAbout: () => void;
+  onCloseGeoTiffAbout: () => void;
   onCloseTiffAbout: () => void;
 }
 
 const LegendDialogs: React.FC<LegendDialogsProps> = ({
-  showAboutPanel,
   showFeatureAboutPanel,
-  showArcGISAboutPanel,
+  showGeoTiffAboutPanel,
   showTiffAboutPanel,
-  onCloseAbout,
   onCloseFeatureAbout,
-  onCloseArcGISAbout,
+  onCloseGeoTiffAbout,
   onCloseTiffAbout
 }) => {
   return (
     <>
-      {showAboutPanel && (
-        <AboutGeoTiffDialog
-          metadata={showAboutPanel.metadata}
-          range={showAboutPanel.range}
-          layerName={showAboutPanel.layerName}
-          categoryId={showAboutPanel.categoryId}
-          onClose={onCloseAbout}
-        />
-      )}
-
       {showFeatureAboutPanel && (
         <AboutFeatureDialog
           metadata={showFeatureAboutPanel.metadata}
@@ -62,12 +42,12 @@ const LegendDialogs: React.FC<LegendDialogsProps> = ({
         />
       )}
 
-      {showArcGISAboutPanel && (
-        <AboutArcGISDialog
-          metadata={showArcGISAboutPanel.metadata}
-          layerName={showArcGISAboutPanel.layerName}
-          renderingRule={showArcGISAboutPanel.renderingRule}
-          onClose={onCloseArcGISAbout}
+      {showGeoTiffAboutPanel && (
+        <AboutGeoTiffDialog
+          layerName={showGeoTiffAboutPanel.layerName}
+          layerId={showGeoTiffAboutPanel.layerId}
+          categoryId={showGeoTiffAboutPanel.categoryId}
+          onClose={onCloseGeoTiffAbout}
         />
       )}
 

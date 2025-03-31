@@ -3,6 +3,7 @@ import { Home, Layers, Flame } from 'lucide-react';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { setActiveTab } from '../../store/slices/uiSlice';
+import { Tab } from '../../constants/maps';
 
 interface TabButtonProps {
   icon: React.ElementType;
@@ -44,20 +45,20 @@ const TabContent: React.FC = () => {
         <TabButton
           icon={Home}
           label="Home"
-          isActive={activeTab === 'home'}
-          onClick={() => dispatch(setActiveTab('home'))}
+          isActive={activeTab === Tab.HOME}
+          onClick={() => dispatch(setActiveTab(Tab.HOME))}
         />
         <TabButton
           icon={Flame}
           label="Wildfire Risk"
-          isActive={activeTab === 'firemetrics'}
-          onClick={() => dispatch(setActiveTab('firemetrics'))}
+          isActive={activeTab === Tab.FIREMETRICS}
+          onClick={() => dispatch(setActiveTab(Tab.FIREMETRICS))}
         />
         <TabButton
           icon={Layers}
           label="Layers"
-          isActive={activeTab === 'layers'}
-          onClick={() => dispatch(setActiveTab('layers'))}
+          isActive={activeTab === Tab.LAYERS}
+          onClick={() => dispatch(setActiveTab(Tab.LAYERS))}
         />
       </div>
     </div>

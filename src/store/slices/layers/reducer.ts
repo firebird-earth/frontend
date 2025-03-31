@@ -100,7 +100,7 @@ export const layersReducer = createReducer(initialState, (builder) => {
       });
     })
     .addCase(actions.setLayerMetadata, (state, action) => {
-      const { categoryId, layerId, metadata, range } = action.payload;
+      const { categoryId, layerId, metadata} = action.payload;
       const category = state.categories[categoryId];
       if (!category) return;
 
@@ -108,7 +108,6 @@ export const layersReducer = createReducer(initialState, (builder) => {
       if (!layer) return;
 
       layer.metadata = metadata;
-      layer.range = range;
     })
     .addCase(actions.setLayerLoading, (state, action) => {
       const { categoryId, layerId, loading } = action.payload;

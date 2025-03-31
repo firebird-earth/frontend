@@ -1,3 +1,4 @@
+// src/components/map/MapLayers.tsx
 import React from 'react';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { TileLayer } from 'react-leaflet';
@@ -26,23 +27,23 @@ const MapLayers: React.FC = () => {
   const coordinates = useAppSelector(state => state.home.aoi.coordinates);
   
   const activeBasemap = categories.basemaps?.layers.find(l => l.active);
-  const wuiLayer = categories.wildfire?.layers.find(l => l.name === 'WUI');
-  const crisisAreasLayer = categories.wildfire?.layers.find(l => l.name === 'Wildfire Crisis Areas');
-  const statesLayer = categories.jurisdictions?.layers.find(l => l.name === 'States');
-  const countiesLayer = categories.jurisdictions?.layers.find(l => l.name === 'Counties');
-  const federalLandsLayer = categories.jurisdictions?.layers.find(l => l.name === 'US Federal Lands');
-  const usfsLayer = categories.jurisdictions?.layers.find(l => l.name === 'US Forest Service');
-  const usfwsLayer = categories.jurisdictions?.layers.find(l => l.name === 'US Fish and Wildlife');
+  const wuiLayer = categories.wildfire?.layers.find(l => l.name === 'WUI' && l.active);
+  const crisisAreasLayer = categories.wildfire?.layers.find(l => l.name === 'Wildfire Crisis Areas' && l.active);
+  const statesLayer = categories.jurisdictions?.layers.find(l => l.name === 'States' && l.active);
+  const countiesLayer = categories.jurisdictions?.layers.find(l => l.name === 'Counties' && l.active);
+  const federalLandsLayer = categories.jurisdictions?.layers.find(l => l.name === 'US Federal Lands' && l.active);
+  const usfsLayer = categories.jurisdictions?.layers.find(l => l.name === 'US Forest Service' && l.active);
+  const usfwsLayer = categories.jurisdictions?.layers.find(l => l.name === 'US Fish and Wildlife' && l.active);
   
-  // Get elevation layers
-  const elevationLayer = categories.elevation?.layers.find(l => l.name === 'Elevation');
-  const hillshadeLayer = categories.elevation?.layers.find(l => l.name === 'Hillshade');
-  const aspectLayer = categories.elevation?.layers.find(l => l.name === 'Aspect');
-  const slopeLayer = categories.elevation?.layers.find(l => l.name === 'Slope Steepness');
-  const contourLayer = categories.elevation?.layers.find(l => l.name === 'Contour');
+  // Get elevation layers - only if active
+  const elevationLayer = categories.elevation?.layers.find(l => l.name === 'Elevation' && l.active);
+  const hillshadeLayer = categories.elevation?.layers.find(l => l.name === 'Hillshade' && l.active);
+  const aspectLayer = categories.elevation?.layers.find(l => l.name === 'Aspect' && l.active);
+  const slopeLayer = categories.elevation?.layers.find(l => l.name === 'Slope Steepness' && l.active);
+  const contourLayer = categories.elevation?.layers.find(l => l.name === 'Contour' && l.active);
   
   // Get active GeoTIFF layers in order with their categories
-  const activeGeoTiffLayers = getOrderedGeoTiffLayers(categories);
+  const activeGeoTiffLayers = getOrderedGeoTiffLayers(categories).filter(({ layer }) => layer.active);
 
   // Find any layer with showValues enabled
   const layerWithValues = React.useMemo(() => {
@@ -78,20 +79,20 @@ const MapLayers: React.FC = () => {
         minZoom={4}
       />
       
-      <WUILayer active={wuiLayer?.active || false} />
-      <CrisisAreasLayer active={crisisAreasLayer?.active || false} />
-      <StatesLayer active={statesLayer?.active || false} />
-      <CountiesLayer active={countiesLayer?.active || false} />
-      <FederalLandsLayer active={federalLandsLayer?.active || false} />
-      <USFSLayer active={usfsLayer?.active || false} />
-      <USFWSLayer active={usfwsLayer?.active || false} />
+      {wuiLayer && <WUILayer active={true} />}
+      {crisisAreasLayer && <CrisisAreasLayer active={true} />}
+      {statesLayer && <StatesLayer active={true} />}
+      {countiesLayer && <CountiesLayer active={true} />}
+      {federalLandsLayer && <FederalLandsLayer active={true} />}
+      {usfsLayer && <USFSLayer active={true} />}
+      {usfwsLayer && <USFWSLayer active={true} />}
       
       {/* Elevation Layers */}
-      <ElevationLayer active={elevationLayer?.active || false} />
-      <SlopeLayer active={slopeLayer?.active || false} />
-      <HillshadeLayer active={hillshadeLayer?.active || false} />
-      <AspectLayer active={aspectLayer?.active || false} />
-      <ContourLayer active={contourLayer?.active || false} />
+      {elevationLayer && <ElevationLayer active={true} />}
+      {slopeLayer && <SlopeLayer active={true} />}
+      {hillshadeLayer && <HillshadeLayer active={true} />}
+      {aspectLayer && <AspectLayer active={true} />}
+      {contourLayer && <ContourLayer active={true} />}
       
       {displayCoords && (
         <AOIBoundaryLayer
@@ -106,7 +107,7 @@ const MapLayers: React.FC = () => {
         <GeoTiffLayer
           key={`${categoryId}-${layer.id}-${layer.name}-${layer.active}-${layer.order}`}
           url={layer.source}
-          active={layer.active}
+          active={true}
           zIndex={layer.order || 0}
           categoryId={categoryId}
           layerId={layer.id}

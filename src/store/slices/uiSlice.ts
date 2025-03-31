@@ -1,7 +1,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { Tab } from '../../constants/maps';
 
 interface UIState {
-  activeTab: 'home' | 'layers' | 'firemetrics';
+  activeTab: Tab;
   isNavOpen: boolean;
   isLegendOpen: boolean;
   theme: 'light' | 'dark';
@@ -13,7 +14,7 @@ interface UIState {
 }
 
 const initialState: UIState = {
-  activeTab: 'home',
+  activeTab: Tab.HOME,
   isNavOpen: true,
   isLegendOpen: true,
   theme: 'light',
@@ -45,7 +46,7 @@ const uiSlice = createSlice({
   name: 'ui',
   initialState,
   reducers: {
-    setActiveTab: (state, action: PayloadAction<'home' | 'layers' | 'firemetrics'>) => {
+    setActiveTab: (state, action: PayloadAction<Tab>) => {
       state.activeTab = action.payload;
     },
     toggleNav: (state) => {

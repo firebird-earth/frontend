@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+// src/components/layers/base/GeoTiffLegend.tsx
+import React, { useState, useEffect, useMemo } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { useAppSelector } from '../../../hooks/useAppSelector';
 import { getColorScheme, getGradientForScheme } from '../../../utils/colors';
@@ -11,7 +12,7 @@ interface GeoTiffLegendProps {
   layerId: number;
 }
 
-const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({ 
+const GeoTiffLegend: React.FC<GeoTiffLegendProps> = React.memo(({ 
   url, 
   categoryId, 
   layerId 
@@ -21,7 +22,7 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  // Get the current AOI from Redux store
+  // Get the current AOI from Redux store using selector
   const currentAOI = useAppSelector(state => state.home.aoi.current);
   const isCreatingAOI = useAppSelector(state => state.ui.isCreatingAOI);
   const layer = useAppSelector(state => {
@@ -30,30 +31,17 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({
     return category.layers.find(l => l.id === layerId);
   });
 
-  // Debug logging
-  console.log('GeoTiffLegend props:', {
-    url,
-    categoryId,
-    layerId,
-    layer: layer ? {
-      name: layer.name,
-      type: layer.type,
-      source: layer.source,
-      valueRange: layer.valueRange,
-      colorScheme: layer.colorScheme,
-      domain: layer.domain,
-      units: layer.units
-    } : null,
-    currentAOI: currentAOI ? {
-      id: currentAOI.id,
-      name: currentAOI.name
-    } : null
-  });
+  // Memoize the URL to prevent unnecessary fetches
+  const effectiveUrl = useMemo(() => {
+    if (!currentAOI || !layer) return url;
+    const aoiId = 'id' in currentAOI ? currentAOI.id : 1;
+    const layerName = layer.source.split('/').pop()?.replace('.tif', '') || '';
+    return getGeoTiffUrl(aoiId, layerName);
+  }, [url, currentAOI, layer]);
 
   useEffect(() => {
     const loadMetadata = async () => {
       try {
-        console.log('Loading GeoTIFF metadata...');
         setLoading(true);
         setError(null);
 
@@ -65,15 +53,7 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({
           throw new Error("Layer not found");
         }
 
-        // Get the correct URL for the GeoTIFF
-        const aoiId = 'id' in currentAOI ? currentAOI.id : 1;
-        const layerName = layer.source.split('/').pop()?.replace('.tif', '') || '';
-        const effectiveUrl = getGeoTiffUrl(aoiId, layerName);
-
-        console.log('Loading metadata for URL:', effectiveUrl);
-
         const metadataResult = await geotiffService.getGeoTiffMetadata(effectiveUrl);
-        console.log('Metadata loaded:', metadataResult);
 
         if (!metadataResult?.metadata?.standard || !metadataResult?.range) {
           throw new Error('Invalid metadata or data range');
@@ -91,7 +71,7 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({
     };
 
     loadMetadata();
-  }, [url, currentAOI, isCreatingAOI, layer]);
+  }, [effectiveUrl, currentAOI, layer]);
 
   if (loading) {
     return (
@@ -147,6 +127,8 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = ({
       </div>
     </div>
   );
-};
+});
+
+GeoTiffLegend.displayName = 'GeoTiffLegend';
 
 export default GeoTiffLegend;

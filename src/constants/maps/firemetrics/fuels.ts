@@ -6,7 +6,8 @@ import { GEOTIFF_LAYERS } from '../../../constants/urls';
 import { colorSchemes } from '../../../constants/colors';
 
 export const FUELS = {
-  name: 'Fules',
+  name: 'fuels',
+  label: 'Fules',
   CANOPY_BULK_DENSITY: {
     name: 'Canopy Bulk Density',
     description: 'Forest canopy bulk density',

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, Eye, EyeOff, Plus } from 'lucide-react';
 import SectionHeader from './SectionHeader';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
@@ -10,7 +10,7 @@ import { getIconForLayer } from '../../utils/icons';
 import { isLayersTab, isFiremetricsTab } from '../../constants/maps';
 
 const LayersTab: React.FC = () => {
-  const dispatch = store.dispatch;
+  const dispatch = useAppDispatch();
   const sections = useAppSelector(state => state.ui.sections);
   const { categories } = useAppSelector(state => state.layers);
   const currentAOI = useAppSelector(state => state.home.aoi.current);

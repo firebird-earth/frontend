@@ -23,7 +23,7 @@ export interface Coordinates {
 export type SerializableBounds = [[number, number], [number, number]]; // [[south, west], [north, east]]
 
 // Serializable metadata that can be stored in Redux
-export interface GeoTiffMetadata {
+export interface GeoTiffMetadataRedux {
   width: number;
   height: number;
   bounds: SerializableBounds;
@@ -33,6 +33,10 @@ export interface GeoTiffMetadata {
   scale: number[];
   transform?: number[];
   rawBounds?: [number, number, number, number]; // [minX, minY, maxX, maxY] in source CRS
+  resolution: {
+    x: number;
+    y: number;
+  };
   stats?: {
     min: number;
     max: number;
@@ -72,7 +76,7 @@ export interface MapLayer {
   };
   renderingRule?: string;
   showValues?: boolean;
-  metadata?: GeoTiffMetadata; // Only serializable metadata
+  metadata?: GeoTiffMetadataRedux; // Only serializable metadata
   colorScheme?: string; // Added colorScheme property
   domain?: [number, number]; // Added domain property
   units?: string; // Added units property

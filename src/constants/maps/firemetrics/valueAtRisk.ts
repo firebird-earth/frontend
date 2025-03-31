@@ -4,7 +4,8 @@ import { LayerCategory } from '../../../store/slices/layers/types';
 import { createInitialCategory } from '../../../store/slices/common/utils/utils';
 
 export const VALUE_AT_RISK = {
-  name: 'Value at Risk',
+  name: 'valueAtRisk',
+  label: 'Value at Risk',
   FIRESHEDS: {
     name: 'Firesheds',
     description: 'Fireshed boundaries',

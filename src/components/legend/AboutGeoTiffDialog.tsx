@@ -1,67 +1,49 @@
 import React from 'react';
 import { Info } from 'lucide-react';
 import { useDraggable } from '../../hooks/useDraggable';
+import { getCRSName } from '../../utils/crs';
+import { useAppSelector } from '../../hooks/useAppSelector';
 
 interface AboutGeoTiffDialogProps {
-  metadata: {
-    standard: {
-      imageWidth: number;
-      imageHeight: number;
-      bitsPerSample: number[];
-      compression: number | null;
-      resolution: {
-        x: number;
-        y: number;
-      };
-      noData: number | null;
-      nonNullValues: number;
-      totalPixels: number;
-      zeroCount: number;
-      crs: string;
-      projectionName: string;
-      datum: string;
-      modelTransform: {
-        origin: [number, number] | null;
-      };
-    };
-    custom: {
-      units?: string;
-      description?: string;
-      source?: string;
-    };
-  };
-  range: {
-    min: number;
-    max: number;
-    mean: number;
-  };
+  layerName: string;
+  layerId: number;
+  categoryId: string;
   onClose: () => void;
-  layerName?: string;
-  categoryId?: string;
 }
 
 const AboutGeoTiffDialog: React.FC<AboutGeoTiffDialogProps> = ({ 
-  metadata, 
-  range, 
-  onClose, 
-  layerName, 
-  categoryId 
+  layerName,
+  layerId,
+  categoryId,
+  onClose
 }) => {
   const { position, handleMouseDown, handleDialogClick, dialogRef } = useDraggable({
     padding: 25,
     initialCorner: 'bottom-right'
   });
 
-  const formatNoData = (value: any): string => {
-    if (value === undefined || value === null) return 'Not set';
-    if (typeof value === 'number') return value.toString();
-    if (typeof value === 'string') return value.trim();
-    return 'Invalid';
-  };
+  // Get layer from Redux store
+  const layer = useAppSelector(state => 
+    state.layers.categories[categoryId]?.layers.find(l => l.id === layerId)
+  );
 
-  const noDataPixels = metadata.standard.totalPixels - metadata.standard.nonNullValues;
-  const zeroPixels = metadata.standard.zeroCount || 0;
-  const validPixels = metadata.standard.nonNullValues;
+  // Access metadata and range from the layer
+  const metadata = layer?.metadata;
+
+  // Early return if metadata is missing
+  if (!metadata) {
+    console.log("metadata not found");
+    return null;
+  }
+
+  // Safely extract pixel statistics
+  const min = metadata.stats?.min || 0;
+  const max = metadata.stats?.max || 0;
+  const mean = metadata.stats?.mean || 0;
+  const validPixels = metadata.stats?.validCount || 0;
+  const noDataPixels = metadata.stats?.noDataCount || 0;
+  const zeroPixels = metadata.stats?.zeroCount || 0;
+  const totalPixels = metadata.width * metadata.height;
 
   return (
     <div className="fixed inset-0 z-[2000]" style={{ pointerEvents: 'none' }}>
@@ -82,37 +64,41 @@ const AboutGeoTiffDialog: React.FC<AboutGeoTiffDialogProps> = ({
         >
           <Info className="h-5 w-5 text-gray-500 pointer-events-none" />
           <h3 className="text-lg font-medium text-gray-900 pointer-events-none">
-            About
+            {layerName}
           </h3>
         </div>
         
         <div className="p-4 space-y-4">
+          {/* Data Statistics */}
           <div className="space-y-1">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Statistics</h4>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Min:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {range.min.toFixed(3)}
+                {min.toFixed(3)}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Max:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {range.max.toFixed(3)}
+                {max.toFixed(3)}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Mean:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {range.mean.toFixed(3)}
+                {mean.toFixed(3)}
               </span>
             </div>
           </div>
 
-          <div className="pt-2 mt-2 border-t border-gray-200 space-y-1">
+          {/* Pixel Analysis */}
+          <div className="space-y-1">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Pixel Analysis</h4>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Size:</span>
+              <span className="text-sm text-gray-600">Dimensions:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {metadata.standard.imageWidth} × {metadata.standard.imageHeight}
+                {metadata.width} × {metadata.height}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -136,106 +122,44 @@ const AboutGeoTiffDialog: React.FC<AboutGeoTiffDialogProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Total Pixels:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {metadata.standard.totalPixels.toLocaleString()}
+                {totalPixels.toLocaleString()}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Resolution:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {isNaN(metadata.standard.resolution.x) 
-                  ? 'Unknown'
-                  : `${metadata.standard.resolution.x.toFixed(2)} meters`}
-              </span>
-            </div>
-          </div>
-
-          <div className="pt-2 mt-2 border-t border-gray-200 space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Data Type:</span>
-              <span className="text-sm font-medium text-gray-700 text-right">
-                {metadata.standard.bitsPerSample
-                  ? `${metadata.standard.bitsPerSample[0]}-bit`
+                {metadata.resolution?.x 
+                  ? `${metadata.resolution.x.toFixed(2)} meters`
                   : 'Unknown'}
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Compression:</span>
-              <span className="text-sm font-medium text-gray-700 text-right">
-                {metadata.standard.compression ? `Type ${metadata.standard.compression}` : 'None'}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">No Data:</span>
-              <span className="text-sm font-medium text-gray-700 text-right">
-                {formatNoData(metadata.standard.noData)}
-               </span>
-            </div>
-            {metadata.custom?.description && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Description:</span>
-                <span className="text-sm font-medium text-gray-700 text-right">
-                  {metadata.custom.description}
-                </span>
-              </div>
-            )}
           </div>
 
-          <div className="pt-2 mt-2 border-t border-gray-200 space-y-1">
+          {/* Image Properties */}
+          <div className="space-y-1">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Properties</h4>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">CRS:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {metadata.standard.crs || 'Unknown'}
+                {getCRSName(metadata.sourceCRS)}
               </span>
             </div>
-            {metadata.standard.projectionName && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600"></span>
-                <span className="text-sm font-medium text-gray-700 text-right">
-                  {metadata.standard.projectionName}
-                </span>
-              </div>
-            )}
-            {metadata.standard.modelTransform?.origin && (
-              <>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Top:</span>
-                  <span className="text-sm font-bold text-gray-700 font-mono text-right">
-                    {metadata.standard.modelTransform.origin[0].toFixed(6)}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Left:</span>
-                  <span className="text-sm font-bold text-gray-700 font-mono text-right">
-                    {metadata.standard.modelTransform.origin[1].toFixed(6)}
-                  </span>
-                </div>
-              </>
-            )}
-            {metadata.standard.datum && (
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Datum:</span>
-                <span className="text-sm font-medium text-gray-700 text-right">
-                  {metadata.standard.datum}
-                </span>
-              </div>
-            )}
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">NoData Value:</span>
+              <span className="text-sm font-medium text-gray-700 text-right">
+                {metadata.noDataValue ?? 'None'}
+              </span>
+            </div>
           </div>
         </div>
         
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex justify-between items-center">
-            {metadata.custom?.source && (
-              <span className="text-xs text-gray-500 italic">
-                Source: {metadata.custom.source}
-              </span>
-            )}
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium"
-            >
-              Done
-            </button>
-          </div>
+        <div className="flex justify-end p-4 border-t border-gray-200">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium"
+          >
+            Done
+          </button>
         </div>
       </div>
     </div>

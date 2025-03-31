@@ -41,10 +41,14 @@ const LegendContent: React.FC<LegendContentProps> = ({
 }) => {
   const { categories } = useAppSelector(state => state.layers);
 
-  const allActiveLayers = Object.entries(categories).flatMap(([categoryId, category]) => {
+  // Get GeoTIFF layers first
+  const geoTiffLayers = getOrderedGeoTiffLayers(categories);
+  
+  // Get other layers, excluding GeoTIFFs
+  const otherLayers = Object.entries(categories).flatMap(([categoryId, category]) => {
     if (categoryId !== 'basemaps') {
       return category.layers
-        .filter(layer => layer.active)
+        .filter(layer => layer.active && layer.type !== LayerType.GeoTiff)
         .map(layer => ({
           categoryId,
           layer
@@ -52,12 +56,6 @@ const LegendContent: React.FC<LegendContentProps> = ({
     }
     return [];
   });
-
-  const geoTiffLayers = getOrderedGeoTiffLayers(categories);
-  
-  const otherLayers = allActiveLayers.filter(
-    ({ layer }) => layer.type !== LayerType.GeoTiff
-  );
 
   const activeLayers = [...geoTiffLayers, ...otherLayers];
 
@@ -76,10 +74,7 @@ const LegendContent: React.FC<LegendContentProps> = ({
               <h4 className="text-sm font-semibold text-gray-800">{layer.name}</h4>
               <div className="relative">
                 <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onMenuClick(e, categoryId, layer.id);
-                  }}
+                  onClick={(e) => onMenuClick(e, categoryId, layer.id)}
                   className="p-1 hover:bg-gray-100 rounded-lg text-gray-600"
                   title="More options"
                 >
@@ -110,6 +105,7 @@ const LegendContent: React.FC<LegendContentProps> = ({
               />
             )}
 
+            {/* Other layer legends */}
             {layer.name === MAP_LAYERS.JURISDICTIONS.STATES.name && <StatesLayer.Legend />}
             {layer.name === MAP_LAYERS.JURISDICTIONS.COUNTIES.name && <CountiesLayer.Legend />}
             {layer.name === MAP_LAYERS.JURISDICTIONS.FEDERAL_LANDS.name && <FederalLandsLayer.Legend />}

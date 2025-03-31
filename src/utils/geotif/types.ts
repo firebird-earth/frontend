@@ -29,6 +29,7 @@ export interface GeoTiffMetadata {
       nonNullValues: number;
       totalPixels: number;
       zeroCount: number;
+      noDataCount: number;
       crs: string;
       projectionName: string;
       datum: string;

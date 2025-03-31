@@ -3,15 +3,15 @@ import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import * as GeoTIFF from 'geotiff';
 import { AlertTriangle, Loader2 } from 'lucide-react';
-import { loadGeoTiffFromUrl, validateGeoTiff, getGeoTiffBounds } from '../../../utils/geotif/utils';
+import { validateGeoTiff, getGeoTiffBounds } from '../../../utils/geotif/utils';
 import { getColorScheme, getColorFromScheme, hexToRgb, GeoTiffNoDataColor } from '../../../utils/colors';
 import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { useAppSelector } from '../../../hooks/useAppSelector';
 import { setLayerBounds, initializeLayerValueRange, setLayerMetadata, setLayerLoading } from '../../../store/slices/layers';
-import { LayerType, GeoTiffRasterData, SerializableBounds } from '../../../types/map';
+import { LayerType, GeoTiffRasterData } from '../../../types/map';
 import { rasterDataCache } from '../../../utils/geotif/cache';
-import proj4 from 'proj4';
 import { defaultColorScheme } from '../../../constants/colors';
+import { geotiffService } from '../../../services/geotiffService';
 
 interface GeoTiffLayerProps {
   url: string;
@@ -19,6 +19,7 @@ interface GeoTiffLayerProps {
   zIndex?: number;
   categoryId?: string;
   layerId?: number;
+  onError?: (error: Error) => void;
 }
 
 const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({ 
@@ -26,7 +27,8 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
   active, 
   zIndex = 0,
   categoryId,
-  layerId 
+  layerId,
+  onError
 }) => {
   const map = useMap();
   const dispatch = useAppDispatch();
@@ -37,6 +39,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
   const [progress, setProgress] = useState(0);
   const imageDataRef = useRef<string | null>(null);
   const boundsRef = useRef<L.LatLngBounds | null>(null);
+  const loadTimeoutRef = useRef<number | null>(null);
   
   const currentAOI = useAppSelector(state => state.home.aoi.current);
   const isCreatingAOI = useAppSelector(state => state.ui.isCreatingAOI);
@@ -64,18 +67,6 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
     return category.layers.find(l => l.id === layerId);
   });
 
-  // Debug logging for layer state changes
-  useEffect(() => {
-    console.log('[GeoTiffLayer] State change:', {
-      active,
-      url,
-      opacity,
-      valueRange,
-      hasLayer: !!layerRef.current,
-      mapHasLayer: layerRef.current ? map.hasLayer(layerRef.current) : false
-    });
-  }, [active, url, opacity, valueRange, map]);
-
   // Cleanup function
   const cleanupLayer = () => {
     if (layerRef.current) {
@@ -86,6 +77,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
       canvasRef.current = null;
     }
     imageDataRef.current = null;
+    boundsRef.current = null;
     
     // Clear raster data from cache when layer is removed
     if (categoryId && layerId) {
@@ -95,48 +87,26 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
 
   // Function to update visualization based on current value range
   const updateVisualization = () => {
-    if (!valueRange || !layer) return;
+    if (!valueRange || !boundsRef.current || !layer) return;
 
     const rasterData = rasterDataCache.get(`${categoryId}-${layerId}`);
     if (!rasterData) return;
 
     const { data, width, height, noDataValue } = rasterData;
 
-    // Create new canvas for this update
     const canvas = document.createElement('canvas');
     canvasRef.current = canvas;
     canvas.width = width;
     canvas.height = height;
 
     const ctx = canvas.getContext('2d');
-    if (!ctx) {
-      console.error('Failed to get canvas context');
-      return;
-    }
+    if (!ctx) return;
 
     const imageData = ctx.createImageData(width, height);
     
-    // Debug logging for color scheme lookup
-    console.log('Color scheme lookup:', {
-      layerName: layer.name,
-      colorScheme: layer.colorScheme,
-      domain: layer.domain,
-      valueRange: {
-        min: valueRange.min,
-        max: valueRange.max,
-        defaultMin: valueRange.defaultMin,
-        defaultMax: valueRange.defaultMax
-      }
-    });
-
     let colorScheme;
     if (layer && layer.colorScheme) {
       colorScheme = getColorScheme(layer.colorScheme);
-      console.log('Retrieved color scheme:', {
-        name: colorScheme?.name,
-        colors: colorScheme?.colors,
-        type: colorScheme?.type
-      });
     } else {
       console.error('Failed to lookup colorscheme, use greenYellowRed');
       colorScheme = getColorScheme(defaultColorScheme);
@@ -144,7 +114,6 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
     
     // Use layer domain for normalization if available, otherwise use full range
     const domain = layer.domain || [valueRange.defaultMin, valueRange.defaultMax];
-    console.log('Using domain:', domain);
     const fullRange = domain[1] - domain[0];
 
     for (let i = 0; i < data.length; i++) {
@@ -178,14 +147,22 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
     }
 
     ctx.putImageData(imageData, 0, 0);
-    
-    // Store the image data URL
     const dataUrl = canvas.toDataURL();
     imageDataRef.current = dataUrl;
 
-    // Update layer if it exists
     if (layerRef.current && boundsRef.current) {
       layerRef.current.setUrl(dataUrl);
+    } else {
+      // Create new layer
+      const layer = L.imageOverlay(dataUrl, boundsRef.current, {
+        opacity: opacity,
+        interactive: false,
+        zIndex: zIndex,
+        className: 'geotiff-high-quality'
+      });
+
+      layer.addTo(map);
+      layerRef.current = layer;
     }
   };
 
@@ -199,7 +176,6 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
   // Main effect for layer management
   useEffect(() => {
     if (!active) {
-      console.log('Cleaning up inactive layer');
       cleanupLayer();
       setError(null);
       setLoading(false);
@@ -208,46 +184,40 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
     }
     
     if (!currentAOI) {
-      console.log('No AOI selected');
       setError("Please select an Area of Interest (AOI) first");
       setLoading(false);
       return;
     }
 
-    const loadGeoTiff = async () => {
+    const loadData = async (bounds: L.LatLngBounds) => {
       try {
-        console.log('Starting GeoTIFF load');
         setError(null);
         setLoading(true);
         setProgress(0);
 
-        const arrayBuffer = await loadGeoTiffFromUrl(url, setProgress);
+        // Load and process GeoTIFF
+        const arrayBuffer = await geotiffService.getGeoTiffData(url, setProgress);
         validateGeoTiff(arrayBuffer);
 
         const tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
         const image = await tiff.getImage();
-        if (!image) throw new Error('No image found in GeoTIFF');
-
+        
         const width = image.getWidth();
         const height = image.getHeight();
+        const rasters = await image.readRasters();
+        const data = rasters[0] as Float32Array;
 
         const boundsInfo = await getGeoTiffBounds(image);
-    
-        let serializableBounds: SerializableBounds;
-        serializableBounds = boundsInfo.bounds;
-
         const leafletBounds = L.latLngBounds(
-          L.latLng(serializableBounds[0][0], serializableBounds[0][1]),
-          L.latLng(serializableBounds[1][0], serializableBounds[1][1])
+          L.latLng(boundsInfo.bounds[0][0], boundsInfo.bounds[0][1]),
+          L.latLng(boundsInfo.bounds[1][0], boundsInfo.bounds[1][1])
         );
 
-        const rasters = await image.readRasters();
-        const data = rasters[0] as Int16Array | Float32Array;
+        boundsRef.current = leafletBounds;
 
+        // Get the GDAL_NODATA value
         const rawNoData = image.fileDirectory.GDAL_NODATA;
-        const noDataValue = rawNoData !== undefined
-          ? Number(rawNoData.replace('\x00', ''))
-          : null;
+        const noDataValue = rawNoData !== undefined ? Number(rawNoData.replace('\x00', '')) : null;
 
         const rasterData: GeoTiffRasterData = {
           data,
@@ -257,58 +227,49 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
         };
 
         // Store in raster cache
-        if (categoryId && layerId) {
-          rasterDataCache.set(`${categoryId}-${layerId}`, rasterData);
+        rasterDataCache.set(`${categoryId}-${layerId}`, rasterData);
+
+      const cachedMetadata = geotiffService.getCache().get(url)?.metadata;
+        if (!cachedMetadata) {
+          throw new Error('Metadata not found in cache');
         }
 
-        // Store bounds
-        boundsRef.current = leafletBounds;
-
+        console.log("cached metadata:", cachedMetadata)
+        let resolutionCached = cachedMetadata.metadata.standard.resolution
+        console.log("cached resolution:", resolutionCached)
+  
+        // Calculate statistics
         let min = Infinity;
         let max = -Infinity;
-        let sum = 0;
+        let mean = Infinity;
         let validCount = 0;
         let noDataCount = 0;
         let zeroCount = 0;
 
-        for (let i = 0; i < data.length; i++) {
-          const value = data[i];
-          if (
-            value !== undefined &&
-            !isNaN(value) &&
-            isFinite(value) &&
-            (noDataValue === null || value !== noDataValue)
-          ) {
-            if (value === 0) {
-              zeroCount++;
-            }
-            min = Math.min(min, value);
-            max = Math.max(max, value);
-            sum += value;
-            validCount++;
-          } else {
-            noDataCount++;
-          }
-        }
-
-        const mean = validCount > 0 ? sum / validCount : 0;
-
+        validCount = cachedMetadata.metadata.standard.nonNullValues
+        noDataCount = cachedMetadata.metadata.standard.noDataCount
+        zeroCount = cachedMetadata.metadata.standard.zeroCount
+        
+        min = cachedMetadata.range.min
+        max = cachedMetadata.range.max
+        mean = cachedMetadata.range.mean
+          
         if (categoryId && layerId) {
-          // Update layer metadata (serializable only)
+          // Update layer metadata
           dispatch(setLayerMetadata({
             categoryId,
             layerId,
             metadata: {
               width,
               height,
-              bounds: serializableBounds,
+              bounds: boundsInfo.bounds,
               noDataValue,
               sourceCRS: boundsInfo.sourceCRS,
               tiepoint: boundsInfo.tiepoint || [],
               scale: boundsInfo.pixelScale || [],
               transform: boundsInfo.transform,
               rawBounds: boundsInfo.rawBounds,
-              rawBoundsCRS: boundsInfo.sourceCRS,
+              resolution: cachedMetadata.metadata.standard.resolution,
               stats: {
                 min,
                 max,
@@ -317,11 +278,6 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
                 noDataCount,
                 zeroCount
               }
-            },
-            range: {
-              min,
-              max,
-              mean
             }
           }));
 
@@ -339,51 +295,53 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
           dispatch(setLayerBounds({
             categoryId,
             layerId,
-            bounds: serializableBounds
+            bounds: boundsInfo.bounds
           }));
         }
 
         // Initial visualization
         updateVisualization();
 
-        // Only create/update layer if we have image data
-        if (imageDataRef.current) {
-          if (layerRef.current) {
-            console.log('Updating existing layer');
-            layerRef.current.setUrl(imageDataRef.current);
-            layerRef.current.setBounds(leafletBounds);
-            layerRef.current.setOpacity(opacity);
-          } else {
-            console.log('Creating new layer');
-            const layer = L.imageOverlay(imageDataRef.current, leafletBounds, {
-              opacity: opacity,
-              interactive: false,
-              zIndex: zIndex,
-              className: 'geotiff-high-quality'
-            });
-
-            layer.addTo(map);
-            layerRef.current = layer;
-          }
-        }
-
         setLoading(false);
         setProgress(100);
-        
-        console.log('Layer loaded successfully');
       } catch (error) {
         console.error('Failed to load layer:', error);
         const message = error instanceof Error ? error.message : 'Unknown error';
         setError(message);
         setLoading(false);
         cleanupLayer();
+        if (onError) {
+          onError(error instanceof Error ? error : new Error(message));
+        }
       }
     };
 
-    loadGeoTiff();
+    // Handle map movement events
+    const handleMapMove = () => {
+      // Clear any pending load timeout
+      if (loadTimeoutRef.current) {
+        window.clearTimeout(loadTimeoutRef.current);
+      }
+
+      // Set a new timeout to load data after movement stops
+      loadTimeoutRef.current = window.setTimeout(() => {
+        const bounds = map.getBounds();
+        loadData(bounds);
+      }, 250); // Wait 250ms after movement stops before loading
+    };
+
+    map.on('moveend', handleMapMove);
+    map.on('zoomend', handleMapMove);
+
+    // Initial load
+    handleMapMove();
 
     return () => {
-      console.log('Cleanup effect running');
+      map.off('moveend', handleMapMove);
+      map.off('zoomend', handleMapMove);
+      if (loadTimeoutRef.current) {
+        window.clearTimeout(loadTimeoutRef.current);
+      }
       cleanupLayer();
     };
   }, [map, url, active, dispatch, categoryId, layerId, currentAOI, isCreatingAOI, zIndex]);
@@ -391,7 +349,6 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
   // Separate effect for opacity changes
   useEffect(() => {
     if (layerRef.current && map.hasLayer(layerRef.current)) {
-      console.log('Updating layer opacity:', opacity);
       layerRef.current.setOpacity(opacity);
     }
   }, [opacity, map]);

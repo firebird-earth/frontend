@@ -6,7 +6,7 @@ export function handleLayersTabToggle(state: LayersState, categoryId: string, la
   const layer = findLayer(state, categoryId, layerId);
   if (!layer) return;
 
-  // Special handling for FireMetrics and Fuels categories
+  // Special handling for FireMetrics
   if (isFiremetricsTab(categoryId)) {
     // Turn off all layers in FireMetrics categories
     Object.entries(state.categories).forEach(([catId, cat]) => {
@@ -20,12 +20,12 @@ export function handleLayersTabToggle(state: LayersState, categoryId: string, la
   }
 
   // For all other categories:
-  // 1. Turn off all layers in all categories (except basemaps and FireMetrics tab layers)
+  // 1. Turn off all layers in the same category (except basemaps)
   // 2. Toggle the clicked layer
   Object.entries(state.categories).forEach(([catId, cat]) => {
-    if (isLayersTab(catId)) {
+    if (catId === categoryId) {
       cat.layers.forEach(l => {
-        if (catId === categoryId && l.id === layerId) {
+        if (l.id === layerId) {
           // Toggle the clicked layer
           l.active = !l.active;
           
@@ -34,7 +34,7 @@ export function handleLayersTabToggle(state: LayersState, categoryId: string, la
             state.slopeRenderingRule = l.renderingRule;
           }
         } else {
-          // Turn off all other layers
+          // Turn off other layers in same category
           l.active = false;
         }
       });

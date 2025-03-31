@@ -8,16 +8,9 @@ import { toggleLayer, toggleSingleLayer } from '../../store/slices/layers';
 import SelectAOIDialog from '../aoi/SelectAOIDialog';
 import { FIRE_METRICS } from '../../constants/maps';
 
-const SECTIONS = {
-  VALUE_AT_RISK: 'valueAtRisk',
-  LANDSCAPE_RISK: 'landscapeRisk', 
-  FUELS: 'fuels'
-} as const;
-
 const FireMetricsTab: React.FC = () => {
   const dispatch = useAppDispatch();
   const sections = useAppSelector(state => state.ui.sections);
-  const firemetricLayers = useAppSelector(state => state.layers.categories.firemetrics?.layers || []);
   const fuelLayers = useAppSelector(state => state.layers.categories.fuels?.layers || []);
   const valueAtRiskLayers = useAppSelector(state => state.layers.categories.valueAtRisk?.layers || []);
   const landscapeRiskLayers = useAppSelector(state => state.layers.categories.landscapeRisk?.layers || []);
@@ -122,13 +115,13 @@ const FireMetricsTab: React.FC = () => {
       {/* Value At Risk Section */}
       <div>
         <SectionHeader 
-          title="Value At Risk" 
+          title={FIRE_METRICS.VALUE_AT_RISK.label}
           isOpen={sections.valueAtRisk} 
-          onToggle={() => dispatch(toggleSection('valueAtRisk'))}
+          onToggle={() => dispatch(toggleSection(FIRE_METRICS.VALUE_AT_RISK.name))}
         />
         {sections.valueAtRisk && (
           <div className="space-y-1">
-            {valueAtRiskLayers.map(layer => renderLayerItem(layer, 'valueAtRisk'))}
+            {valueAtRiskLayers.map(layer => renderLayerItem(layer, FIRE_METRICS.VALUE_AT_RISK.name))}
           </div>
         )}
       </div>
@@ -136,14 +129,13 @@ const FireMetricsTab: React.FC = () => {
       {/* Landscape Risk Section */}
       <div>
         <SectionHeader 
-          title="Landscape Risk" 
+          title={FIRE_METRICS.LANDSCAPE_RISK.label}
           isOpen={sections.landscapeRisk} 
-          onToggle={() => dispatch(toggleSection('landscapeRisk'))}
+          onToggle={() => dispatch(toggleSection(FIRE_METRICS.LANDSCAPE_RISK.name))}
         />
         {sections.landscapeRisk && (
           <div className="space-y-1">
-            {firemetricLayers.map(layer => renderLayerItem(layer, 'firemetrics'))}
-            {landscapeRiskLayers.map(layer => renderLayerItem(layer, 'landscapeRisk'))}
+            {landscapeRiskLayers.map(layer => renderLayerItem(layer, FIRE_METRICS.LANDSCAPE_RISK.name))}
           </div>
         )}
       </div>
@@ -151,13 +143,13 @@ const FireMetricsTab: React.FC = () => {
       {/* Fuels Section */}
       <div>
         <SectionHeader 
-          title="Fuels" 
+          title={FIRE_METRICS.FUELS.label}
           isOpen={sections.fuels} 
-          onToggle={() => dispatch(toggleSection('fuels'))}
+          onToggle={() => dispatch(toggleSection(FIRE_METRICS.FUELS.name))}
         />
         {sections.fuels && (
           <div className="space-y-1">
-            {fuelLayers.map(layer => renderLayerItem(layer, 'fuels'))}
+            {fuelLayers.map(layer => renderLayerItem(layer, FIRE_METRICS.FUELS.name))}
           </div>
         )}
       </div>

@@ -25,7 +25,7 @@ export const CATEGORY_TAB_MAPPING = {
 } as const;
 
 export const isHomeTab = (categoryId: string): boolean => CATEGORY_TAB_MAPPING[categoryId] === Tab.HOME;
-export const isLayersTab = (categoryId: string): boolean => CATEGORY_TAB_MAPPING[categoryId] === Tab.LAYERS;
+export const isLayersTab = (categoryId: string): boolean => categoryId !== 'basemaps' && CATEGORY_TAB_MAPPING[categoryId] === Tab.LAYERS;
 export const isFiremetricsTab = (categoryId: string): boolean => CATEGORY_TAB_MAPPING[categoryId] === Tab.FIREMETRICS;
 
 export { FIRE_METRICS, MAP_LAYERS };

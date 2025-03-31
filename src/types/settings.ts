@@ -1,3 +1,5 @@
+import { Tab } from '../constants/maps';
+
 // Base settings interface that will be stored in Firebase
 export interface FirebaseUserSettings {
   id: string;           // User's UID from Firebase Auth
@@ -30,7 +32,7 @@ export interface FirebaseUserSettings {
       updatedAt: string;
     };
     navigation: {
-      defaultTab: 'home' | 'layers' | 'firemetrics';
+      defaultTab: Tab;
       expandedSections: string[];
       updatedAt: string;
     };

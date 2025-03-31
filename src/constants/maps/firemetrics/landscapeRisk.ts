@@ -6,7 +6,8 @@ import { GEOTIFF_LAYERS } from '../../../constants/urls';
 import { colorSchemes } from '../../../constants/colors';
 
 export const LANDSCAPE_RISK = {
-  name: 'Landscape Risk',
+  name: 'landscapeRisk',
+  label: 'Landscape Risk',
   BURN_PROBABILITY: {
     name: 'Burn Probability',
     description: 'Annual burn probability',

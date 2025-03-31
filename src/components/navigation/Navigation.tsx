@@ -4,6 +4,7 @@ import HomeTab from './HomeTab';
 import LayersTab from './LayersTab';
 import FireMetricsTab from './FireMetricsTab';
 import { useAppSelector } from '../../hooks/useAppSelector';
+import { Tab } from '../../constants/maps';
 
 const Navigation: React.FC = () => {
   const { isNavOpen, activeTab } = useAppSelector(state => state.ui);
@@ -21,9 +22,9 @@ const Navigation: React.FC = () => {
           <div className="h-full flex flex-col">
             <div className="flex-1 overflow-y-auto">
               <div className="px-4 py-4 pr-2">
-                {activeTab === 'home' && <HomeTab />}
-                {activeTab === 'layers' && <LayersTab />}
-                {activeTab === 'firemetrics' && <FireMetricsTab />}
+                {activeTab === Tab.HOME && <HomeTab />}
+                {activeTab === Tab.LAYERS && <LayersTab />}
+                {activeTab === Tab.FIREMETRICS && <FireMetricsTab />}
               </div>
             </div>
           </div>

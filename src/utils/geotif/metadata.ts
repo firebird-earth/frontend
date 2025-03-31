@@ -18,6 +18,15 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
       throw new Error('No image found in GeoTIFF');
     }
 
+    // Log raw file directory contents
+    console.log('Raw file directory:', image.fileDirectory);
+    console.log('ModelPixelScaleTag:', {
+      raw: image.fileDirectory.ModelPixelScaleTag,
+      type: image.fileDirectory.ModelPixelScaleTag ? image.fileDirectory.ModelPixelScaleTag.constructor.name : 'undefined',
+      length: image.fileDirectory.ModelPixelScaleTag ? image.fileDirectory.ModelPixelScaleTag.length : 0,
+      values: image.fileDirectory.ModelPixelScaleTag ? Array.from(image.fileDirectory.ModelPixelScaleTag) : []
+    });
+
     console.log('GeoTIFF image loaded:', {
       width: image.getWidth(),
       height: image.getHeight(),
@@ -52,40 +61,26 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
     
     console.log('Parsed NODATA value:', noDataValue);
 
-    // Get GeoKeys for CRS information
-    const geoKeys = image.geoKeys || {};
-    console.log('GeoKeys:', geoKeys);
-    
-    let crs = 'Unknown';
-    let projectionName = '';
-    let datum = '';
-
-    if (geoKeys.ProjectedCSTypeGeoKey) {
-      crs = geoKeys.ProjectedCSTypeGeoKey.toString();
-      projectionName = geoKeys.GTCitationGeoKey || '';
-      projectionName = projectionName.replace(/^PCS Name = /, '');
-      console.log('Projected CRS:', { crs, projectionName });
-    } else if (geoKeys.GeographicTypeGeoKey) {
-      crs = geoKeys.GeographicTypeGeoKey.toString();
-      const geogCitation = geoKeys.GeogCitationGeoKey || '';
-      const datumMatch = geogCitation.match(/Datum = ([^|]+)/);
-      datum = datumMatch ? datumMatch[1] : '';
-      console.log('Geographic CRS:', { crs, datum });
-    }
-
-    // Get transformation information
-    const tiepoint = image.fileDirectory.ModelTiepointTag;
-    const scale = image.fileDirectory.ModelPixelScaleTag;
-    const transform = image.fileDirectory.ModelTransformationTag;
-
-    console.log('Transformation info:', {
-      tiepoint: tiepoint ? Array.from(tiepoint) : null,
-      scale: scale ? Array.from(scale) : null,
-      transform: transform ? Array.from(transform) : null
-    });
-
     // Get bounds information
     const boundsInfo = await getGeoTiffBounds(image);
+
+    // Calculate resolution from bounds and dimensions if ModelPixelScaleTag is missing
+    let resolution = { x: NaN, y: NaN };
+    if (image.fileDirectory.ModelPixelScaleTag) {
+      const scale = image.fileDirectory.ModelPixelScaleTag;
+      resolution = {
+        x: Math.abs(scale[0]),
+        y: Math.abs(scale[1])
+      };
+    } else if (boundsInfo.rawBounds) {
+      // Calculate from raw bounds (in source CRS units) and image dimensions
+      const [minX, minY, maxX, maxY] = boundsInfo.rawBounds;
+      resolution = {
+        x: Math.abs(maxX - minX) / width,
+        y: Math.abs(maxY - minY) / height
+      };
+      console.log('Calculated resolution from bounds:', resolution);
+    }
 
     // Calculate statistics
     console.log('Computing raster statistics...');
@@ -122,7 +117,8 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
       validCount,
       noDataCount,
       zeroCount,
-      totalPixels: width * height
+      totalPixels: width * height,
+      resolution
     });
 
     // Get custom metadata
@@ -156,26 +152,24 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
           bitsPerSample: image.fileDirectory.BitsPerSample || [],
           compression: image.fileDirectory.Compression || null,
           modelTransform: {
-            matrix: transform,
-            tiepoint: tiepoint,
+            matrix: boundsInfo.transform,
+            tiepoint: boundsInfo.tiepoint,
             origin: boundsInfo.transform ? [boundsInfo.transform[3], boundsInfo.transform[7]] : null
           },
-          resolution: {
-            x: scale ? Math.abs(scale[0]) : NaN,
-            y: scale ? Math.abs(scale[1]) : NaN
-          },
+          resolution,
           noData: noDataValue,
           nonNullValues: validCount,
           totalPixels: width * height,
           zeroCount,
-          crs,
-          projectionName,
-          datum,
+          noDataCount,
+          crs: boundsInfo.sourceCRS,
+          projectionName: '',
+          datum: '',
           rawBounds: boundsInfo.rawBounds,
           sourceCRS: boundsInfo.sourceCRS,
-          tiepoint,
-          scale,
-          transform
+          tiepoint: boundsInfo.tiepoint,
+          scale: boundsInfo.pixelScale,
+          transform: boundsInfo.transform
         },
         custom: customMetadata
       },
@@ -190,6 +184,7 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
       dimensions: `${width}x${height}`,
       bounds: boundsInfo.bounds,
       sourceCRS: boundsInfo.sourceCRS,
+      resolution,
       stats: {
         min,
         max,

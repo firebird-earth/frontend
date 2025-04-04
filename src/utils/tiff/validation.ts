@@ -1,5 +1,16 @@
+// Debug configuration
+const ValidationConfig = {
+  debug: false
+} as const;
+
+export function setValidationDebug(enabled: boolean) {
+  (ValidationConfig as any).debug = enabled;
+}
+
 export function validateTiff(arrayBuffer: ArrayBuffer): void {
-  console.log('Validating TIFF structure...');
+  if (ValidationConfig.debug) {
+    console.log('Validating TIFF structure...');
+  }
   
   // Check if buffer exists and has content
   if (!arrayBuffer || arrayBuffer.byteLength === 0) {
@@ -19,7 +30,9 @@ export function validateTiff(arrayBuffer: ArrayBuffer): void {
     const isLittleEndian = byteOrder === 0x4949; // 'II'
     const isBigEndian = byteOrder === 0x4D4D;    // 'MM'
     
-    console.log('Byte order:', isLittleEndian ? 'Little Endian (II)' : isBigEndian ? 'Big Endian (MM)' : 'Invalid');
+    if (ValidationConfig.debug) {
+      console.log('Byte order:', isLittleEndian ? 'Little Endian (II)' : isBigEndian ? 'Big Endian (MM)' : 'Invalid');
+    }
     
     if (!isLittleEndian && !isBigEndian) {
       throw new Error(`Invalid byte order marker: 0x${byteOrder.toString(16)}`);
@@ -27,7 +40,9 @@ export function validateTiff(arrayBuffer: ArrayBuffer): void {
 
     // Check magic number (42 for classic TIFF, 43 for BigTIFF)
     const magicNumber = dataView.getUint16(2, isLittleEndian);
-    console.log('Magic number:', magicNumber);
+    if (ValidationConfig.debug) {
+      console.log('Magic number:', magicNumber);
+    }
     
     if (magicNumber !== 42 && magicNumber !== 43) {
       throw new Error(`Invalid TIFF magic number: ${magicNumber}`);
@@ -42,7 +57,9 @@ export function validateTiff(arrayBuffer: ArrayBuffer): void {
     // Try to read the first IFD entry count
     try {
       const entryCount = dataView.getUint16(ifdOffset, isLittleEndian);
-      console.log('IFD entry count:', entryCount);
+      if (ValidationConfig.debug) {
+        console.log('IFD entry count:', entryCount);
+      }
       
       // Validate that we can read all entries (each entry is 12 bytes)
       const entriesEnd = ifdOffset + 2 + (entryCount * 12);
@@ -69,7 +86,9 @@ export function validateTiff(arrayBuffer: ArrayBuffer): void {
         throw new Error(`Invalid TIFF entry type: ${type}`);
       }
 
-      console.log('First IFD entry:', { tag, type, count });
+      if (ValidationConfig.debug) {
+        console.log('First IFD entry:', { tag, type, count });
+      }
 
       // Read sample format (if present) to determine data type
       let sampleFormat = 1; // Default to unsigned integer
@@ -89,10 +108,12 @@ export function validateTiff(arrayBuffer: ArrayBuffer): void {
         }
       }
 
-      console.log('Data format:', {
-        sampleFormat,
-        bitsPerSample
-      });
+      if (ValidationConfig.debug) {
+        console.log('Data format:', {
+          sampleFormat,
+          bitsPerSample
+        });
+      }
 
       // Validate pixel data
       const stripOffsetsTag = 273;
@@ -142,11 +163,13 @@ export function validateTiff(arrayBuffer: ArrayBuffer): void {
         const zeroPercentage = (zeroCount / totalSamples) * 100;
         const uniqueValueCount = uniqueValues.size;
 
-        console.log('Pixel value analysis:', {
-          sampledPixels: totalSamples,
-          uniqueValues: uniqueValueCount,
-          zeroPercentage: zeroPercentage.toFixed(2) + '%'
-        });
+        if (ValidationConfig.debug) {
+          console.log('Pixel value analysis:', {
+            sampledPixels: totalSamples,
+            uniqueValues: uniqueValueCount,
+            zeroPercentage: zeroPercentage.toFixed(2) + '%'
+          });
+        }
 
         // Warn if data looks suspicious
         if (uniqueValueCount === 1) {
@@ -182,17 +205,19 @@ export function validateTiff(arrayBuffer: ArrayBuffer): void {
     }
 
     const missingTags = Array.from(requiredTags).filter(tag => !foundTags.has(tag));
-    if (missingTags.length > 0) {
+    if (missingTags.length > 0 && ValidationConfig.debug) {
       console.warn('Missing required TIFF tags:', missingTags);
     }
 
-    console.log('TIFF validation successful:', {
-      byteOrder: isLittleEndian ? 'II' : 'MM',
-      magicNumber,
-      ifdOffset,
-      fileSize: arrayBuffer.byteLength,
-      foundTags: Array.from(foundTags)
-    });
+    if (ValidationConfig.debug) {
+      console.log('TIFF validation successful:', {
+        byteOrder: isLittleEndian ? 'II' : 'MM',
+        magicNumber,
+        ifdOffset,
+        fileSize: arrayBuffer.byteLength,
+        foundTags: Array.from(foundTags)
+      });
+    }
   } catch (error) {
     console.error('TIFF validation failed:', error);
     throw new Error(`Invalid TIFF structure: ${error.message}`);

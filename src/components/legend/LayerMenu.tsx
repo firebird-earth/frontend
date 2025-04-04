@@ -7,7 +7,6 @@ import {
   toggleSingleLayer,
   setShowMapValues
 } from '../../store/slices/layers';
-import { isEsriLayer } from '../../store/slices/common/utils/utils';
 import OpacityControl from '../controls/OpacityControl';
 import ValueRangeControl from '../controls/ValueRangeControl';
 import LayerOrderControl from '../controls/LayerOrderControl';
@@ -18,7 +17,6 @@ interface LayerMenuProps {
   onClose: () => void;
   onAboutClick?: () => void;
   onFeatureAboutClick?: () => void;
-  onTiffAboutClick?: () => void;
   isGeoTiff: boolean;
   isFeatureLayer: boolean;
   isArcGISImageService: boolean;
@@ -31,7 +29,6 @@ const LayerMenu: React.FC<LayerMenuProps> = ({
   onClose, 
   onAboutClick,
   onFeatureAboutClick,
-  onTiffAboutClick,
   isGeoTiff,
   isFeatureLayer,
   isArcGISImageService,
@@ -68,7 +65,7 @@ const LayerMenu: React.FC<LayerMenuProps> = ({
   return (
     <div className="absolute right-0 top-[calc(100%+4.375rem)] w-56 bg-white rounded-lg shadow-lg py-1 border z-50">
       {/* Opacity Control */}
-      {!isEsriLayer(categoryId, layerId, categories) && (
+      {(isGeoTiff || isArcGISImageService) && (
         <div className="px-4 py-2">
           <OpacityControl
             categoryId={categoryId}
@@ -80,49 +77,21 @@ const LayerMenu: React.FC<LayerMenuProps> = ({
         </div>
       )}
 
-      {/* Value Range Control and Show Map Values for GeoTIFF layers */}
-      {isGeoTiff && layer?.valueRange && (
-        <>
-          <div className="px-4 py-2">
-            <ValueRangeControl
-              categoryId={categoryId}
-              layerId={layerId}
-              range={layer.valueRange}
-              showLabel={true}
-              showValue={true}
-            />
-          </div>
-          <button
-            onClick={handleShowValuesClick}
-            className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center space-x-2 ${
-              layer?.showValues ? 'text-blue-600' : 'text-gray-700'
-            }`}
-          >
-            <BarChart2 className="h-4 w-4" />
-            <span>Show Map Values</span>
-          </button>
-          <div className="my-1 border-t border-gray-200"></div>
-        </>
-      )}
-      
-      {/* Layer ordering actions - only for GeoTIFF layers */}
-      {isGeoTiff && (
+      {/* Value Range Control */}
+      {(isGeoTiff || isArcGISImageService) && layer?.valueRange && (
         <div className="px-4 py-2">
-          <LayerOrderControl
+          <ValueRangeControl
             categoryId={categoryId}
             layerId={layerId}
-            onOrderChange={onClose}
+            range={layer.valueRange}
+            showLabel={true}
+            showValue={true}
           />
         </div>
       )}
 
-      {/* Menu break before About */}
-      {(isGeoTiff || isFeatureLayer || isArcGISImageService) && (
-        <div className="my-1 border-t border-gray-200"></div>
-      )}
-
-      {/* Show Map Values for non-GeoTIFF layers */}
-      {(isFeatureLayer || isArcGISImageService) && (
+      {/* Show Values button */}
+      {(isGeoTiff || isArcGISImageService) && layer?.valueRange && (
         <button
           onClick={handleShowValuesClick}
           className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center space-x-2 ${
@@ -134,25 +103,40 @@ const LayerMenu: React.FC<LayerMenuProps> = ({
         </button>
       )}
 
+      {/* Layer ordering controls */}
+      {(isGeoTiff || isArcGISImageService) && (
+        <>
+          <div className="my-1 border-t border-gray-200"></div>
+          <div className="px-4 py-2">
+            <LayerOrderControl
+              categoryId={categoryId}
+              layerId={layerId}
+              onOrderChange={onClose}
+            />
+          </div>
+        </>
+      )}
+
       {/* About Panel */}
       {(isGeoTiff || isFeatureLayer || isArcGISImageService) && (
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            if (isGeoTiff && onAboutClick) {
-              onAboutClick();
-            } else if (isFeatureLayer && onFeatureAboutClick) {
-              onFeatureAboutClick();
-            } else if (isArcGISImageService && onTiffAboutClick) {
-              onTiffAboutClick();
-            }
-            onClose();
-          }}
-          className="w-full px-4 py-2 text-left text-sm text-[#333333] hover:bg-gray-100 flex items-center"
-        >
-          <Info className="h-4 w-4 mr-2" />
-          About
-        </button>
+        <>
+          <div className="my-1 border-t border-gray-200"></div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (isGeoTiff || isArcGISImageService) {
+                onAboutClick?.();
+              } else if (isFeatureLayer && onFeatureAboutClick) {
+                onFeatureAboutClick();
+              }
+              onClose();
+            }}
+            className="w-full px-4 py-2 text-left text-sm text-[#333333] hover:bg-gray-100 flex items-center"
+          >
+            <Info className="h-4 w-4 mr-2" />
+            About
+          </button>
+        </>
       )}
       
       <button

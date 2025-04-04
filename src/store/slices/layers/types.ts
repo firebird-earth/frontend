@@ -55,11 +55,17 @@ export interface SetShowMapValuesPayload {
 export interface SetLayerMetadataPayload {
   categoryId: string;
   layerId: number;
-  metadata: GeoTiffMetadataRedux
+  metadata: GeoTiffMetadataRedux;
 }
 
 export interface SetLayerLoadingPayload {
   categoryId: string;
   layerId: number;
   loading: boolean;
+}
+
+export interface SetLayerPanePayload {
+  categoryId: string;
+  layerId: number;
+  pane: string;
 }

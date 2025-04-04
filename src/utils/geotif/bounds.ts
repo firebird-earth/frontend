@@ -3,23 +3,38 @@ import proj4 from 'proj4';
 import { GeoTiffBounds } from './types';
 import { registerUTMProjection } from './utils';
 
+// Debug configuration
+const BoundsConfig = {
+  debug: false
+} as const;
+
+export function setBoundsDebug(enabled: boolean) {
+  (BoundsConfig as any).debug = enabled;
+}
+
 export async function getGeoTiffBounds(image: GeoTIFF.GeoTIFFImage): Promise<GeoTiffBounds> {
-  console.log('Calculating GeoTIFF bounds...');
+  if (BoundsConfig.debug) {
+    console.log('Calculating GeoTIFF bounds...');
+  }
 
   // Get coordinate transformation info
   const tiepoint = image.fileDirectory.ModelTiepointTag;
   const pixelScale = image.fileDirectory.ModelPixelScaleTag;
   const transform = image.fileDirectory.ModelTransformationTag;
 
-  console.log('Coordinate transformation info:', {
-    tiepoint: tiepoint ? Array.from(tiepoint) : null,
-    pixelScale: pixelScale ? Array.from(pixelScale) : null,
-    transform: transform ? Array.from(transform) : null
-  });
+  if (BoundsConfig.debug) {
+    console.log('Coordinate transformation info:', {
+      tiepoint: tiepoint ? Array.from(tiepoint) : null,
+      pixelScale: pixelScale ? Array.from(pixelScale) : null,
+      transform: transform ? Array.from(transform) : null
+    });
+  }
 
   // Get GeoKeys for CRS information
   const geoKeys = image.geoKeys || {};
-  console.log('GeoKeys:', geoKeys);
+  if (BoundsConfig.debug) {
+    console.log('GeoKeys:', geoKeys);
+  }
 
   // Determine source CRS
   let sourceCRS = 'EPSG:4326'; // Default to WGS84
@@ -32,18 +47,24 @@ export async function getGeoTiffBounds(image: GeoTIFF.GeoTIFFImage): Promise<Geo
   // Register UTM projection if needed
   registerUTMProjection(sourceCRS);
 
-  console.log('Source CRS:', sourceCRS);
+  if (BoundsConfig.debug) {
+    console.log('Source CRS:', sourceCRS);
+  }
 
   const width = image.getWidth();
   const height = image.getHeight();
-  console.log('Image dimensions:', { width, height });
+  if (BoundsConfig.debug) {
+    console.log('Image dimensions:', { width, height });
+  }
 
   let west: number, south: number, east: number, north: number;
   let rawBounds: [number, number, number, number] | undefined;
 
   if (transform) {
     // Use transformation matrix
-    console.log('Using transformation matrix for bounds');
+    if (BoundsConfig.debug) {
+      console.log('Using transformation matrix for bounds');
+    }
     const [a, b, c, x0, d, e, f, y0] = transform;
     
     west = x0;
@@ -52,10 +73,14 @@ export async function getGeoTiffBounds(image: GeoTIFF.GeoTIFFImage): Promise<Geo
     south = y0 + (height * e);
     
     rawBounds = [west, south, east, north];
-    console.log('Calculated bounds from transform:', { west, north, east, south });
+    if (BoundsConfig.debug) {
+      console.log('Calculated bounds from transform:', { west, north, east, south });
+    }
   } else if (tiepoint && pixelScale) {
     // Use tiepoint and pixel scale
-    console.log('Using tiepoint and pixel scale for bounds');
+    if (BoundsConfig.debug) {
+      console.log('Using tiepoint and pixel scale for bounds');
+    }
     const [i, j, k, x, y, z] = tiepoint;
     const [scaleX, scaleY] = pixelScale;
     
@@ -65,12 +90,18 @@ export async function getGeoTiffBounds(image: GeoTIFF.GeoTIFFImage): Promise<Geo
     south = y - (height * Math.abs(scaleY));
     
     rawBounds = [west, south, east, north];
-    console.log('Calculated bounds from tiepoint/scale:', { west, north, east, south });
+    if (BoundsConfig.debug) {
+      console.log('Calculated bounds from tiepoint/scale:', { west, north, east, south });
+    }
   } else {
     // Fallback to bounding box
-    console.log('Falling back to bounding box');
+    if (BoundsConfig.debug) {
+      console.log('Falling back to bounding box');
+    }
     const bbox = image.getBoundingBox();
-    console.log('Raw bounding box:', bbox);
+    if (BoundsConfig.debug) {
+      console.log('Raw bounding box:', bbox);
+    }
     
     if (!bbox || bbox.length !== 4) {
       throw new Error('Invalid bounding box');
@@ -78,13 +109,17 @@ export async function getGeoTiffBounds(image: GeoTIFF.GeoTIFFImage): Promise<Geo
     
     [west, south, east, north] = bbox;
     rawBounds = [west, south, east, north];
-    console.log('Bounds from bounding box:', { west, south, east, north });
+    if (BoundsConfig.debug) {
+      console.log('Bounds from bounding box:', { west, south, east, north });
+    }
   }
 
   // Transform corners to WGS84 if needed
   if (sourceCRS !== 'EPSG:4326') {
     try {
-      console.log('Transforming coordinates from', sourceCRS, 'to WGS84');
+      if (BoundsConfig.debug) {
+        console.log('Transforming coordinates from', sourceCRS, 'to WGS84');
+      }
 
       // Transform corners to maintain aspect ratio
       const corners = [
@@ -110,11 +145,13 @@ export async function getGeoTiffBounds(image: GeoTIFF.GeoTIFFImage): Promise<Geo
       south = Math.min(...transformedCorners.map(c => c[1]));
       north = Math.max(...transformedCorners.map(c => c[1]));
 
-      console.log('Transformed corners:', {
-        original: corners,
-        transformed: transformedCorners,
-        bounds: { west, south, east, north }
-      });
+      if (BoundsConfig.debug) {
+        console.log('Transformed corners:', {
+          original: corners,
+          transformed: transformedCorners,
+          bounds: { west, south, east, north }
+        });
+      }
     } catch (e) {
       console.error('Coordinate transformation failed:', e);
       throw new Error('Failed to transform coordinates to WGS84');
@@ -147,19 +184,21 @@ export async function getGeoTiffBounds(image: GeoTIFF.GeoTIFFImage): Promise<Geo
   // Return Leaflet-friendly bounds: [[south, west], [north, east]]
   const bounds: [[number, number], [number, number]] = [[south, west], [north, east]];
   
-  console.log('Final bounds:', {
-    bounds,
-    sourceCRS,
-    transform,
-    tiepoint,
-    pixelScale,
-    rawBounds,
-    aspectRatio: {
-      width: Math.abs(east - west),
-      height: Math.abs(north - south),
-      ratio: Math.abs(east - west) / Math.abs(north - south)
-    }
-  });
+  if (BoundsConfig.debug) {
+    console.log('Final bounds:', {
+      bounds,
+      sourceCRS,
+      transform,
+      tiepoint,
+      pixelScale,
+      rawBounds,
+      aspectRatio: {
+        width: Math.abs(east - west),
+        height: Math.abs(north - south),
+        ratio: Math.abs(east - west) / Math.abs(north - south)
+      }
+    });
+  }
 
   return {
     bounds,

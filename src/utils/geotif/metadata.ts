@@ -3,10 +3,21 @@ import { GeoTiffMetadata } from './types';
 import { validateGeoTiff } from './validation';
 import { getGeoTiffBounds } from './bounds';
 
+// Debug configuration
+const MetadataConfig = {
+  debug: false
+} as const;
+
+export function setMetadataDebug(enabled: boolean) {
+  (MetadataConfig as any).debug = enabled;
+}
+
 export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadata> {
   try {
-    console.log('Starting GeoTIFF metadata extraction...');
-    console.log('File:', file.name, file.size, 'bytes', file.type);
+    if (MetadataConfig.debug) {
+      console.log('Starting GeoTIFF metadata extraction...');
+      console.log('File:', file.name, file.size, 'bytes', file.type);
+    }
 
     const arrayBuffer = await file.arrayBuffer();
     validateGeoTiff(arrayBuffer);
@@ -19,26 +30,30 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
     }
 
     // Log raw file directory contents
-    console.log('Raw file directory:', image.fileDirectory);
-    console.log('ModelPixelScaleTag:', {
-      raw: image.fileDirectory.ModelPixelScaleTag,
-      type: image.fileDirectory.ModelPixelScaleTag ? image.fileDirectory.ModelPixelScaleTag.constructor.name : 'undefined',
-      length: image.fileDirectory.ModelPixelScaleTag ? image.fileDirectory.ModelPixelScaleTag.length : 0,
-      values: image.fileDirectory.ModelPixelScaleTag ? Array.from(image.fileDirectory.ModelPixelScaleTag) : []
-    });
+    if (MetadataConfig.debug) {
+      console.log('Raw file directory:', image.fileDirectory);
+      console.log('ModelPixelScaleTag:', {
+        raw: image.fileDirectory.ModelPixelScaleTag,
+        type: image.fileDirectory.ModelPixelScaleTag ? image.fileDirectory.ModelPixelScaleTag.constructor.name : 'undefined',
+        length: image.fileDirectory.ModelPixelScaleTag ? image.fileDirectory.ModelPixelScaleTag.length : 0,
+        values: image.fileDirectory.ModelPixelScaleTag ? Array.from(image.fileDirectory.ModelPixelScaleTag) : []
+      });
 
-    console.log('GeoTIFF image loaded:', {
-      width: image.getWidth(),
-      height: image.getHeight(),
-      samplesPerPixel: image.fileDirectory.SamplesPerPixel,
-      bitsPerSample: image.fileDirectory.BitsPerSample,
-      compression: image.fileDirectory.Compression,
-      photometric: image.fileDirectory.PhotometricInterpretation
-    });
+      console.log('GeoTIFF image loaded:', {
+        width: image.getWidth(),
+        height: image.getHeight(),
+        samplesPerPixel: image.fileDirectory.SamplesPerPixel,
+        bitsPerSample: image.fileDirectory.BitsPerSample,
+        compression: image.fileDirectory.Compression,
+        photometric: image.fileDirectory.PhotometricInterpretation
+      });
+    }
 
     const width = image.getWidth();
     const height = image.getHeight();
-    console.log('Reading raster data...');
+    if (MetadataConfig.debug) {
+      console.log('Reading raster data...');
+    }
     const rasters = await image.readRasters();
     const data = rasters[0] as Int16Array | Float32Array;
 
@@ -46,20 +61,26 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
       throw new Error('No raster data found');
     }
 
-    console.log('Raw data statistics:', {
-      length: data.length,
-      type: data.constructor.name
-    });
+    if (MetadataConfig.debug) {
+      console.log('Raw data statistics:', {
+        length: data.length,
+        type: data.constructor.name
+      });
+    }
 
     // Get the GDAL_NODATA value
     const rawNoData = image.fileDirectory.GDAL_NODATA;
-    console.log('Raw GDAL_NODATA value:', rawNoData);
+    if (MetadataConfig.debug) {
+      console.log('Raw GDAL_NODATA value:', rawNoData);
+    }
     
     const noDataValue = rawNoData !== undefined
       ? Number(rawNoData.replace('\x00', ''))
       : null;
     
-    console.log('Parsed NODATA value:', noDataValue);
+    if (MetadataConfig.debug) {
+      console.log('Parsed NODATA value:', noDataValue);
+    }
 
     // Get bounds information
     const boundsInfo = await getGeoTiffBounds(image);
@@ -79,11 +100,15 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
         x: Math.abs(maxX - minX) / width,
         y: Math.abs(maxY - minY) / height
       };
-      console.log('Calculated resolution from bounds:', resolution);
+      if (MetadataConfig.debug) {
+        console.log('Calculated resolution from bounds:', resolution);
+      }
     }
 
     // Calculate statistics
-    console.log('Computing raster statistics...');
+    if (MetadataConfig.debug) {
+      console.log('Computing raster statistics...');
+    }
     let min = Infinity;
     let max = -Infinity;
     let sum = 0;
@@ -110,16 +135,18 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
 
     const mean = validCount > 0 ? sum / validCount : 0;
 
-    console.log('Data statistics:', {
-      min,
-      max,
-      mean,
-      validCount,
-      noDataCount,
-      zeroCount,
-      totalPixels: width * height,
-      resolution
-    });
+    if (MetadataConfig.debug) {
+      console.log('Data statistics:', {
+        min,
+        max,
+        mean,
+        validCount,
+        noDataCount,
+        zeroCount,
+        totalPixels: width * height,
+        resolution
+      });
+    }
 
     // Get custom metadata
     const customMetadata = {
@@ -128,7 +155,9 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
     };
 
     if (image.fileDirectory.GDAL_METADATA) {
-      console.log('Raw GDAL metadata:', image.fileDirectory.GDAL_METADATA);
+      if (MetadataConfig.debug) {
+        console.log('Raw GDAL metadata:', image.fileDirectory.GDAL_METADATA);
+      }
       try {
         const metadata = image.fileDirectory.GDAL_METADATA;
         const unitsMatch = metadata.match(/<Item name="units">(.*?)<\/Item>/);
@@ -137,7 +166,9 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
         if (unitsMatch) customMetadata.units = unitsMatch[1];
         if (descMatch) customMetadata.description = descMatch[1];
         
-        console.log('Parsed custom metadata:', customMetadata);
+        if (MetadataConfig.debug) {
+          console.log('Parsed custom metadata:', customMetadata);
+        }
       } catch (e) {
         console.warn('Failed to parse GDAL metadata:', e);
       }
@@ -180,20 +211,22 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
       }
     };
 
-    console.log('Final metadata:', {
-      dimensions: `${width}x${height}`,
-      bounds: boundsInfo.bounds,
-      sourceCRS: boundsInfo.sourceCRS,
-      resolution,
-      stats: {
-        min,
-        max,
-        mean,
-        validCount,
-        noDataCount,
-        zeroCount
-      }
-    });
+    if (MetadataConfig.debug) {
+      console.log('Final metadata:', {
+        dimensions: `${width}x${height}`,
+        bounds: boundsInfo.bounds,
+        sourceCRS: boundsInfo.sourceCRS,
+        resolution,
+        stats: {
+          min,
+          max,
+          mean,
+          validCount,
+          noDataCount,
+          zeroCount
+        }
+      });
+    }
 
     return metadata;
   } catch (error) {

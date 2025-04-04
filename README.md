@@ -1,0 +1,134 @@
+# Firebird Map Application
+
+A sophisticated web mapping application built with React, Leaflet, and modern web technologies for visualizing and analyzing geospatial data.
+
+## Layer Ordering System
+
+Leaflet maintains a strict layer ordering system using panes with predefined z-index values. This determines how different types of layers stack on top of each other:
+
+| Pane Name     | Z-Index | Purpose                    |
+|---------------|---------|----------------------------|
+| Tile Pane     | 200     | Raster tiles/images       |
+| Overlay Pane  | 400     | Vector/feature layers     |
+| Shadow Pane   | 500     | Marker shadows            |
+| Marker Pane   | 600     | Map markers               |
+| Tooltip Pane  | 650     | Layer tooltips            |
+| Popup Pane    | 700     | Popups                    |
+
+### Layer Type Rendering
+
+Different layer types are automatically assigned to specific panes:
+
+- **Feature Services** (e.g., Counties layer)
+  - Rendered in Overlay Pane (z-index: 400)
+  - Always appears above raster layers
+  
+- **Image Services** (e.g., Elevation layer)
+  - Rendered in Tile Pane (z-index: 200)
+  - Always appears below vector layers
+
+- **GeoTIFF Layers**
+  - Rendered as image overlays in Tile Pane
+  - Support custom ordering within their pane
+
+This explains why vector layers like Counties always appear above raster layers like Elevation, regardless of the order they're activated.
+
+## Features
+
+- Multiple layer types support (GeoTIFF, ArcGIS Services, Vector)
+- Dynamic layer ordering within compatible types
+- Interactive map controls
+- Coordinate display system
+- Grid overlay system
+- Dark/light theme support
+- Responsive design
+
+## Tech Stack
+
+- React 18
+- TypeScript
+- Leaflet
+- Redux Toolkit
+- Tailwind CSS
+- Vite
+
+## Getting Started
+
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   npm install
+   ```
+3. Start the development server:
+   ```bash
+   npm run dev
+   ```
+
+## Development
+
+### Project Structure
+
+```
+src/
+├── components/     # React components
+├── store/         # Redux store and slices
+├── services/      # API and service integrations
+├── utils/         # Utility functions
+├── types/         # TypeScript type definitions
+└── constants/     # Application constants
+```
+
+### Key Components
+
+- `Map.tsx` - Main map component
+- `Legend.tsx` - Layer legend and controls
+- `Navigation.tsx` - Navigation panel
+- `LayerControls/` - Layer-specific control components
+
+### State Management
+
+The application uses Redux Toolkit for state management with the following main slices:
+
+- `layers` - Layer management and ordering
+- `map` - Map state (center, zoom, etc.)
+- `ui` - UI state (theme, panels, etc.)
+- `settings` - User preferences
+
+## Building for Production
+
+```bash
+npm run build
+```
+
+The build output will be in the `dist` directory.
+
+## Deployment
+
+The application supports deployment to:
+- Netlify (preferred)
+- Any static hosting service
+
+## Browser Support
+
+- Chrome (latest)
+- Firefox (latest)
+- Safari (latest)
+- Edge (latest)
+
+## Performance Considerations
+
+- GeoTIFF data is cached in memory
+- Layer rendering is optimized for large datasets
+- Automatic cleanup of unused resources
+- Lazy loading of map tiles and features
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Submit a pull request
+
+## License
+
+MIT License

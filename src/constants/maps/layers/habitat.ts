@@ -1,11 +1,13 @@
 import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/common/utils/utils';
+import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
 
 export const HABITAT = {
   MULE_DEER: {
     name: 'Mule Deer',
+    type: LayerType.Vector,
+    source: 'USFS Wildlife Habitat',
     description: 'Mule deer habitat areas',
     units: 'category',
     colorScheme: 'none',
@@ -23,6 +25,8 @@ export const HABITAT = {
   },
   SAGE_GROUSE: {
     name: 'Gunnison Sage Grouse',
+    type: LayerType.Vector,
+    source: 'USFS Wildlife Habitat',
     description: 'Gunnison sage grouse habitat',
     units: 'category',
     colorScheme: 'none',
@@ -40,6 +44,8 @@ export const HABITAT = {
   },
   MIGRATION_CORRIDORS: {
     name: 'Migration Corridors',
+    type: LayerType.Vector,
+    source: 'USFS Wildlife Habitat',
     description: 'Wildlife migration corridors',
     units: 'category',
     colorScheme: 'none',
@@ -57,6 +63,8 @@ export const HABITAT = {
   },
   LYNX_UNITS: {
     name: 'Lynx Analysis Units (LAU)',
+    type: LayerType.Vector,
+    source: 'USFS Wildlife Habitat',
     description: 'Lynx habitat analysis units',
     units: 'category',
     colorScheme: 'none',
@@ -76,24 +84,8 @@ export const HABITAT = {
 
 // Layer category constant
 export const HABITAT_CATEGORY: LayerCategory = createInitialCategory('habitat', 'Habitat', [
-  { 
-    name: HABITAT.MULE_DEER.name, 
-    type: LayerType.Vector,
-    colorScheme: HABITAT.MULE_DEER.colorScheme
-  },
-  { 
-    name: HABITAT.SAGE_GROUSE.name, 
-    type: LayerType.Vector,
-    colorScheme: HABITAT.SAGE_GROUSE.colorScheme
-  },
-  { 
-    name: HABITAT.MIGRATION_CORRIDORS.name, 
-    type: LayerType.Vector,
-    colorScheme: HABITAT.MIGRATION_CORRIDORS.colorScheme
-  },
-  { 
-    name: HABITAT.LYNX_UNITS.name, 
-    type: LayerType.Vector,
-    colorScheme: HABITAT.LYNX_UNITS.colorScheme
-  }
+  HABITAT.MULE_DEER,
+  HABITAT.SAGE_GROUSE,
+  HABITAT.MIGRATION_CORRIDORS,
+  HABITAT.LYNX_UNITS
 ]);

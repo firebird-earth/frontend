@@ -1,17 +1,17 @@
 import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/common/utils/utils';
+import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
 import { WUI_LAYER, CRISIS_AREAS_LAYER } from '../../../constants/urls';
 
 export const WILDFIRE = {
   WUI: {
     name: 'WUI',
+    type: LayerType.TileLayer,
+    source: WUI_LAYER,
     description: 'Wildland Urban Interface',
     units: 'category',
-    source: WUI_LAYER,
     colorScheme: 'none',
-    type: 'tileLayer',
     legend: {
       items: [
         { color: 'rgba(239, 68, 68, 0.7)', label: 'Interface - Housing density > 6.17 units/km²' },
@@ -25,11 +25,11 @@ export const WILDFIRE = {
   },
   CRISIS_AREAS: {
     name: 'Wildfire Crisis Areas',
+    type: LayerType.ArcGISFeatureService,
+    source: CRISIS_AREAS_LAYER,
     description: 'USFS Wildfire Crisis Strategy areas',
     units: 'category',
-    source: CRISIS_AREAS_LAYER,
     colorScheme: 'none',
-    type: 'ArcGIS_featureService',
     legend: {
       items: [
         {
@@ -44,29 +44,28 @@ export const WILDFIRE = {
   },
   PRIORITY_AREAS: {
     name: 'Priority Treatment Areas',
+    type: LayerType.Vector,
+    source: 'USFS Fire Management',
     description: 'Priority areas for wildfire treatment',
     units: 'category',
     colorScheme: 'none',
-    type: 'vector'
+    legend: {
+      items: [
+        {
+          color: '#dc2626',
+          weight: 1,
+          fillColor: '#dc2626',
+          fillOpacity: 0.2,
+          label: 'Priority Treatment Area'
+        }
+      ]
+    }
   }
 } as const;
 
 // Layer category constant
 export const WILDFIRE_CATEGORY: LayerCategory = createInitialCategory('wildfire', 'Wildfire', [
-  { 
-    name: WILDFIRE.WUI.name, 
-    type: LayerType.TileLayer, 
-    source: WUI_LAYER, 
-    colorScheme: WILDFIRE.WUI.colorScheme 
-  },
-  { 
-    name: WILDFIRE.CRISIS_AREAS.name, 
-    type: LayerType.ArcGISFeatureService, 
-    source: CRISIS_AREAS_LAYER, 
-    colorScheme: WILDFIRE.CRISIS_AREAS.colorScheme 
-  },
-  { 
-    name: WILDFIRE.PRIORITY_AREAS.name, 
-    type: LayerType.Vector 
-  }
+  WILDFIRE.WUI,
+  WILDFIRE.CRISIS_AREAS,
+  WILDFIRE.PRIORITY_AREAS
 ]);

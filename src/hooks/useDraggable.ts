@@ -6,17 +6,17 @@ interface Position {
 }
 
 interface UseDraggableOptions {
-  initialPosition?: Position;
   padding?: number;
   initialCorner?: 'center' | 'bottom-right';
+  referenceElement?: HTMLElement | null;
 }
 
 export function useDraggable({ 
-  initialPosition, 
   padding = 25,
-  initialCorner = 'bottom-right'
+  initialCorner = 'bottom-right',
+  referenceElement = null
 }: UseDraggableOptions = {}) {
-  const [position, setPosition] = useState<Position>(initialPosition || { x: 0, y: 0 });
+  const [position, setPosition] = useState<Position>({ x: 0, y: 0 });
   const dialogRef = useRef<HTMLDivElement | null>(null);
   const dragStartRef = useRef<Position | null>(null);
   const initializedRef = useRef(false);
@@ -27,21 +27,29 @@ export function useDraggable({
 
     const dialog = dialogRef.current;
     const rect = dialog.getBoundingClientRect();
-    const viewport = {
-      width: window.innerWidth,
-      height: window.innerHeight
-    };
 
-    // Set initial position based on corner preference
     let initialX: number;
     let initialY: number;
 
-    if (initialCorner === 'bottom-right') {
-      initialX = viewport.width - rect.width - padding;
-      initialY = viewport.height - rect.height - padding;
+    if (referenceElement) {
+      // Position relative to reference element
+      const refRect = referenceElement.getBoundingClientRect();
+      initialX = refRect.right - rect.width - padding;
+      initialY = refRect.top + 50; // Position 50px below the top of reference element
     } else {
-      initialX = (viewport.width - rect.width) / 2;
-      initialY = (viewport.height - rect.height) / 2;
+      // Default positioning
+      const viewport = {
+        width: window.innerWidth,
+        height: window.innerHeight
+      };
+
+      if (initialCorner === 'bottom-right') {
+        initialX = viewport.width - rect.width - padding;
+        initialY = viewport.height - rect.height - padding;
+      } else {
+        initialX = (viewport.width - rect.width) / 2;
+        initialY = (viewport.height - rect.height) / 2;
+      }
     }
 
     // Set position immediately
@@ -49,7 +57,7 @@ export function useDraggable({
     dialog.style.top = `${initialY}px`;
     setPosition({ x: initialX, y: initialY });
     initializedRef.current = true;
-  }, [padding, initialCorner]);
+  }, [padding, initialCorner, referenceElement]);
 
   // Handle drag start
   const handleMouseDown = (e: ReactMouseEvent<HTMLElement>) => {

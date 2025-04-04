@@ -1,19 +1,19 @@
 import React, { useEffect, useRef } from 'react';
 import { MapContainer } from 'react-leaflet';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import Navigation from './navigation/Navigation';
+import Navigation from '../navigation/Navigation';
 import MapController from './MapController';
-import Legend from './legend/Legend';
-import CreateAOIPanel from './aoi/CreateAOIPanel';
-import ViewAOIPanel from './aoi/ViewAOIPanel';
-import ErrorBoundary from './common/ErrorBoundary';
-import { useAppDispatch } from '../hooks/useAppDispatch';
-import { useAppSelector } from '../hooks/useAppSelector';
-import { toggleLegend } from '../store/slices/uiSlice';
-import MapClickHandler from './map/MapClickHandler';
-import LocationMarkers from './map/LocationMarkers';
-import MapControls from './map/MapControls';
-import MapLayers from './map/MapLayers';
+import Legend from '../legend/Legend';
+import CreateAOIPanel from '../aoi/CreateAOIPanel';
+import ViewAOIPanel from '../aoi/ViewAOIPanel';
+import ErrorBoundary from '../common/ErrorBoundary';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { useAppSelector } from '../../hooks/useAppSelector';
+import { toggleLegend } from '../../store/slices/uiSlice';
+import MapClickHandler from './MapClickHandler';
+import LocationMarkers from './LocationMarkers';
+import MapControls from './MapControls';
+import MapLayers from './MapLayers';
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default marker icons in React-Leaflet
@@ -34,6 +34,31 @@ const MapComponent: React.FC = () => {
   
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
+
+  // Store map reference globally when initialized
+  const handleMapInit = (map: L.Map) => {
+    mapRef.current = map;
+  };
+
+  // Create custom panes when map initializes
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    const map = mapRef.current;
+
+    // Create panes with specific z-index values that sit below the default feature pane
+    map.createPane('firemetricsPane');
+    map.createPane('layersPane');
+    
+    // Set z-index for each pane (default feature pane is 400)
+    map.getPane('firemetricsPane')!.style.zIndex = '375';
+    map.getPane('layersPane')!.style.zIndex = '350';
+
+    // Ensure pointer events are enabled
+    map.getPane('firemetricsPane')!.style.pointerEvents = 'auto';
+    map.getPane('layersPane')!.style.pointerEvents = 'auto';
+
+  }, [mapRef.current]);
 
   // Add resize observer to handle container size changes
   useEffect(() => {
@@ -86,7 +111,7 @@ const MapComponent: React.FC = () => {
         <div ref={mapContainerRef} className="h-full w-full relative">
           <ErrorBoundary>
             <MapContainer
-              ref={mapRef}
+              ref={handleMapInit}
               center={[center[1], center[0]]}
               zoom={zoom}
               className="h-full w-full absolute inset-0"

@@ -1,4 +1,4 @@
-import { RootState } from '../../index';
+import type { RootState } from '../types/store';
 
 // AOI selectors
 export const selectCurrentAOI = (state: RootState) => state.home.aoi.current;

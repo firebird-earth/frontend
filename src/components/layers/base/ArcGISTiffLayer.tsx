@@ -6,10 +6,11 @@ import { AlertTriangle, Loader2 } from 'lucide-react';
 import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { useAppSelector } from '../../../hooks/useAppSelector';
 import { setLayerBounds, initializeLayerValueRange, setLayerMetadata, setLayerLoading } from '../../../store/slices/layers';
-import { getColorScheme, getColorFromScheme, hexToRgb, GeoTiffNoDataColor } from '../../../utils/colors';
 import { validateTiff } from '../../../utils/tiff';
+import { getColorScheme, getColorFromScheme, hexToRgb, GeoTiffNoDataColor } from '../../../utils/colors';
 import { MapServiceConfig } from '../../../services/maps/types';
 import { rasterDataCache } from '../../../utils/geotif/cache';
+import { isFiremetricsTab } from '../../../constants/maps';
 
 interface ArcGISTiffLayerProps {
   active: boolean;
@@ -22,7 +23,7 @@ interface ArcGISTiffLayerProps {
   onError?: (error: Error) => void;
 }
 
-const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({ 
+const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
   active,
   opacity = 1,
   serviceConfig,
@@ -63,6 +64,8 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
     colorScheme,
     categoryId,
     layerId,
+    order: layer?.order,
+    pane: layer.pane,
     renderingRule: renderingRule ? renderingRule.substring(0, 100) + '...' : null
   });
 
@@ -97,7 +100,6 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
       setProgress(0);
       return;
     }
-
     return () => cleanup();
   }, [active, map, categoryId, layerId]);
 
@@ -111,16 +113,13 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
     if (!active) return;
 
     const handleMapMove = () => {
-      // Clear any pending load timeout
       if (loadTimeoutRef.current) {
         window.clearTimeout(loadTimeoutRef.current);
       }
-
-      // Set a new timeout to load data after movement stops
       loadTimeoutRef.current = window.setTimeout(() => {
         const bounds = map.getBounds();
         loadData(bounds);
-      }, 250); // Wait 250ms after movement stops before loading
+      }, 250);
     };
 
     map.on('moveend', handleMapMove);
@@ -150,49 +149,30 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
       // Load and parse the TIFF data
       const tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
       const image = await tiff.getImage();
-      
+
       const width = image.getWidth();
       const height = image.getHeight();
       const rasters = await image.readRasters();
       const data = rasters[0] as Float32Array;
 
-      // Get the raw bounds from the image's metadata
       const bbox = image.getBoundingBox();
       const rawBounds = bbox || [bounds.getWest(), bounds.getSouth(), bounds.getEast(), bounds.getNorth()];
 
-      // Get the nodata value from the image metadata
       const rawNoData = image.fileDirectory.GDAL_NODATA;
       const noDataValue = rawNoData !== undefined ? Number(rawNoData.replace('\x00', '')) : null;
 
-      const rasterData = {
-        data,
-        width,
-        height,
-        noDataValue
-      };
-
-      // Store in raster cache
+      const rasterData = { data, width, height, noDataValue };
       rasterDataCache.set(`${categoryId}-${layerId}`, rasterData);
-
       boundsRef.current = bounds;
 
-      // Calculate statistics for metadata
-      let min = Infinity;
-      let max = -Infinity;
-      let sum = 0;
-      let validCount = 0;
-      let noDataCount = 0;
-      let zeroCount = 0;
-      
+      let min = Infinity, max = -Infinity, sum = 0, validCount = 0, noDataCount = 0, zeroCount = 0;
       for (let i = 0; i < data.length; i++) {
         const value = data[i];
         if (noDataValue !== null && value === noDataValue) {
           noDataCount++;
           continue;
         }
-        if (value === 0) {
-          zeroCount++;
-        }
+        if (value === 0) zeroCount++;
         if (value !== undefined && !isNaN(value) && isFinite(value)) {
           min = Math.min(min, value);
           max = Math.max(max, value);
@@ -200,10 +180,8 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
           validCount++;
         }
       }
-
       const mean = validCount > 0 ? sum / validCount : 0;
 
-      // Dispatch metadata to Redux
       dispatch(setLayerMetadata({
         categoryId,
         layerId,
@@ -217,35 +195,17 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
           scale: image.fileDirectory.ModelPixelScaleTag || [],
           transform: image.fileDirectory.ModelTransformationTag,
           rawBounds,
-          rawBoundsCRS: 'EPSG:4326', // ArcGIS Image Services use WGS84
-          stats: {
-            min,
-            max,
-            mean,
-            validCount,
-            noDataCount,
-            zeroCount
-          }
+          rawBoundsCRS: 'EPSG:4326',
+          stats: { min, max, mean, validCount, noDataCount, zeroCount }
         },
-        range: {
-          min,
-          max,
-          mean
-        }
+        range: { min, max, mean }
       }));
 
-      // Initialize value range if not set
       if (!valueRange) {
-        dispatch(initializeLayerValueRange({
-          categoryId,
-          layerId,
-          min,
-          max
-        }));
+        dispatch(initializeLayerValueRange({ categoryId, layerId, min, max }));
       }
 
       updateVisualization();
-
       setLoading(false);
       setProgress(100);
     } catch (error) {
@@ -260,7 +220,6 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
   const updateVisualization = () => {
     if (!valueRange || !boundsRef.current || !layer) return;
 
-    // Remove existing image overlay before creating a new one
     if (imageOverlayRef.current) {
       map.removeLayer(imageOverlayRef.current);
       imageOverlayRef.current = null;
@@ -274,18 +233,14 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
     canvasRef.current = canvas;
     canvas.width = width;
     canvas.height = height;
-
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
-
     const imageData = ctx.createImageData(width, height);
-    
     const scheme = getColorScheme(colorScheme);
     if (!scheme) {
       console.error('No color scheme found for:', colorScheme);
       return;
     }
-
     console.log('Using color scheme:', {
       name: scheme.name,
       type: scheme.type,
@@ -293,15 +248,12 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
       colors: scheme.colors,
       domain: layer.domain
     });
-
-    // Use layer domain for normalization if available, otherwise use full range
     const domain = layer.domain || [valueRange.defaultMin, valueRange.defaultMax];
     const fullRange = domain[1] - domain[0];
 
     for (let i = 0; i < data.length; i++) {
       const value = data[i];
       const idx = i * 4;
-
       if (
         value === undefined ||
         isNaN(value) ||
@@ -316,37 +268,33 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
         imageData.data[idx + 3] = GeoTiffNoDataColor.a;
         continue;
       }
-
-      // Normalize based on domain range
       const normalizedValue = (value - domain[0]) / fullRange;
       const color = getColorFromScheme(scheme, normalizedValue);
       const { r, g, b } = hexToRgb(color);
-      
       imageData.data[idx] = r;
       imageData.data[idx + 1] = g;
       imageData.data[idx + 2] = b;
       imageData.data[idx + 3] = 255;
     }
-
     ctx.putImageData(imageData, 0, 0);
     const dataUrl = canvas.toDataURL();
     imageDataRef.current = dataUrl;
 
-    // Create new image overlay
+    // Create new image overlay and explicitly bring it to the front
     const imageOverlay = L.imageOverlay(dataUrl, boundsRef.current, {
       opacity: opacity,
       interactive: false,
-      className: 'geotiff-high-quality'
+      className: 'geotiff-high-quality',
+      pane: layer.pane,
+      zIndex: layer.order || 0
     });
-
     imageOverlay.addTo(map);
+    imageOverlay.bringToFront();
     imageOverlayRef.current = imageOverlay;
   };
 
   useEffect(() => {
-    if (valueRange) {
-      updateVisualization();
-    }
+    if (valueRange) updateVisualization();
   }, [valueRange]);
 
   useEffect(() => {
@@ -358,38 +306,24 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
   const fetchTiff = async (bounds: L.LatLngBounds): Promise<ArrayBuffer> => {
     try {
       const exportImageUrl = serviceConfig.serviceUrl;
-
-      // Calculate optimal image size based on map size and zoom level
       const zoom = map.getZoom();
       const containerSize = map.getSize();
-      
-      // Calculate pixels per degree at current zoom
       const pixelsPerDegree = Math.pow(2, zoom + 8) / 360;
-      
-      // Calculate required image dimensions
       const degreesLng = Math.abs(bounds.getEast() - bounds.getWest());
       const degreesLat = Math.abs(bounds.getNorth() - bounds.getSouth());
       const targetWidth = Math.round(degreesLng * pixelsPerDegree);
       const targetHeight = Math.round(degreesLat * pixelsPerDegree);
-
-      // Ensure minimum size of 256x256 and maximum of 2048x2048
       const width = Math.min(2048, Math.max(256, targetWidth));
       const height = Math.min(2048, Math.max(256, targetHeight));
-
-      // Create bbox string with 6 decimal precision
       const bbox = `${bounds.getWest().toFixed(6)},${bounds.getSouth().toFixed(6)},${bounds.getEast().toFixed(6)},${bounds.getNorth().toFixed(6)}`;
-      
-      // Parse the rendering rule
       let parsedRule: any;
       try {
-        parsedRule = typeof renderingRule === 'string' ? 
+        parsedRule = typeof renderingRule === 'string' ?
           JSON.parse(renderingRule) : renderingRule;
       } catch (e) {
         console.error('Failed to parse rendering rule:', e);
         parsedRule = renderingRule;
       }
-
-      // Match the working URL structure exactly
       const params = new URLSearchParams({
         bbox,
         bboxSR: '4326',
@@ -397,7 +331,7 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
         imageSR: '4326',
         format: 'tiff',
         pixelType: 'F32',
-        noData: '',  // Let the service determine the nodata value
+        noData: '',
         compression: 'LZW',
         bandIds: '',
         mosaicRule: '',
@@ -405,16 +339,12 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
         interpolation: 'RSP_NearestNeighbor',
         f: 'image'
       });
-
       const url = `${exportImageUrl}/exportImage?${params.toString()}`;
-
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error(`Failed to fetch TIFF: ${response.status} ${response.statusText}`);
       }
-
       const arrayBuffer = await response.arrayBuffer();
-
       return arrayBuffer;
     } catch (error) {
       console.error('Error fetching TIFF:', error);
@@ -428,18 +358,11 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
         <div className="flex items-center space-x-3">
           <Loader2 className="h-5 w-5 text-blue-500 animate-spin" />
           <div className="flex-1">
-            <div className="text-sm font-medium text-gray-900">
-              Loading TIFF...
-            </div>
+            <div className="text-sm font-medium text-gray-900">Loading TIFF...</div>
             <div className="mt-1 relative h-2 bg-gray-200 rounded-full overflow-hidden">
-              <div
-                className="absolute inset-y-0 left-0 bg-blue-500 transition-all duration-150"
-                style={{ width: `${progress}%` }}
-              />
+              <div className="absolute inset-y-0 left-0 bg-blue-500 transition-all duration-150" style={{ width: `${progress}%` }} />
             </div>
-            <div className="mt-1 text-xs text-gray-500">
-              {progress}% complete
-            </div>
+            <div className="mt-1 text-xs text-gray-500">{progress}% complete</div>
           </div>
         </div>
       </div>
@@ -452,9 +375,7 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
         <div className="flex items-start space-x-2">
           <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
           <div className="flex-1">
-            <h3 className="text-sm font-medium text-red-800 mb-1">
-              Failed to load TIFF
-            </h3>
+            <h3 className="text-sm font-medium text-red-800 mb-1">Failed to load TIFF</h3>
             <p className="text-sm text-red-600">{error}</p>
           </div>
         </div>

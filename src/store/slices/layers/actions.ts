@@ -7,7 +7,8 @@ import {
   InitializeLayerValueRangePayload,
   SetShowMapValuesPayload,
   SetLayerMetadataPayload,
-  SetLayerLoadingPayload
+  SetLayerLoadingPayload,
+  SetLayerPanePayload
 } from './types';
 
 // Layer actions
@@ -21,6 +22,7 @@ export const initializeLayerValueRange = createAction<InitializeLayerValueRangeP
 export const setShowMapValues = createAction<SetShowMapValuesPayload>('layers/setShowMapValues');
 export const setLayerMetadata = createAction<SetLayerMetadataPayload>('layers/setLayerMetadata');
 export const setLayerLoading = createAction<SetLayerLoadingPayload>('layers/setLayerLoading');
+export const setLayerPane = createAction<SetLayerPanePayload>('layers/setLayerPane');
 
 // Layer ordering actions
 export const bringLayerToFront = createAction<ToggleLayerPayload>('layers/bringLayerToFront');

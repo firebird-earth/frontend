@@ -1,5 +1,5 @@
 import L from 'leaflet';
-import { MapLayer } from '../types/map';
+import { MapLayer } from '../../types/map';
 
 class MapService {
   private static instance: MapService;

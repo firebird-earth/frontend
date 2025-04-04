@@ -1,4 +1,5 @@
 import { GeoJSON } from 'geojson';
+import L from 'leaflet';
 
 export enum LayerType {
   Basemap = 'basemap',
@@ -17,6 +18,20 @@ export enum LayerType {
 export interface Coordinates {
   lat: number;
   lng: number;
+}
+
+// Legend item interface
+export interface LegendItem {
+  color: string;
+  weight: number;
+  fillColor: string;
+  fillOpacity: number;
+  label: string;
+}
+
+// Legend interface
+export interface Legend {
+  items: LegendItem[];
 }
 
 // Serializable bounds format
@@ -76,10 +91,12 @@ export interface MapLayer {
   };
   renderingRule?: string;
   showValues?: boolean;
-  metadata?: GeoTiffMetadataRedux; // Only serializable metadata
-  colorScheme?: string; // Added colorScheme property
-  domain?: [number, number]; // Added domain property
-  units?: string; // Added units property
+  metadata?: GeoTiffMetadataRedux;
+  colorScheme?: string;
+  domain?: [number, number];
+  units?: string;
+  legend?: Legend;
+  pane?: string;
 }
 
 export interface LayerCategory {

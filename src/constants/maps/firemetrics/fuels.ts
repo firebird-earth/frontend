@@ -1,7 +1,7 @@
 import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/common/utils/utils';
+import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
 import { GEOTIFF_LAYERS } from '../../../constants/urls';
 import { colorSchemes } from '../../../constants/colors';
 
@@ -14,6 +14,7 @@ export const FUELS = {
     units: 'kg/m³',
     source: GEOTIFF_LAYERS.CANOPY_BULK_DENSITY,
     colorScheme: colorSchemes.greenYellowRed.name,
+    type: LayerType.GeoTiff,
   },
   CANOPY_COVER: {
     name: 'Canopy Cover',
@@ -21,6 +22,7 @@ export const FUELS = {
     units: 'percent',
     source: GEOTIFF_LAYERS.CANOPY_COVER,
     colorScheme: colorSchemes.canopyCover.name,
+    type: LayerType.GeoTiff,
     domain: [0, 100], // Canopy cover percentage range
     legend: {
       items: [
@@ -38,6 +40,7 @@ export const FUELS = {
     units: 'meters',
     source: GEOTIFF_LAYERS.CANOPY_HEIGHT,
     colorScheme: colorSchemes.greenYellowRed.name,
+    type: LayerType.GeoTiff,
     domain: [0, 50], // Canopy height range in meters
     legend: {
       items: [
@@ -55,6 +58,7 @@ export const FUELS = {
     units: 'percent',
     source: 'USFS Forest Health Technology Enterprise Team',
     colorScheme: colorSchemes.greenYellowRed.name,
+    type: LayerType.GeoTiff,
     domain: [0, 100], // Mortality percentage range
     legend: {
       items: [
@@ -70,40 +74,8 @@ export const FUELS = {
 
 // Layer category constant
 export const FUELS_CATEGORY: LayerCategory = createInitialCategory('fuels', 'Fuels', [
-  { 
-    name: FUELS.CANOPY_BULK_DENSITY.name,
-    type: LayerType.GeoTiff,
-    source: FUELS.CANOPY_BULK_DENSITY.source,
-    colorScheme: FUELS.CANOPY_BULK_DENSITY.colorScheme,
-    domain: FUELS.CANOPY_BULK_DENSITY.domain,
-    active: false,
-    order: 30
-  },
-  {
-    name: FUELS.CANOPY_COVER.name,
-    type: LayerType.GeoTiff,
-    source: FUELS.CANOPY_COVER.source,
-    colorScheme: FUELS.CANOPY_COVER.colorScheme,
-    domain: FUELS.CANOPY_COVER.domain,
-    active: false,
-    order: 40
-  },
-  {
-    name: FUELS.CANOPY_HEIGHT.name,
-    type: LayerType.GeoTiff,
-    source: FUELS.CANOPY_HEIGHT.source,
-    colorScheme: FUELS.CANOPY_HEIGHT.colorScheme,
-    domain: FUELS.CANOPY_HEIGHT.domain,
-    active: false,
-    order: 50
-  },
-  {
-    name: FUELS.MORTALITY.name,
-    type: LayerType.Placeholder,
-    source: '',
-    colorScheme: FUELS.MORTALITY.colorScheme,
-    domain: FUELS.MORTALITY.domain,
-    active: false,
-    order: 60
-  }
+  FUELS.CANOPY_BULK_DENSITY,
+  FUELS.CANOPY_COVER,
+  FUELS.CANOPY_HEIGHT,
+  FUELS.MORTALITY
 ]);

@@ -1,7 +1,7 @@
 import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/common/utils/utils';
+import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
 import { ELEVATION_SERVICE } from '../../../services/maps/services';
 import { colorSchemes } from '../../../constants/colors';
 
@@ -58,96 +58,66 @@ const CONTOUR_RULE = {
 export const ELEVATION = {
   ELEVATION: {
     name: 'Elevation',
+    type: LayerType.ArcGISImageService,
+    source: ELEVATION_SERVICE.serviceUrl,
+    renderingRule: JSON.stringify(ELEVATION_RULE),
     description: 'USGS 3DEP Elevation',
-    source: ELEVATION_SERVICE.baseUrl,
     units: 'meters',
     colorScheme: colorSchemes.greenYellowRed.name,
-    type: LayerType.ArcGISImageService,
-    renderingRule: JSON.stringify(ELEVATION_RULE),
-    domain: [0, 4000] // Elevation range in meters
+    domain: [0, 4000], // Elevation range in meters
+    order: 1
   },
   SLOPE: {
     name: 'Slope Steepness',
+    type: LayerType.ArcGISImageService,
+    source: ELEVATION_SERVICE.serviceUrl,
+    renderingRule: JSON.stringify(SLOPE_RULE),
     description: 'USGS 3DEP Elevation',
-    source: ELEVATION_SERVICE.baseUrl,
     units: 'degrees',
     colorScheme: colorSchemes.slopeGradient.name,
-    type: LayerType.ArcGISImageService,
-    renderingRule: JSON.stringify(SLOPE_RULE),
-    domain: [0, 45] // Slope range in degrees
+    domain: [0, 45], // Slope range in degrees
+    order: 2
   },
   HILLSHADE: {
     name: 'Hillshade',
+    type: LayerType.ArcGISImageService,
+    source: ELEVATION_SERVICE.serviceUrl,
+    renderingRule: JSON.stringify(HILLSHADE_RULE),
     description: 'USGS 3DEP Elevation',
-    source: ELEVATION_SERVICE.baseUrl,
     units: 'category',
     colorScheme: '',
-    type: LayerType.ArcGISImageService,
-    renderingRule: JSON.stringify(HILLSHADE_RULE),
-    domain: [0, 255] // Hillshade intensity range
+    domain: [0, 255], // Hillshade intensity range
+    order: 4
   },
   ASPECT: {
     name: 'Aspect',
+    type: LayerType.ArcGISImageService,
+    source: ELEVATION_SERVICE.serviceUrl,
+    renderingRule: JSON.stringify(ASPECT_RULE),
     description: 'USGS 3DEP Elevation',
-    source: ELEVATION_SERVICE.baseUrl,
     units: 'degrees',
     colorScheme: colorSchemes.redBlue.name,
-    type: LayerType.ArcGISImageService,
-    renderingRule: JSON.stringify(ASPECT_RULE),
-    domain: [0, 360] // Aspect range in degrees
+    domain: [0, 360], // Aspect range in degrees
+    order: 3
   },
   CONTOUR: {
     name: 'Contour',
+    type: LayerType.ArcGISImageService,
+    source: ELEVATION_SERVICE.serviceUrl,
+    renderingRule: JSON.stringify(CONTOUR_RULE),
     description: 'USGS 3DEP Elevation',
-    source: ELEVATION_SERVICE.baseUrl,
     units: 'meters',
     colorScheme: '',
-    type: LayerType.ArcGISImageService,
-    renderingRule: JSON.stringify(CONTOUR_RULE),
-    domain: [0, 4000] // Contour range in meters
+    domain: [0, 4000], // Contour range in meters
+    order: 5
   }
 } as const;
 
 // Layer category constant
 export const ELEVATION_CATEGORY: LayerCategory = createInitialCategory('elevation', 'Elevation', [
-  { 
-    name: ELEVATION.ELEVATION.name, 
-    type: LayerType.ArcGISImageService, 
-    source: ELEVATION.ELEVATION.source, 
-    renderingRule: ELEVATION.ELEVATION.renderingRule, 
-    colorScheme: ELEVATION.ELEVATION.colorScheme, 
-    order: 1 
-  },
-  { 
-    name: ELEVATION.SLOPE.name, 
-    type: LayerType.ArcGISImageService, 
-    source: ELEVATION.SLOPE.source, 
-    renderingRule: ELEVATION.SLOPE.renderingRule, 
-    colorScheme: ELEVATION.SLOPE.colorScheme, 
-    order: 2 
-  },
-  { 
-    name: ELEVATION.ASPECT.name, 
-    type: LayerType.ArcGISImageService, 
-    source: ELEVATION.ASPECT.source, 
-    renderingRule: ELEVATION.ASPECT.renderingRule, 
-    colorScheme: ELEVATION.ASPECT.colorScheme, 
-    order: 3 
-  },
-  { 
-    name: ELEVATION.HILLSHADE.name, 
-    type: LayerType.ArcGISImageService, 
-    source: ELEVATION.HILLSHADE.source, 
-    renderingRule: ELEVATION.HILLSHADE.renderingRule, 
-    colorScheme: ELEVATION.HILLSHADE.colorScheme, 
-    order: 4 
-  },
-  { 
-    name: ELEVATION.CONTOUR.name, 
-    type: LayerType.ArcGISImageService, 
-    source: ELEVATION.CONTOUR.source, 
-    renderingRule: ELEVATION.CONTOUR.renderingRule, 
-    colorScheme: ELEVATION.CONTOUR.colorScheme, 
-    order: 5 
-  }
+  ELEVATION.ELEVATION,
+  ELEVATION.SLOPE,
+  ELEVATION.ASPECT,
+  ELEVATION.HILLSHADE,
+  ELEVATION.CONTOUR
 ]);

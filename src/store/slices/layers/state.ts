@@ -1,5 +1,5 @@
 import { LayersState } from './types';
-import { LayerType } from '../../../types/map';
+import { LayerType, MapLayer } from '../../../types/map';
 import { TILE_LAYERS, WUI_LAYER, CRISIS_AREAS_LAYER, GEOTIFF_LAYERS } from '../../../constants/urls';
 import { createInitialCategory } from '../common/utils/utils';
 import { JURISDICTIONS, JURISDICTIONS_CATEGORY } from '../../../constants/maps/layers/jurisdictions';
@@ -16,10 +16,19 @@ import { TRANSPORTATION, TRANSPORTATION_CATEGORY } from '../../../constants/maps
 import { WATER, WATER_CATEGORY } from '../../../constants/maps/layers/water';
 import { INFRASTRUCTURE, INFRASTRUCTURE_CATEGORY } from '../../../constants/maps/layers/infrastructure';
 import { RESTORATION_CLASS, RESTORATION_CLASS_CATEGORY } from '../../../constants/maps/layers/restorationClass';
+import L from 'leaflet';
+
+// Create a WeakMap to store Leaflet layer instances
+export const leafletLayerMap = new Map<number, L.Layer>();
+
+// Track the last used order number for each pane
+export const paneCounters: Record<string, number> = {
+  firemetricsPane: 0,
+  layersPane: 0
+};
 
 export const initialState: LayersState = {
   categories: {
-    
     valueAtRisk: VALUE_AT_RISK_CATEGORY,
     landscapeRisk: LANDSCAPE_RISK_CATEGORY,
     fuels: FUELS_CATEGORY,

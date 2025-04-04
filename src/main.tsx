@@ -2,7 +2,7 @@ import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
 import { store } from './store';
-import App from './App.tsx';
+import App from './components/app/App';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import './index.css';
 

@@ -1,13 +1,13 @@
 import React, { useEffect } from 'react';
 import { Menu, Search, Download, Settings } from 'lucide-react';
-import Map from './components/Map';
-import SettingsDialog from './components/settings/SettingsDialog';
-import { useAppDispatch } from './hooks/useAppDispatch';
-import { useAppSelector } from './hooks/useAppSelector';
-import { toggleSettings, toggleNav, setActiveTab, setTheme } from './store/slices/uiSlice';
-import { initializeSettings } from './store/slices/settingsSlice';
-import firebirdLogo from './assets/firebird-logo.png';
-import CurrentAOI from './components/header/CurrentAOI';
+import Map from '../map/Map';
+import SettingsDialog from '../settings/SettingsDialog';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { useAppSelector } from '../../hooks/useAppSelector';
+import { toggleSettings, toggleNav, setActiveTab, setTheme } from '../../store/slices/uiSlice';
+import { initializeSettings } from '../../store/slices/settingsSlice';
+import firebirdLogo from '../../assets/firebird-logo.png';
+import CurrentAOI from '../header/CurrentAOI';
 
 const App: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -73,9 +73,9 @@ const App: React.FC = () => {
                 <img 
                   src={firebirdLogo}
                   alt="Firebird"
-                  width="120"
-                  height="24"
-                  className="h-6 w-[120px] object-contain"
+                  width="102"
+                  height="20"
+                  className="h-5 w-[102px] object-contain"
                 />
               </button>
             </div>

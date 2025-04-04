@@ -1,11 +1,13 @@
 import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/common/utils/utils';
+import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
 
 export const RESTORATION_CLASS = {
   MODERATE_DEPARTURE: {
     name: 'Moderate Departure Veg. Conditions Class',
+    type: LayerType.Vector,
+    source: 'USFS Vegetation',
     description: 'Areas with moderate vegetation departure from historical conditions',
     units: 'category',
     colorScheme: 'none',
@@ -23,6 +25,8 @@ export const RESTORATION_CLASS = {
   },
   SIGNIFICANT_DEPARTURE: {
     name: 'Significant Departure Veg. Condition Class',
+    type: LayerType.Vector,
+    source: 'USFS Vegetation',
     description: 'Areas with significant vegetation departure from historical conditions',
     units: 'category',
     colorScheme: 'none',
@@ -42,14 +46,6 @@ export const RESTORATION_CLASS = {
 
 // Layer category constant
 export const RESTORATION_CLASS_CATEGORY: LayerCategory = createInitialCategory('restorationClass', 'Restoration Class', [
-  { 
-    name: RESTORATION_CLASS.MODERATE_DEPARTURE.name, 
-    type: LayerType.Vector,
-    colorScheme: RESTORATION_CLASS.MODERATE_DEPARTURE.colorScheme
-  },
-  { 
-    name: RESTORATION_CLASS.SIGNIFICANT_DEPARTURE.name, 
-    type: LayerType.Vector,
-    colorScheme: RESTORATION_CLASS.SIGNIFICANT_DEPARTURE.colorScheme
-  }
+  RESTORATION_CLASS.MODERATE_DEPARTURE,
+  RESTORATION_CLASS.SIGNIFICANT_DEPARTURE
 ]);

@@ -1,8 +1,19 @@
 import { validateGeoTiff } from './validation';
 
+// Debug configuration
+const LoadersConfig = {
+  debug: false
+} as const;
+
+export function setLoadersDebug(enabled: boolean) {
+  (LoadersConfig as any).debug = enabled;
+}
+
 export async function loadGeoTiffFromUrl(url: string, onProgress?: (progress: number) => void): Promise<ArrayBuffer> {
   try {
-    console.log('Loading GeoTIFF from URL:', url);
+    if (LoadersConfig.debug) {
+      console.log('Loading GeoTIFF from URL:', url);
+    }
     
     const fetchOptions: RequestInit = {
       method: 'GET',
@@ -22,8 +33,10 @@ export async function loadGeoTiffFromUrl(url: string, onProgress?: (progress: nu
       throw new Error('File size is 0 bytes');
     }
 
-    console.log('GeoTIFF file size:', totalSize, 'bytes');
-    console.log('Content-Type:', headResponse.headers.get('content-type'));
+    if (LoadersConfig.debug) {
+      console.log('GeoTIFF file size:', totalSize, 'bytes');
+      console.log('Content-Type:', headResponse.headers.get('content-type'));
+    }
 
     const response = await fetch(url, fetchOptions);
     if (!response.ok) {
@@ -49,9 +62,15 @@ export async function loadGeoTiffFromUrl(url: string, onProgress?: (progress: nu
       if (onProgress) {
         onProgress(Math.round((receivedLength / totalSize) * 100));
       }
+
+      if (LoadersConfig.debug) {
+        console.log('Download progress:', Math.round((receivedLength / totalSize) * 100), '%');
+      }
     }
 
-    console.log('GeoTIFF download complete:', receivedLength, 'bytes received');
+    if (LoadersConfig.debug) {
+      console.log('GeoTIFF download complete:', receivedLength, 'bytes received');
+    }
 
     const chunksAll = new Uint8Array(receivedLength);
     let position = 0;

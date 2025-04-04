@@ -1,57 +1,51 @@
 import React from 'react';
 import { Info } from 'lucide-react';
 import { useDraggable } from '../../hooks/useDraggable';
+import { getCRSName } from '../../utils/crs';
+import { useAppSelector } from '../../hooks/useAppSelector';
 
 interface AboutTiffDialogProps {
-  metadata: {
-    width: number;
-    height: number;
-    bounds: [[number, number], [number, number]];
-    noDataValue: number | null;
-    sourceCRS: string;
-    tiepoint: number[];
-    scale: number[];
-    transform?: number[];
-    rawBounds?: [number, number, number, number];
-    stats?: {
-      min: number;
-      max: number;
-      mean: number;
-      validCount: number;
-      noDataCount: number;
-      zeroCount: number;
-    };
-  };
-  range: {
-    min: number;
-    max: number;
-    mean: number;
-  };
   layerName: string;
-  renderingRule?: string;
+  layerId: number;
+  categoryId: string;
   onClose: () => void;
 }
 
-const AboutTiffDialog: React.FC<AboutTiffDialogProps> = ({
-  metadata,
-  range,
+const AboutTiffDialog: React.FC<AboutTiffDialogProps> = ({ 
   layerName,
-  renderingRule,
+  layerId,
+  categoryId,
   onClose
 }) => {
+  const titleBarRef = document.querySelector('.bg-white.dark\\:bg-gray-800.shadow-md') as HTMLElement;
+
   const { position, handleMouseDown, handleDialogClick, dialogRef } = useDraggable({
-    padding: 25,
-    initialCorner: 'bottom-right'
+    padding: 8,
+    referenceElement: titleBarRef
   });
 
-  // Calculate percentage of valid pixels
-  const totalPixels = metadata.stats?.validCount + (metadata.stats?.noDataCount || 0);
-  const validPercentage = totalPixels ? 
-    ((metadata.stats?.validCount || 0) / totalPixels * 100).toFixed(1) : '0';
-  const noDataPercentage = totalPixels ? 
-    ((metadata.stats?.noDataCount || 0) / totalPixels * 100).toFixed(1) : '0';
-  const zeroPercentage = totalPixels ? 
-    ((metadata.stats?.zeroCount || 0) / totalPixels * 100).toFixed(1) : '0';
+  // Get layer from Redux store
+  const layer = useAppSelector(state => 
+    state.layers.categories[categoryId]?.layers.find(l => l.id === layerId)
+  );
+
+  // Access metadata and range from the layer
+  const metadata = layer?.metadata;
+
+  // Early return if metadata is missing
+  if (!metadata) {
+    console.log("metadata not found");
+    return null;
+  }
+
+  // Safely extract pixel statistics
+  const min = metadata.stats?.min || 0;
+  const max = metadata.stats?.max || 0;
+  const mean = metadata.stats?.mean || 0;
+  const validPixels = metadata.stats?.validCount || 0;
+  const noDataPixels = metadata.stats?.noDataCount || 0;
+  const zeroPixels = metadata.stats?.zeroCount || 0;
+  const totalPixels = metadata.width * metadata.height;
 
   return (
     <div className="fixed inset-0 z-[2000]" style={{ pointerEvents: 'none' }}>
@@ -83,19 +77,19 @@ const AboutTiffDialog: React.FC<AboutTiffDialogProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Min:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {range.min.toFixed(3)}
+                {min.toFixed(3)}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Max:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {range.max.toFixed(3)}
+                {max.toFixed(3)}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Mean:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {range.mean.toFixed(3)}
+                {mean.toFixed(3)}
               </span>
             </div>
           </div>
@@ -104,21 +98,41 @@ const AboutTiffDialog: React.FC<AboutTiffDialogProps> = ({
           <div className="space-y-1">
             <h4 className="text-sm font-medium text-gray-700 mb-2">Pixel Analysis</h4>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Valid Pixels:</span>
+              <span className="text-sm text-gray-600">Dimensions:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {metadata.stats?.validCount.toLocaleString()} ({validPercentage}%)
+                {metadata.width} × {metadata.height}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">NoData Pixels:</span>
+              <span className="text-sm text-gray-600">Valid Pixels:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {metadata.stats?.noDataCount.toLocaleString()} ({noDataPercentage}%)
+                {validPixels.toLocaleString()}
               </span>
             </div>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Zero Pixels:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {metadata.stats?.zeroCount.toLocaleString()} ({zeroPercentage}%)
+                {zeroPixels.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">NoData Pixels:</span>
+              <span className="text-sm font-medium text-gray-700 text-right">
+                {noDataPixels.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Total Pixels:</span>
+              <span className="text-sm font-medium text-gray-700 text-right">
+                {totalPixels.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Resolution:</span>
+              <span className="text-sm font-medium text-gray-700 text-right">
+                {metadata.resolution?.x 
+                  ? `${metadata.resolution.x.toFixed(2)} meters`
+                  : 'Unknown'}
               </span>
             </div>
           </div>
@@ -127,9 +141,9 @@ const AboutTiffDialog: React.FC<AboutTiffDialogProps> = ({
           <div className="space-y-1">
             <h4 className="text-sm font-medium text-gray-700 mb-2">Properties</h4>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Dimensions:</span>
+              <span className="text-sm text-gray-600">CRS:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {metadata.width} × {metadata.height}
+                {getCRSName(metadata.sourceCRS)}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -138,49 +152,16 @@ const AboutTiffDialog: React.FC<AboutTiffDialogProps> = ({
                 {metadata.noDataValue ?? 'None'}
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">CRS:</span>
-              <span className="text-sm font-medium text-gray-700 text-right">
-                {metadata.sourceCRS}
-              </span>
-            </div>
           </div>
-
-          {/* Bounds */}
-          {metadata.bounds && (
-            <div className="space-y-1">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Bounds</h4>
-              <div className="space-y-1 text-xs font-mono">
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">North:</span>
-                  <span className="text-gray-700">{metadata.bounds[1][0].toFixed(6)}°</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">South:</span>
-                  <span className="text-gray-700">{metadata.bounds[0][0].toFixed(6)}°</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">East:</span>
-                  <span className="text-gray-700">{metadata.bounds[1][1].toFixed(6)}°</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-gray-600">West:</span>
-                  <span className="text-gray-700">{metadata.bounds[0][1].toFixed(6)}°</span>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
         
-        <div className="p-4 border-t border-gray-200">
-          <div className="flex justify-end">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium"
-            >
-              Done
-            </button>
-          </div>
+        <div className="flex justify-end p-4 border-t border-gray-200">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 text-sm font-medium"
+          >
+            Done
+          </button>
         </div>
       </div>
     </div>

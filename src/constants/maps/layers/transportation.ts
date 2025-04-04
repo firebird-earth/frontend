@@ -1,11 +1,13 @@
 import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/common/utils/utils';
+import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
 
 export const TRANSPORTATION = {
   STATE_ROADS: {
     name: 'State DOT Roads',
+    type: LayerType.Vector,
+    source: 'USFS Transportation',
     description: 'State Department of Transportation roads',
     units: 'category',
     colorScheme: 'none',
@@ -23,6 +25,8 @@ export const TRANSPORTATION = {
   },
   COUNTY_ROADS: {
     name: 'County Roads',
+    type: LayerType.Vector,
+    source: 'USFS Transportation',
     description: 'County maintained roads',
     units: 'category',
     colorScheme: 'none',
@@ -40,6 +44,8 @@ export const TRANSPORTATION = {
   },
   USFS_ROADS: {
     name: 'National Forest Service Roads',
+    type: LayerType.Vector,
+    source: 'USFS Transportation',
     description: 'USFS maintained roads',
     units: 'category',
     colorScheme: 'none',
@@ -59,19 +65,7 @@ export const TRANSPORTATION = {
 
 // Layer category constant
 export const TRANSPORTATION_CATEGORY: LayerCategory = createInitialCategory('transportation', 'Transportation', [
-  { 
-    name: TRANSPORTATION.STATE_ROADS.name, 
-    type: LayerType.Vector,
-    colorScheme: TRANSPORTATION.STATE_ROADS.colorScheme
-  },
-  { 
-    name: TRANSPORTATION.COUNTY_ROADS.name, 
-    type: LayerType.Vector,
-    colorScheme: TRANSPORTATION.COUNTY_ROADS.colorScheme
-  },
-  { 
-    name: TRANSPORTATION.USFS_ROADS.name, 
-    type: LayerType.Vector,
-    colorScheme: TRANSPORTATION.USFS_ROADS.colorScheme
-  }
+  TRANSPORTATION.STATE_ROADS,
+  TRANSPORTATION.COUNTY_ROADS,
+  TRANSPORTATION.USFS_ROADS
 ]);

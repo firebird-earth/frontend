@@ -1,11 +1,77 @@
 import { createReducer } from '@reduxjs/toolkit';
 import { initialState } from './state';
 import * as actions from './actions';
-import { handleBasemapToggle } from './utils/basemaps';
-import { handleLayersTabToggle } from './utils/layerManagement';
-import { handleLayerOrdering } from '../common/utils/ordering';
-import { handleValueRange } from '../common/utils/valueRange';
-import { handleOpacity } from '../common/utils/opacity';
+import { handleLayerOrdering } from './utils/ordering';
+import { handleValueRange } from './utils/valueRange';
+import { handleOpacity } from './utils/opacity';
+import { isLayersTab, isFiremetricsTab } from '../../../constants/maps/index';
+import { findLayer } from './utils/utils';
+
+import { paneCounters } from './state';
+
+function handleToggleExclusive(state: LayersState, categoryId: string, layerId: number): void {
+  const layer = findLayer(state, categoryId, layerId);
+  if (!layer) return;
+
+  // Handle basemaps first - they're always exclusive
+  if (categoryId === 'basemaps') {
+    state.categories.basemaps.layers.forEach(l => {
+      l.active = l.id === layerId;
+    });
+    return;
+  }
+
+  // For Layers tab:
+  // Only turn off other layers within the Layers tab categories
+  if (isLayersTab(categoryId)) {
+    Object.entries(state.categories).forEach(([catId, cat]) => {
+      if (isLayersTab(catId)) {
+        cat.layers.forEach(l => {
+          if (catId === categoryId && l.id === layerId) {
+            // Toggle the clicked layer
+            l.active = !l.active;
+          } else {
+            // Turn off other layers only in Layers tab categories
+            l.active = false;
+          }
+        });
+      }
+    });
+    return;
+  }
+
+  // For FireMetrics tab:
+  // Only turn off other layers within the FireMetrics tab categories
+  if (isFiremetricsTab(categoryId)) {
+    Object.entries(state.categories).forEach(([catId, cat]) => {
+      if (isFiremetricsTab(catId)) {
+        cat.layers.forEach(l => {
+          if (catId === categoryId && l.id === layerId) {
+            // Toggle the clicked layer
+            l.active = !l.active;
+          } else {
+            // Turn off other layers only in FireMetrics tab categories
+            l.active = false;
+          }
+        });
+      }
+    });
+    return;
+  }
+}
+
+function handleBasemapToggle(state: LayersState, categoryId: string, layerId: number): void {
+  const category = findCategory(state, categoryId);
+  if (!category) return;
+
+  const layer = findLayer(state, categoryId, layerId);
+  if (!layer) return;
+
+  // Basemaps are exclusive - only one can be active at a time
+  category.layers.forEach(l => {
+    l.active = l.id === layerId;
+  });
+}
 
 export const layersReducer = createReducer(initialState, (builder) => {
   builder
@@ -21,17 +87,28 @@ export const layersReducer = createReducer(initialState, (builder) => {
         const layer = category.layers.find(l => l.id === layerId);
         if (!layer) return;
 
+        if (!layer.active && !layer.order) {
+          layer.order = ++paneCounters[layer.pane];
+          console.log("---> toggle layer:",{name:layer.name, pane:layer.pane, order: layer.order})
+        }
+        
         layer.active = !layer.active;
       }
     })
     .addCase(actions.toggleSingleLayer, (state, action) => {
       const { categoryId, layerId } = action.payload;
 
-      if (categoryId === 'basemaps') {
-        handleBasemapToggle(state, categoryId, layerId);
-      } else {
-        handleLayersTabToggle(state, categoryId, layerId);
+      const category = state.categories[categoryId];
+      if (!category) return;
+
+      const layer = category.layers.find(l => l.id === layerId);
+      if (!layer) return;
+
+      if (!layer.active && !layer.order) {
+        layer.order = ++paneCounters[layer.pane];
+        console.log("---> activate layer:",{name:layer.name, pane:layer.pane, order: layer.order})
       }
+      handleToggleExclusive(state, categoryId, layerId);
     })
     .addCase(actions.setLayerOpacity, (state, action) => {
       const { categoryId, layerId, opacity } = action.payload;
@@ -100,7 +177,7 @@ export const layersReducer = createReducer(initialState, (builder) => {
       });
     })
     .addCase(actions.setLayerMetadata, (state, action) => {
-      const { categoryId, layerId, metadata} = action.payload;
+      const { categoryId, layerId, metadata } = action.payload;
       const category = state.categories[categoryId];
       if (!category) return;
 
@@ -118,6 +195,16 @@ export const layersReducer = createReducer(initialState, (builder) => {
       if (!layer) return;
 
       layer.loading = loading;
+    })
+    .addCase(actions.setLayerPane, (state, action) => {
+      const { categoryId, layerId, pane } = action.payload;
+      const category = state.categories[categoryId];
+      if (!category) return;
+
+      const layer = category.layers.find(l => l.id === layerId);
+      if (!layer) return;
+
+      layer.pane = pane;
     })
     .addCase(actions.setSlopeRenderingRule, (state, action) => {
       state.slopeRenderingRule = action.payload;

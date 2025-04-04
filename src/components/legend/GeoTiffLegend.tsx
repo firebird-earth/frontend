@@ -1,10 +1,9 @@
-// src/components/layers/base/GeoTiffLegend.tsx
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
-import { useAppSelector } from '../../../hooks/useAppSelector';
-import { getColorScheme, getGradientForScheme } from '../../../utils/colors';
-import { geotiffService } from '../../../services/geotiffService';
-import { getGeoTiffUrl } from '../../../constants/urls';
+import { useAppSelector } from '../../hooks/useAppSelector';
+import { getColorScheme, getGradientForScheme } from '../../utils/colors';
+import { geotiffService } from '../../services/maps/geotiffService';
+import { getGeoTiffUrl } from '../../constants/urls';
 
 interface GeoTiffLegendProps {
   url: string;
@@ -15,7 +14,7 @@ interface GeoTiffLegendProps {
 const GeoTiffLegend: React.FC<GeoTiffLegendProps> = React.memo(({ 
   url, 
   categoryId, 
-  layerId 
+  layerId
 }) => {
   const [metadata, setMetadata] = useState<any>(null);
   const [dataRange, setDataRange] = useState<{min: number; max: number; mean: number} | null>(null);
@@ -32,7 +31,7 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = React.memo(({
   });
 
   // Memoize the URL to prevent unnecessary fetches
-  const effectiveUrl = useMemo(() => {
+  const effectiveUrl = React.useMemo(() => {
     if (!currentAOI || !layer) return url;
     const aoiId = 'id' in currentAOI ? currentAOI.id : 1;
     const layerName = layer.source.split('/').pop()?.replace('.tif', '') || '';
@@ -122,7 +121,7 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = React.memo(({
           <span>{valueRange ? valueRange.max.toFixed(3) : dataRange.max.toFixed(3)}</span>
         </div>
         <div className="text-xs text-gray-600 text-center">
-          {layer.units || metadata.custom?.units || 'units'}
+          {layer.units || 'units'}
         </div>
       </div>
     </div>

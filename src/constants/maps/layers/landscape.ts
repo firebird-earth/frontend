@@ -1,17 +1,16 @@
 import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/common/utils/utils';
+import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
 
 export const LANDSCAPE = {
   SLOPE: {
     name: 'Slope Steepness',
+    type: LayerType.Vector,
+    source: 'USFS Landscape',
     description: 'Terrain slope steepness in degrees',
     units: 'degrees',
-    source: 'USGS 3DEP',
     colorScheme: 'slopeGradient',
-    type: 'dynamic',
-    service: 'slope',
     legend: {
       items: [
         {
@@ -31,6 +30,8 @@ export const LANDSCAPE = {
   },
   TIMBER_BASE: {
     name: 'Timber Base',
+    type: LayerType.Vector,
+    source: 'USFS Landscape',
     description: 'Timber base areas',
     units: 'category',
     colorScheme: 'none',
@@ -48,6 +49,8 @@ export const LANDSCAPE = {
   },
   ROADLESS: {
     name: 'Roadless Areas',
+    type: LayerType.Vector,
+    source: 'USFS Landscape',
     description: 'Inventoried roadless areas',
     units: 'category',
     colorScheme: 'none',
@@ -65,6 +68,8 @@ export const LANDSCAPE = {
   },
   WILDERNESS: {
     name: 'Wilderness Areas',
+    type: LayerType.Vector,
+    source: 'USFS Landscape',
     description: 'Designated wilderness areas',
     units: 'category',
     colorScheme: 'none',
@@ -82,6 +87,8 @@ export const LANDSCAPE = {
   },
   CULTURAL: {
     name: 'Cultural Areas',
+    type: LayerType.Vector,
+    source: 'USFS Landscape',
     description: 'Cultural and historic areas',
     units: 'category',
     colorScheme: 'none',
@@ -101,24 +108,8 @@ export const LANDSCAPE = {
 
 // Layer category constant
 export const LANDSCAPE_CATEGORY: LayerCategory = createInitialCategory('landscape', 'Landscape', [
-  { 
-    name: LANDSCAPE.TIMBER_BASE.name, 
-    type: LayerType.Vector,
-    colorScheme: LANDSCAPE.TIMBER_BASE.colorScheme
-  },
-  { 
-    name: LANDSCAPE.ROADLESS.name, 
-    type: LayerType.Vector,
-    colorScheme: LANDSCAPE.ROADLESS.colorScheme
-  },
-  { 
-    name: LANDSCAPE.WILDERNESS.name, 
-    type: LayerType.Vector,
-    colorScheme: LANDSCAPE.WILDERNESS.colorScheme
-  },
-  { 
-    name: LANDSCAPE.CULTURAL.name, 
-    type: LayerType.Vector,
-    colorScheme: LANDSCAPE.CULTURAL.colorScheme
-  }
+  LANDSCAPE.TIMBER_BASE,
+  LANDSCAPE.ROADLESS,
+  LANDSCAPE.WILDERNESS,
+  LANDSCAPE.CULTURAL
 ]);

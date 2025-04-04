@@ -1,6 +1,6 @@
 import React from 'react';
 import GeoTiffLayer from './GeoTiffLayer';
-import GeoTiffLegend from './GeoTiffLegend';
+import GeoTiffLegend from '../../legend/GeoTiffLegend';
 import { LayerType } from '../../../types/map';
 
 interface LayerConfig {

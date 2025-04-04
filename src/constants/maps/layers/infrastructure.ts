@@ -1,11 +1,13 @@
 import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/common/utils/utils';
+import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
 
 export const INFRASTRUCTURE = {
   BUILDINGS: {
     name: 'Buildings',
+    type: LayerType.Vector,
+    source: 'USFS Infrastructure',
     description: 'Building footprints and structures',
     units: 'category',
     colorScheme: 'none',
@@ -23,6 +25,8 @@ export const INFRASTRUCTURE = {
   },
   POWER_LINES: {
     name: 'Power Transmission Lines',
+    type: LayerType.Vector,
+    source: 'USFS Infrastructure',
     description: 'Power transmission line corridors',
     units: 'category',
     colorScheme: 'none',
@@ -40,6 +44,8 @@ export const INFRASTRUCTURE = {
   },
   HIGH_VOLTAGE_LINES: {
     name: 'High Voltage Power Transmission Lines',
+    type: LayerType.Vector,
+    source: 'USFS Infrastructure',
     description: 'High voltage power transmission corridors',
     units: 'category',
     colorScheme: 'none',
@@ -59,19 +65,7 @@ export const INFRASTRUCTURE = {
 
 // Layer category constant
 export const INFRASTRUCTURE_CATEGORY: LayerCategory = createInitialCategory('infrastructure', 'Infrastructure', [
-  { 
-    name: INFRASTRUCTURE.BUILDINGS.name, 
-    type: LayerType.Vector,
-    colorScheme: INFRASTRUCTURE.BUILDINGS.colorScheme
-  },
-  { 
-    name: INFRASTRUCTURE.POWER_LINES.name, 
-    type: LayerType.Vector,
-    colorScheme: INFRASTRUCTURE.POWER_LINES.colorScheme
-  },
-  { 
-    name: INFRASTRUCTURE.HIGH_VOLTAGE_LINES.name, 
-    type: LayerType.Vector,
-    colorScheme: INFRASTRUCTURE.HIGH_VOLTAGE_LINES.colorScheme
-  }
+  INFRASTRUCTURE.BUILDINGS,
+  INFRASTRUCTURE.POWER_LINES,
+  INFRASTRUCTURE.HIGH_VOLTAGE_LINES
 ]);

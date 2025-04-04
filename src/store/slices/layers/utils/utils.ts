@@ -1,6 +1,6 @@
+import { LayerType } from '../../../../types/map';
 import { LayerCategory, LayersState } from '../types';
 import { MapLayer } from '../../../../types/map';
-import { isLayersTab, isFiremetricsTab } from '../../../../constants/maps';
 
 export function createInitialCategory(
   id: string,
@@ -10,14 +10,17 @@ export function createInitialCategory(
   return {
     id,
     name,
-    layers: layers.map((layer, index) => ({
-      id: index + 1,
-      name: '',
-      type: 'tile',
-      source: '',
-      active: false,
-      ...layer
-    }))
+    layers: layers.map((layer, index) => {
+      // Determine which pane this layer belongs to
+      const pane = id === 'landscapeRisk' || id === 'fuels' ? 'firemetricsPane' : 'layersPane';
+      
+      return {
+        id: index + 1,
+        active: false,
+        pane: pane,
+        ...layer
+      };
+    })
   };
 }
 

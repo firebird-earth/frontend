@@ -1,11 +1,10 @@
 import React from 'react';
 import AboutFeatureDialog from './AboutFeatureDialog';
-import AboutGeoTiffDialog from './AboutGeoTiffDialog';
 import AboutTiffDialog from './AboutTiffDialog';
 
 interface LegendDialogsProps {
   showFeatureAboutPanel: {
-    metadata: any;
+    url: string;
     layerName: string;
   } | null;
   showGeoTiffAboutPanel: {
@@ -13,51 +12,32 @@ interface LegendDialogsProps {
     layerId: number;
     categoryId: string;
   } | null;
-  showTiffAboutPanel: {
-    metadata: any;
-    range: any;
-    layerName: string;
-    renderingRule?: string;
-  } | null;
   onCloseFeatureAbout: () => void;
   onCloseGeoTiffAbout: () => void;
-  onCloseTiffAbout: () => void;
 }
 
 const LegendDialogs: React.FC<LegendDialogsProps> = ({
   showFeatureAboutPanel,
   showGeoTiffAboutPanel,
-  showTiffAboutPanel,
   onCloseFeatureAbout,
-  onCloseGeoTiffAbout,
-  onCloseTiffAbout
+  onCloseGeoTiffAbout
 }) => {
   return (
     <>
       {showFeatureAboutPanel && (
         <AboutFeatureDialog
-          metadata={showFeatureAboutPanel.metadata}
+          url={showFeatureAboutPanel.url}
           layerName={showFeatureAboutPanel.layerName}
           onClose={onCloseFeatureAbout}
         />
       )}
 
       {showGeoTiffAboutPanel && (
-        <AboutGeoTiffDialog
+        <AboutTiffDialog
           layerName={showGeoTiffAboutPanel.layerName}
           layerId={showGeoTiffAboutPanel.layerId}
           categoryId={showGeoTiffAboutPanel.categoryId}
           onClose={onCloseGeoTiffAbout}
-        />
-      )}
-
-      {showTiffAboutPanel && (
-        <AboutTiffDialog
-          metadata={showTiffAboutPanel.metadata}
-          range={showTiffAboutPanel.range}
-          layerName={showTiffAboutPanel.layerName}
-          renderingRule={showTiffAboutPanel.renderingRule}
-          onClose={onCloseTiffAbout}
         />
       )}
     </>

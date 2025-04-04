@@ -1,4 +1,4 @@
-import { RootState } from '../../..';
+import type { RootState } from '../types/store';
 import { LayerCategory, MapLayer } from '../../../types/map';
 
 // Basic selectors

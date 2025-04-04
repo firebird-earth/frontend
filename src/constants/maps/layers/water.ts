@@ -1,11 +1,13 @@
 import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/common/utils/utils';
+import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
 
 export const WATER = {
   WATERSHEDS_L8: {
     name: 'Watersheds L8',
+    type: LayerType.Vector,
+    source: 'USFS Watersheds',
     description: 'Level 8 watershed boundaries',
     units: 'category',
     colorScheme: 'none',
@@ -23,6 +25,8 @@ export const WATER = {
   },
   WATERSHEDS_L10: {
     name: 'Watersheds L10',
+    type: LayerType.Vector,
+    source: 'USFS Watersheds',
     description: 'Level 10 watershed boundaries',
     units: 'category',
     colorScheme: 'none',
@@ -40,6 +44,8 @@ export const WATER = {
   },
   WATERSHEDS_L12: {
     name: 'Watersheds L12',
+    type: LayerType.Vector,
+    source: 'USFS Watersheds',
     description: 'Level 12 watershed boundaries',
     units: 'category',
     colorScheme: 'none',
@@ -57,6 +63,8 @@ export const WATER = {
   },
   WATERWAYS_EPHEMERAL: {
     name: 'Waterways Ephemeral',
+    type: LayerType.Vector,
+    source: 'USFS Waterways',
     description: 'Ephemeral waterways',
     units: 'category',
     colorScheme: 'none',
@@ -74,6 +82,8 @@ export const WATER = {
   },
   WATERWAYS_INTERMITTENT: {
     name: 'Waterways Intermittent',
+    type: LayerType.Vector,
+    source: 'USFS Waterways',
     description: 'Intermittent waterways',
     units: 'category',
     colorScheme: 'none',
@@ -91,6 +101,8 @@ export const WATER = {
   },
   WATERWAYS_PERENNIAL: {
     name: 'Waterways Perennial',
+    type: LayerType.Vector,
+    source: 'USFS Waterways',
     description: 'Perennial waterways',
     units: 'category',
     colorScheme: 'none',
@@ -108,6 +120,8 @@ export const WATER = {
   },
   WATER_BODIES: {
     name: 'Lakes, Wetlands and Ponds',
+    type: LayerType.Vector,
+    source: 'USFS Waterways',
     description: 'Major water bodies',
     units: 'category',
     colorScheme: 'none',
@@ -127,39 +141,11 @@ export const WATER = {
 
 // Layer category constant
 export const WATER_CATEGORY: LayerCategory = createInitialCategory('water', 'Water', [
-  { 
-    name: WATER.WATERSHEDS_L8.name, 
-    type: LayerType.Vector,
-    colorScheme: WATER.WATERSHEDS_L8.colorScheme
-  },
-  { 
-    name: WATER.WATERSHEDS_L10.name, 
-    type: LayerType.Vector,
-    colorScheme: WATER.WATERSHEDS_L10.colorScheme
-  },
-  { 
-    name: WATER.WATERSHEDS_L12.name, 
-    type: LayerType.Vector,
-    colorScheme: WATER.WATERSHEDS_L12.colorScheme
-  },
-  { 
-    name: WATER.WATERWAYS_EPHEMERAL.name, 
-    type: LayerType.Vector,
-    colorScheme: WATER.WATERWAYS_EPHEMERAL.colorScheme
-  },
-  { 
-    name: WATER.WATERWAYS_INTERMITTENT.name, 
-    type: LayerType.Vector,
-    colorScheme: WATER.WATERWAYS_INTERMITTENT.colorScheme
-  },
-  { 
-    name: WATER.WATERWAYS_PERENNIAL.name, 
-    type: LayerType.Vector,
-    colorScheme: WATER.WATERWAYS_PERENNIAL.colorScheme
-  },
-  { 
-    name: WATER.WATER_BODIES.name, 
-    type: LayerType.Vector,
-    colorScheme: WATER.WATER_BODIES.colorScheme
-  }
+  WATER.WATERSHEDS_L8,
+  WATER.WATERSHEDS_L10,
+  WATER.WATERSHEDS_L12,
+  WATER.WATERWAYS_EPHEMERAL,
+  WATER.WATERWAYS_INTERMITTENT,
+  WATER.WATERWAYS_PERENNIAL,
+  WATER.WATER_BODIES
 ]);

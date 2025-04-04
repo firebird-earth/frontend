@@ -5,12 +5,11 @@ import { layersReducer } from './reducer';
 export * from './types';
 export * from './actions';
 export * from './selectors';
-export * from './utils/basemaps';
-export * from './utils/layerManagement';
-export * from '../common/utils/utils';
-export * from '../common/utils/ordering';
-export * from '../common/utils/valueRange';
-export * from '../common/utils/opacity';
+export * from './utils/utils';
+export * from './utils/ordering';
+export * from './utils/orderingGet';
+export * from './utils/valueRange';
+export * from './utils/opacity';
 
 // Export the reducer as default
-export default layersReducer;
+export default layersReducer; 

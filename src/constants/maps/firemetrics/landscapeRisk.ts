@@ -1,7 +1,7 @@
 import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/common/utils/utils';
+import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
 import { GEOTIFF_LAYERS } from '../../../constants/urls';
 import { colorSchemes } from '../../../constants/colors';
 
@@ -13,14 +13,16 @@ export const LANDSCAPE_RISK = {
     description: 'Annual burn probability',
     units: 'probability',
     source: GEOTIFF_LAYERS.BURN_PROBABILITY,
-    colorScheme: colorSchemes.burnProbability.name
+    colorScheme: colorSchemes.burnProbability.name,
+    type: LayerType.GeoTiff
   },
   FLAME_LENGTH: {
     name: 'Flame Length',
     description: 'Conditional flame length',
     units: 'feet',
-    source: 'USFS Fire Modeling Institute',
+    source: GEOTIFF_LAYERS.FLAME_LENGTH,
     colorScheme: colorSchemes.fireIntensity.name,
+    type: LayerType.GeoTiff,
     domain: [0, 100] // Flame length range in feet
   },
   FIRE_INTENSITY: {
@@ -29,6 +31,7 @@ export const LANDSCAPE_RISK = {
     units: 'level',
     source: 'USFS Fire Modeling Institute',
     colorScheme: 'none',
+    type: LayerType.Vector,
     domain: [0, 6] // Fire intensity levels
   },
   SUPPRESSION_DIFFICULTY: {
@@ -37,6 +40,7 @@ export const LANDSCAPE_RISK = {
     units: 'index',
     source: 'USFS Fire Modeling Institute',
     colorScheme: 'none',
+    type: LayerType.Vector,
     domain: [0, 5] // Suppression difficulty index
   },
   TRANSMISSION_INDEX: {
@@ -45,6 +49,7 @@ export const LANDSCAPE_RISK = {
     units: 'index',
     source: 'USFS Fire Modeling Institute',
     colorScheme: 'none',
+    type: LayerType.Vector,
     domain: [0, 100] // Transmission index range
   },
   TRANSMISSION_INFLUENCE: {
@@ -53,43 +58,17 @@ export const LANDSCAPE_RISK = {
     units: 'index',
     source: 'USFS Fire Modeling Institute',
     colorScheme: 'none',
+    type: LayerType.Vector,
     domain: [0, 100] // Transmission influence range
   }
 } as const;
 
 // Layer category constant
 export const LANDSCAPE_RISK_CATEGORY: LayerCategory = createInitialCategory('landscapeRisk', 'Landscape Risk', [
-  { 
-    name: LANDSCAPE_RISK.BURN_PROBABILITY.name, 
-    type: LayerType.GeoTiff, 
-    source: LANDSCAPE_RISK.BURN_PROBABILITY.source, 
-    active: false, 
-    colorScheme: LANDSCAPE_RISK.BURN_PROBABILITY.colorScheme,
-    domain: LANDSCAPE_RISK.BURN_PROBABILITY.domain,
-    order: 20 
-  },
-  { 
-    name: LANDSCAPE_RISK.FIRE_INTENSITY.name, 
-    type: LayerType.Vector 
-  },
-  { 
-    name: LANDSCAPE_RISK.FLAME_LENGTH.name, 
-    type: LayerType.GeoTiff, 
-    source: GEOTIFF_LAYERS.FLAME_LENGTH, 
-    active: false, 
-    colorScheme: LANDSCAPE_RISK.FLAME_LENGTH.colorScheme, 
-    order: 10 
-  },
-  { 
-    name: LANDSCAPE_RISK.SUPPRESSION_DIFFICULTY.name, 
-    type: LayerType.Vector 
-  },
-  { 
-    name: LANDSCAPE_RISK.TRANSMISSION_INDEX.name, 
-    type: LayerType.Vector 
-  },
-  { 
-    name: LANDSCAPE_RISK.TRANSMISSION_INFLUENCE.name, 
-    type: LayerType.Vector 
-  }
+  LANDSCAPE_RISK.BURN_PROBABILITY,
+  LANDSCAPE_RISK.FIRE_INTENSITY,
+  LANDSCAPE_RISK.FLAME_LENGTH,
+  LANDSCAPE_RISK.SUPPRESSION_DIFFICULTY,
+  LANDSCAPE_RISK.TRANSMISSION_INDEX,
+  LANDSCAPE_RISK.TRANSMISSION_INFLUENCE
 ]);

@@ -1,17 +1,17 @@
 import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/common/utils/utils';
+import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
 import { STATES_LAYER, COUNTIES_LAYER, FEDERAL_LANDS_LAYER, USFS_LANDS_LAYER, USFWS_LANDS_LAYER } from '../../../constants/urls';
 
 export const JURISDICTIONS = {
   STATES: {
     name: 'States',
+    type: LayerType.ArcGISFeatureService,
+    source: STATES_LAYER,
     description: 'State boundaries from US Census Bureau',
     units: 'category',
-    source: STATES_LAYER,
     colorScheme: 'none',
-    type: LayerType.ArcGISFeatureService,
     legend: {
       items: [
         { 
@@ -26,11 +26,11 @@ export const JURISDICTIONS = {
   },
   COUNTIES: {
     name: 'Counties',
+    type: LayerType.ArcGISFeatureService,
+    source: COUNTIES_LAYER,
     description: 'County boundaries from US Census Bureau',
     units: 'category',
-    source: COUNTIES_LAYER,
     colorScheme: 'none',
-    type: LayerType.ArcGISFeatureService,
     legend: {
       items: [
         {
@@ -45,11 +45,11 @@ export const JURISDICTIONS = {
   },
   FEDERAL_LANDS: {
     name: 'US Federal Lands',
+    type: LayerType.ArcGISFeatureService,
+    source: FEDERAL_LANDS_LAYER,
     description: 'Federal land boundaries',
     units: 'category',
-    source: FEDERAL_LANDS_LAYER,
     colorScheme: 'none',
-    type: LayerType.ArcGISFeatureService,
     legend: {
       items: [
         {
@@ -64,11 +64,11 @@ export const JURISDICTIONS = {
   },
   USFS: {
     name: 'US Forest Service',
+    type: LayerType.ArcGISFeatureService,
+    source: USFS_LANDS_LAYER,
     description: 'National Forest System lands',
     units: 'category',
-    source: USFS_LANDS_LAYER,
     colorScheme: 'none',
-    type: LayerType.ArcGISFeatureService,
     legend: {
       items: [
         {
@@ -83,11 +83,11 @@ export const JURISDICTIONS = {
   },
   USFWS: {
     name: 'US Fish and Wildlife',
+    type: LayerType.ArcGISFeatureService,
+    source: USFWS_LANDS_LAYER,
     description: 'USFWS managed lands',
     units: 'category',
-    source: USFWS_LANDS_LAYER,
     colorScheme: 'none',
-    type: LayerType.ArcGISFeatureService,
     legend: {
       items: [
         {
@@ -102,10 +102,11 @@ export const JURISDICTIONS = {
   },
   BLM: {
     name: 'Bureau of Land Management',
+    type: LayerType.Vector,
+    source: 'USFS Land Management',
     description: 'BLM managed lands',
     units: 'category',
     colorScheme: 'none',
-    type: LayerType.Vector,
     legend: {
       items: [
         {
@@ -120,10 +121,11 @@ export const JURISDICTIONS = {
   },
   NPS: {
     name: 'National Park Service',
+    type: LayerType.Vector,
+    source: 'USFS Land Management',
     description: 'NPS managed lands',
     units: 'category',
     colorScheme: 'none',
-    type: LayerType.Vector,
     legend: {
       items: [
         {
@@ -138,10 +140,11 @@ export const JURISDICTIONS = {
   },
   BOR: {
     name: 'Bureau of Reclamation',
+    type: LayerType.Vector,
+    source: 'USFS Land Management',
     description: 'BOR managed lands',
     units: 'category',
     colorScheme: 'none',
-    type: LayerType.Vector,
     legend: {
       items: [
         {
@@ -156,10 +159,11 @@ export const JURISDICTIONS = {
   },
   BIA: {
     name: 'Bureau of Indian Affairs',
+    type: LayerType.Vector,
+    source: 'USFS Land Management',
     description: 'BIA managed lands',
     units: 'category',
     colorScheme: 'none',
-    type: LayerType.Vector,
     legend: {
       items: [
         {
@@ -174,10 +178,11 @@ export const JURISDICTIONS = {
   },
   STATE: {
     name: 'State Owned',
+    type: LayerType.Vector,
+    source: 'USFS Land Management',
     description: 'State managed lands',
     units: 'category',
     colorScheme: 'none',
-    type: LayerType.Vector,
     legend: {
       items: [
         {
@@ -192,10 +197,11 @@ export const JURISDICTIONS = {
   },
   PRIVATE: {
     name: 'Private Land',
+    type: LayerType.Vector,
+    source: 'USFS Land Management',
     description: 'Privately owned lands',
     units: 'category',
     colorScheme: 'none',
-    type: LayerType.Vector,
     legend: {
       items: [
         {
@@ -212,58 +218,15 @@ export const JURISDICTIONS = {
 
 // Layer category constant
 export const JURISDICTIONS_CATEGORY: LayerCategory = createInitialCategory('jurisdictions', 'Jurisdictions', [
-  { 
-    name: JURISDICTIONS.STATES.name, 
-    type: LayerType.ArcGISFeatureService, 
-    source: JURISDICTIONS.STATES.source, 
-    colorScheme: JURISDICTIONS.STATES.colorScheme 
-  },
-  { 
-    name: JURISDICTIONS.COUNTIES.name, 
-    type: LayerType.ArcGISFeatureService, 
-    source: JURISDICTIONS.COUNTIES.source, 
-    colorScheme: JURISDICTIONS.COUNTIES.colorScheme 
-  },
-  { 
-    name: JURISDICTIONS.FEDERAL_LANDS.name, 
-    type: LayerType.ArcGISFeatureService, 
-    source: JURISDICTIONS.FEDERAL_LANDS.source, 
-    colorScheme: JURISDICTIONS.FEDERAL_LANDS.colorScheme 
-  },
-  { 
-    name: JURISDICTIONS.USFS.name, 
-    type: LayerType.ArcGISFeatureService, 
-    source: JURISDICTIONS.USFS.source, 
-    colorScheme: JURISDICTIONS.USFS.colorScheme 
-  },
-  { 
-    name: JURISDICTIONS.USFWS.name, 
-    type: LayerType.ArcGISFeatureService, 
-    source: JURISDICTIONS.USFWS.source, 
-    colorScheme: JURISDICTIONS.USFWS.colorScheme 
-  },
-  { 
-    name: JURISDICTIONS.BLM.name, 
-    type: LayerType.Vector 
-  },
-  { 
-    name: JURISDICTIONS.NPS.name, 
-    type: LayerType.Vector 
-  },
-  { 
-    name: JURISDICTIONS.BOR.name, 
-    type: LayerType.Vector 
-  },
-  { 
-    name: JURISDICTIONS.BIA.name, 
-    type: LayerType.Vector 
-  },
-  { 
-    name: JURISDICTIONS.STATE.name, 
-    type: LayerType.Vector 
-  },
-  { 
-    name: JURISDICTIONS.PRIVATE.name, 
-    type: LayerType.Vector 
-  }
+  JURISDICTIONS.STATES,
+  JURISDICTIONS.COUNTIES,
+  JURISDICTIONS.FEDERAL_LANDS,
+  JURISDICTIONS.USFS,
+  JURISDICTIONS.USFWS,
+  JURISDICTIONS.BLM,
+  JURISDICTIONS.NPS,
+  JURISDICTIONS.BOR,
+  JURISDICTIONS.BIA,
+  JURISDICTIONS.STATE,
+  JURISDICTIONS.PRIVATE
 ]);

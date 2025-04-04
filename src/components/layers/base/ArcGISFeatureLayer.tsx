@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import * as EsriLeaflet from 'esri-leaflet';
@@ -60,43 +60,14 @@ export function createFeatureLayer(categoryId: string, config: LayerConfig) {
     );
   };
 
-  // Add Legend component if legend config exists
-  if (config.legend) {
-    FeatureLayerInstance.Legend = () => (
-      <div className="space-y-2">
-        {config.legend.items.map((item, index) => (
-          <div key={index} className="flex items-center space-x-2">
-            {item.fillColor === 'none' ? (
-              // Show a line segment for unfilled shapes
-              <div className="w-6 h-6 flex items-center justify-center">
-                <div 
-                  className="w-5 h-0 border-t"
-                  style={{ 
-                    borderColor: item.color,
-                    borderWidth: `${item.weight}px`
-                  }}
-                />
-              </div>
-            ) : (
-              // Show filled rectangle for shapes with fill
-              <div 
-                className="w-6 h-6 rounded border"
-                style={{ 
-                  backgroundColor: item.fillColor,
-                  opacity: item.fillOpacity,
-                  borderColor: item.color,
-                  borderWidth: item.weight
-                }}
-              />
-            )}
-            <span className="text-xs text-gray-600">
-              {item.label}
-            </span>
-          </div>
-        ))}
-      </div>
-    );
-  }
+  // Create layer object with legend configuration
+  const layer = {
+    name: config.name,
+    type: LayerType.ArcGISFeatureService,
+    source: config.source,
+    active: false,
+    legend: config.legend // Make sure to include the legend configuration
+  };
 
   FeatureLayerInstance.displayName = `${config.name}Layer`;
   return FeatureLayerInstance;
@@ -110,7 +81,8 @@ const FeatureLayer: React.FC<FeatureLayerProps> = ({
     color: '#374151',
     weight: 1,
     fillColor: '#374151',
-    fillOpacity: 0.1
+    fillOpacity: 0.1,
+    opacity: 1
   },
   simplifyFactor = 0.35,
   precision = 5,

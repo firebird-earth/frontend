@@ -1,78 +1,72 @@
 import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/common/utils/utils';
+import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
 import { TILE_LAYERS } from '../../urls';
 
 export const BASEMAPS = {
   STREET: {
     name: 'Street',
+    type: LayerType.Basemap,
+    source: TILE_LAYERS.STREET,
     description: 'OpenStreetMap standard style',
     units: '',
-    source: TILE_LAYERS.STREET,
-    colorScheme: 'none'
+    colorScheme: 'none',
+    maxZoom: 22,
+    minZoom: 4,
+    attribution: '© OpenStreetMap contributors'
   },
   STREET_LIGHT: {
     name: 'Street (light)',
+    type: LayerType.Basemap,
+    source: TILE_LAYERS.STREET_LIGHT,
     description: 'Light-colored street map style',
     units: '',
-    source: TILE_LAYERS.STREET_LIGHT,
-    colorScheme: 'none'
+    colorScheme: 'none',
+    maxZoom: 22,
+    minZoom: 4,
+    attribution: '© CartoDB'
   },
   TERRAIN: {
     name: 'Terrain',
+    type: LayerType.Basemap,
+    source: TILE_LAYERS.TERRAIN,
     description: 'Topographic map style',
     units: '',
-    source: TILE_LAYERS.TERRAIN,
-    colorScheme: 'none'
+    colorScheme: 'none',
+    maxZoom: 22,
+    minZoom: 4,
+    attribution: '© OpenTopoMap'
   },
   SATELLITE: {
     name: 'Satellite',
+    type: LayerType.Basemap,
+    source: TILE_LAYERS.SATELLITE,
     description: 'Aerial/satellite imagery',
     units: '',
-    source: TILE_LAYERS.SATELLITE,
-    colorScheme: 'none'
+    colorScheme: 'none',
+    maxZoom: 22,
+    minZoom: 4,
+    attribution: '© Esri'
   },
   TOPO: {
     name: 'Topographic',
+    type: LayerType.Basemap,
+    source: TILE_LAYERS.TOPO,
     description: 'USGS topographic map style',
     units: '',
-    source: TILE_LAYERS.TOPO,
-    colorScheme: 'none'
+    colorScheme: 'none',
+    maxZoom: 22,
+    minZoom: 4,
+    attribution: '© USGS'
   }
 } as const;
 
 // Layer category constant
 export const BASEMAPS_CATEGORY: LayerCategory = createInitialCategory('basemaps', 'Basemaps', [
-  { 
-    name: BASEMAPS.TOPO.name, 
-    active: true, 
-    type: LayerType.Basemap, 
-    source: BASEMAPS.TOPO.source, 
-    colorScheme: BASEMAPS.TOPO.colorScheme 
-  },
-  { 
-    name: BASEMAPS.STREET.name, 
-    type: LayerType.Basemap, 
-    source: BASEMAPS.STREET.source, 
-    colorScheme: BASEMAPS.STREET.colorScheme 
-  },
-  { 
-    name: BASEMAPS.STREET_LIGHT.name, 
-    type: LayerType.Basemap, 
-    source: BASEMAPS.STREET_LIGHT.source, 
-    colorScheme: BASEMAPS.STREET_LIGHT.colorScheme 
-  },
-  { 
-    name: BASEMAPS.TERRAIN.name, 
-    type: LayerType.Basemap, 
-    source: BASEMAPS.TERRAIN.source, 
-    colorScheme: BASEMAPS.TERRAIN.colorScheme 
-  },
-  { 
-    name: BASEMAPS.SATELLITE.name, 
-    type: LayerType.Basemap, 
-    source: BASEMAPS.SATELLITE.source, 
-    colorScheme: BASEMAPS.SATELLITE.colorScheme 
-  }
+  { ...BASEMAPS.TOPO, active: true },
+  BASEMAPS.STREET,
+  BASEMAPS.STREET_LIGHT,
+  BASEMAPS.TERRAIN,
+  BASEMAPS.SATELLITE
 ]);

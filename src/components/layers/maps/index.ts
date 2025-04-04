@@ -45,7 +45,7 @@ export const WUILayer = createTileLayer(WILDFIRE_CATEGORY.id, WILDFIRE.WUI);
 
 // Export base components
 export { default as GeoTiffLayer } from '../base/GeoTiffLayer';
-export { default as GeoTiffLegend } from '../base/GeoTiffLegend';
+export { default as GeoTiffLegend } from '../../legend/GeoTiffLegend';
 
 // Export factory functions
 export { createDynamicLayer } from '../base/ArcGISDynamicLayer';

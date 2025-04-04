@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useMap } from 'react-leaflet';
-import { useAppSelector } from '../hooks/useAppSelector';
+import { useAppSelector } from '../../hooks/useAppSelector';
 
 const MapController = () => {
   const map = useMap();

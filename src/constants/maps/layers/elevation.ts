@@ -65,7 +65,6 @@ export const ELEVATION = {
     units: 'meters',
     colorScheme: colorSchemes.greenYellowRed.name,
     domain: [0, 4000], // Elevation range in meters
-    order: 1
   },
   SLOPE: {
     name: 'Slope Steepness',
@@ -76,7 +75,6 @@ export const ELEVATION = {
     units: 'degrees',
     colorScheme: colorSchemes.slopeGradient.name,
     domain: [0, 45], // Slope range in degrees
-    order: 2
   },
   HILLSHADE: {
     name: 'Hillshade',
@@ -87,7 +85,6 @@ export const ELEVATION = {
     units: 'category',
     colorScheme: '',
     domain: [0, 255], // Hillshade intensity range
-    order: 4
   },
   ASPECT: {
     name: 'Aspect',
@@ -98,7 +95,6 @@ export const ELEVATION = {
     units: 'degrees',
     colorScheme: colorSchemes.redBlue.name,
     domain: [0, 360], // Aspect range in degrees
-    order: 3
   },
   CONTOUR: {
     name: 'Contour',
@@ -109,7 +105,6 @@ export const ELEVATION = {
     units: 'meters',
     colorScheme: '',
     domain: [0, 4000], // Contour range in meters
-    order: 5
   }
 } as const;
 

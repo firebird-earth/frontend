@@ -18,7 +18,6 @@ import { leafletLayerMap } from '../../../store/slices/layers/state';
 interface GeoTiffLayerProps {
   url: string;
   active: boolean;
-  zIndex?: number;
   categoryId?: string;
   layerId?: number;
   onError?: (error: Error) => void;
@@ -107,7 +106,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
     return () => cleanupLayer();
   }, [active, map, categoryId, layerId]);
 
- // Update the loading state in Redux when loading changes
+  // Update the loading state in Redux when loading changes
   useEffect(() => {
     dispatch(setLayerLoading({ categoryId, layerId, loading }));
   }, [loading, categoryId, layerId, dispatch]);
@@ -186,7 +185,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
       zIndex: layer.order || 0
     });
 
-    console.log("---> add layer to map", {layer:layer.name, order:layer.order, zindex:layer.order}) 
+    console.log("---> add layer to map", {layer:layer.name, id:layer.id, pane:layer.pane, order:layer.order, zindex:layer.order}) 
     
     imageOverlay.addTo(map);
     layerRef.current = imageOverlay;
@@ -272,7 +271,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
 
         let resolutionCached = cachedMetadata.metadata.standard.resolution;
   
-        // Calculate statistics
+        // Get statistics
         let min = Infinity;
         let max = -Infinity;
         let mean = Infinity;
@@ -282,8 +281,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
 
         validCount = cachedMetadata.metadata.standard.nonNullValues;
         noDataCount = cachedMetadata.metadata.standard.noDataCount;
-        zeroCount = cachedMetadata.metadata.standard.zeroCount;
-        
+        zeroCount = cachedMetadata.metadata.standard.zeroCount;    
         min = cachedMetadata.range.min;
         max = cachedMetadata.range.max;
         mean = cachedMetadata.range.mean;
@@ -357,11 +355,19 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
         window.clearTimeout(loadTimeoutRef.current);
       }
 
-      // Set a new timeout to load data after movement stops
       loadTimeoutRef.current = window.setTimeout(() => {
+        // If we have cached data and image, just update bounds
+        if (rasterDataCache.get(`${categoryId}-${layerId}`) && imageDataRef.current && boundsRef.current) {
+          if (layerRef.current) {
+            layerRef.current.setBounds(boundsRef.current);
+          }
+          return;
+        }
+
+        // Only do full reload if we don't have data cached
         const bounds = map.getBounds();
         loadData(bounds);
-      }, 250); // Wait 250ms after movement stops before loading
+      }, 250);
     };
 
     map.on('moveend', handleMapMove);

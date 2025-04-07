@@ -11,6 +11,16 @@ import { getColorScheme, getColorFromScheme, hexToRgb, GeoTiffNoDataColor } from
 import { MapServiceConfig } from '../../../services/maps/types';
 import { rasterDataCache } from '../../../utils/geotif/cache';
 import { isFiremetricsTab } from '../../../constants/maps';
+import { leafletLayerMap } from '../../../store/slices/layers/state';
+
+// Debug configuration
+const ArcGISTiffLayerConfig = {
+  debug: false
+} as const;
+
+export function setArcGISTiffLayerDebug(enabled: boolean) {
+  (ArcGISTiffLayerConfig as any).debug = enabled;
+}
 
 interface ArcGISTiffLayerProps {
   active: boolean;
@@ -58,17 +68,22 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
   });
 
   // Debug logging for props and state
-  console.log('ArcGISTiffLayer props:', {
-    active,
-    opacity,
-    colorScheme,
-    categoryId,
-    layerId,
-    order: layer?.order,
-    pane: layer.pane,
-    renderingRule: renderingRule ? renderingRule.substring(0, 100) + '...' : null
-  });
+  if (ArcGISTiffLayerConfig.debug) {
+    console.log('ArcGISTiffLayer props:', {
+      active,
+      opacity,
+      colorScheme,
+      categoryId,
+      layerId,
+      renderingRule: renderingRule ? renderingRule.substring(0, 100) + '...' : null
+    });
+  }
 
+  if (ArcGISTiffLayerConfig.debug) {
+    // Debug logging for props and state
+    console.log('ArcGISTiffLayer layer:', layer)
+  }
+  
   // Cleanup function
   const cleanup = () => {
     if (imageOverlayRef.current) {
@@ -241,13 +256,17 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
       console.error('No color scheme found for:', colorScheme);
       return;
     }
-    console.log('Using color scheme:', {
-      name: scheme.name,
-      type: scheme.type,
-      buckets: scheme.buckets,
-      colors: scheme.colors,
-      domain: layer.domain
-    });
+
+    if (ArcGISTiffLayerConfig.debug) {
+      console.log('Using color scheme:', {
+        name: scheme.name,
+        type: scheme.type,
+        buckets: scheme.buckets,
+        colors: scheme.colors,
+        domain: layer.domain
+      });
+    }
+    
     const domain = layer.domain || [valueRange.defaultMin, valueRange.defaultMax];
     const fullRange = domain[1] - domain[0];
 
@@ -288,9 +307,15 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
       pane: layer.pane,
       zIndex: layer.order || 0
     });
+
+    console.log("---> add layer to map", {layer:layer.name, id:layer.id, pane:layer.pane, order:layer.order, zindex:layer.order}) 
+    
     imageOverlay.addTo(map);
     imageOverlay.bringToFront();
     imageOverlayRef.current = imageOverlay;
+
+    // Store the Leaflet layer reference in the WeakMap
+    leafletLayerMap.set(layerId, imageOverlay);
   };
 
   useEffect(() => {
@@ -386,4 +411,4 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
   return null;
 };
 
-export default ArcGISTiffLayer;
+export default ArcGISTiffLayer

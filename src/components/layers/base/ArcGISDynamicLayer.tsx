@@ -95,7 +95,7 @@ const ArcGISDynamicLayer: React.FC<ArcGISDynamicLayerProps> = ({
   }
 
   // Use the layer's order property
-  const layerId = layer.order || 1;
+  //const layerId = layer.order || 1;
 
   // Get color scheme from layer configuration, fallback to greenYellowRed if none specified
   const colorScheme = layer.colorScheme || defaultColorScheme;
@@ -108,7 +108,7 @@ const ArcGISDynamicLayer: React.FC<ArcGISDynamicLayerProps> = ({
       renderingRule={renderingRule}
       colorScheme={colorScheme}
       categoryId={categoryId}
-      layerId={layerId}
+      layerId={layer.id}
     />
   );
 };

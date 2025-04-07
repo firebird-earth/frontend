@@ -38,6 +38,7 @@ const LayersTab: React.FC = () => {
     
     // If the layer is already active and it's the only active one in its category, do nothing
     // This prevents the flashing effect when clicking on an already active layer
+/*
     if (layer && layer.active) {
       const activeLayersInCategory = category.layers.filter(l => l.active).length;
       
@@ -46,7 +47,7 @@ const LayersTab: React.FC = () => {
         return;
       }
     }
-    
+*/    
     // Use toggleSingleLayer to make it exclusive (turn off other layers in the same category)
     dispatch(toggleSingleLayer({ categoryId, layerId }));
   };

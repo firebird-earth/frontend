@@ -14,12 +14,48 @@ export const WILDFIRE = {
     colorScheme: 'none',
     legend: {
       items: [
-        { color: 'rgba(239, 68, 68, 0.7)', label: 'Interface - Housing density > 6.17 units/km²' },
-        { color: 'rgba(249, 115, 22, 0.7)', label: 'Intermix - Housing density > 6.17 units/km² & Vegetation > 50%' },
-        { color: 'rgba(234, 179, 8, 0.7)', label: 'Very Low Density - Housing density 0-6.17 units/km²' },
-        { color: 'rgba(132, 204, 22, 0.7)', label: 'Vegetated - No housing & Vegetation > 50%' },
-        { color: 'rgba(34, 197, 94, 0.7)', label: 'Non-Vegetated - No housing & Vegetation < 50%' },
-        { color: 'rgba(16, 185, 129, 0.7)', label: 'Water' }
+        {
+          color: 'rgba(239, 68, 68, 0.7)',
+          weight: 1,
+          fillColor: 'rgba(239, 68, 68, 0.7)',
+          fillOpacity: 0.7,
+          label: 'Interface - Housing density > 6.17 units/km²'
+        },
+        {
+          color: 'rgba(249, 115, 22, 0.7)',
+          weight: 1,
+          fillColor: 'rgba(249, 115, 22, 0.7)',
+          fillOpacity: 0.7,
+          label: 'Intermix - Housing density > 6.17 units/km² & Vegetation > 50%'
+        },
+        {
+          color: 'rgba(234, 179, 8, 0.7)',
+          weight: 1,
+          fillColor: 'rgba(234, 179, 8, 0.7)',
+          fillOpacity: 0.7,
+          label: 'Very Low Density - Housing density 0-6.17 units/km²'
+        },
+        {
+          color: 'rgba(132, 204, 22, 0.7)',
+          weight: 1,
+          fillColor: 'rgba(132, 204, 22, 0.7)',
+          fillOpacity: 0.7,
+          label: 'Vegetated - No housing & Vegetation > 50%'
+        },
+        {
+          color: 'rgba(34, 197, 94, 0.7)',
+          weight: 1,
+          fillColor: 'rgba(34, 197, 94, 0.7)',
+          fillOpacity: 0.7,
+          label: 'Non-Vegetated - No housing & Vegetation < 50%'
+        },
+        {
+          color: 'rgba(16, 185, 129, 0.7)',
+          weight: 1,
+          fillColor: 'rgba(16, 185, 129, 0.7)',
+          fillOpacity: 0.7,
+          label: 'Water'
+        }
       ]
     }
   },

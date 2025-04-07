@@ -15,6 +15,13 @@ export enum LayerType {
   Placeholder = 'placeholder'
 }
 
+export enum MapPane {
+  OverlayPane = 'overlayPane',
+  FiremetricsPane = 'firemetricsPane',
+  LayersPane = 'layersPane',
+  TilePane = 'tilePane'
+}
+
 export interface Coordinates {
   lat: number;
   lng: number;
@@ -96,7 +103,7 @@ export interface MapLayer {
   domain?: [number, number];
   units?: string;
   legend?: Legend;
-  pane?: string;
+  pane?: MapPane;
 }
 
 export interface LayerCategory {

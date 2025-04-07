@@ -69,3 +69,9 @@ export interface SetLayerPanePayload {
   layerId: number;
   pane: string;
 }
+
+export interface SetLayerOrderPayload {
+  categoryId: string;
+  layerId: number;
+  order: number;
+}

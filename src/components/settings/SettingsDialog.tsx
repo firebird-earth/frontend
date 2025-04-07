@@ -130,7 +130,7 @@ const SettingsDialog: React.FC = () => {
           {/* Theme Settings */}
           <div>
             <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-4">Theme</h3>
-            <div className="space-y-3">
+            <div className="flex items-center space-x-8">
               <label className="flex items-center space-x-3">
                 <input
                   type="checkbox"
@@ -140,7 +140,7 @@ const SettingsDialog: React.FC = () => {
                 />
                 <div className="flex items-center space-x-2">
                   <Sun className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Light Mode</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Light</span>
                 </div>
               </label>
               <label className="flex items-center space-x-3">
@@ -152,7 +152,7 @@ const SettingsDialog: React.FC = () => {
                 />
                 <div className="flex items-center space-x-2">
                   <Moon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Dark Mode</span>
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Dark</span>
                 </div>
               </label>
             </div>

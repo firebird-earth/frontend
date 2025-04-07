@@ -37,7 +37,7 @@ const MapControls: React.FC = () => {
       <NavigateControl />
       <ZoomControl position="topright" />
       <ScaleControl position="bottomright" imperial={true} metric={true} />
-      <GridControl />
+      <GridControl position="bottomright" />
       <NorthArrow position="bottomleft" />
       <CoordinateControl position="bottomleft" />
       <LoadingControl 

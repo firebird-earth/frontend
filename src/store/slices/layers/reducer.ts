@@ -5,7 +5,7 @@ import { handleLayerOrdering } from './utils/ordering';
 import { handleValueRange } from './utils/valueRange';
 import { handleOpacity } from './utils/opacity';
 import { isLayersTab, isFiremetricsTab } from '../../../constants/maps/index';
-import { findLayer } from './utils/utils';
+import { findLayer, findCategory } from './utils/utils';
 
 import { paneCounters } from './state';
 
@@ -89,7 +89,7 @@ export const layersReducer = createReducer(initialState, (builder) => {
 
         if (!layer.active && !layer.order) {
           layer.order = ++paneCounters[layer.pane];
-          console.log("---> toggle layer:",{name:layer.name, pane:layer.pane, order: layer.order})
+          console.log("---> toggle layer:",{name:layer.name, id:layer.id, pane:layer.pane, order: layer.order})
         }
         
         layer.active = !layer.active;
@@ -106,7 +106,7 @@ export const layersReducer = createReducer(initialState, (builder) => {
 
       if (!layer.active && !layer.order) {
         layer.order = ++paneCounters[layer.pane];
-        console.log("---> activate layer:",{name:layer.name, pane:layer.pane, order: layer.order})
+        console.log("---> activate layer:",{name:layer.name, layer:layer.id, pane:layer.pane, order: layer.order})
       }
       handleToggleExclusive(state, categoryId, layerId);
     })
@@ -205,6 +205,13 @@ export const layersReducer = createReducer(initialState, (builder) => {
       if (!layer) return;
 
       layer.pane = pane;
+    })
+    .addCase(actions.setLayerOrder, (state, action) => {
+      const { categoryId, layerId, order } = action.payload;
+      const layer = findLayer(state, categoryId, layerId);
+      if (layer) {
+        layer.order = order;
+      }
     })
     .addCase(actions.setSlopeRenderingRule, (state, action) => {
       state.slopeRenderingRule = action.payload;

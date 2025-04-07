@@ -4,6 +4,7 @@ import { LayerCategory } from '../../../store/slices/layers/types';
 import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
 import { GEOTIFF_LAYERS } from '../../../constants/urls';
 import { colorSchemes } from '../../../constants/colors';
+import { STORAGE } from '../../../constants/urls';
 
 export const FUELS = {
   name: 'fuels',
@@ -12,7 +13,7 @@ export const FUELS = {
     name: 'Canopy Bulk Density',
     description: 'Forest canopy bulk density',
     units: 'kg/m³',
-    source: GEOTIFF_LAYERS.CANOPY_BULK_DENSITY,
+    source: `${STORAGE}/TMV/cbd.tif`,
     colorScheme: colorSchemes.greenYellowRed.name,
     type: LayerType.GeoTiff,
   },
@@ -20,7 +21,7 @@ export const FUELS = {
     name: 'Canopy Cover',
     description: 'Forest canopy cover percentage',
     units: 'percent',
-    source: GEOTIFF_LAYERS.CANOPY_COVER,
+    source: `${STORAGE}/TMV/canopy_cover.tif`,
     colorScheme: colorSchemes.canopyCover.name,
     type: LayerType.GeoTiff,
     domain: [0, 100], // Canopy cover percentage range
@@ -38,7 +39,7 @@ export const FUELS = {
     name: 'Canopy Height',
     description: 'Forest canopy height',
     units: 'meters',
-    source: GEOTIFF_LAYERS.CANOPY_HEIGHT,
+    source: `${STORAGE}/TMV/canopy_height.tif`,
     colorScheme: colorSchemes.greenYellowRed.name,
     type: LayerType.GeoTiff,
     domain: [0, 50], // Canopy height range in meters

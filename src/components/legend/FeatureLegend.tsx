@@ -47,7 +47,7 @@ const FeatureLegend: React.FC<FeatureLegendProps> = React.memo(({
     return null;
   }
 
-  console.log('Rendering legend items:', layer.legend.items);
+  //console.log('Rendering legend items:', layer.legend.items);
 
   return (
     <div className="space-y-2">

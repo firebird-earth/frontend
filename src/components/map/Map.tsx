@@ -38,6 +38,7 @@ const MapComponent: React.FC = () => {
   // Store map reference globally when initialized
   const handleMapInit = (map: L.Map) => {
     mapRef.current = map;
+    window.leafletMap = map
   };
 
   // Create custom panes when map initializes

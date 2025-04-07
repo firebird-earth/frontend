@@ -1,10 +1,14 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { calculateGridZoomThreshold, zoomToGridThreshold } from '../../utils/grid';
 
-const GridControl = () => {
+interface GridControlProps {
+  position?: L.ControlPosition;
+}
+
+const GridControl: React.FC<GridControlProps> = ({ position = 'bottomright' }) => {
   const map = useMap();
   const gridLayerRef = useRef<L.LayerGroup | null>(null);
   const controlRef = useRef<L.Control | null>(null);
@@ -163,7 +167,7 @@ const GridControl = () => {
     // Create grid control
     const GridControl = L.Control.extend({
       options: {
-        position: 'bottomright'
+        position
       },
       onAdd: () => {
         const container = L.DomUtil.create('div', 'leaflet-control leaflet-control-grid');
@@ -184,28 +188,13 @@ const GridControl = () => {
         container.style.cursor = 'pointer';
         container.style.marginBottom = '0';
         container.style.transition = 'all 0.2s ease-in-out';
-        container.style.minWidth = '20px'; // Changed to 20px minimum
-        
-        const icon = document.createElement('div');
-        icon.innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <rect width="18" height="18" x="3" y="3" rx="2" ry="2"/>
-            <line x1="3" y1="9" x2="21" y2="9"/>
-            <line x1="3" y1="15" x2="21" y2="15"/>
-            <line x1="9" y1="3" x2="9" y2="21"/>
-            <line x1="15" y1="3" x2="15" y2="21"/>
-          </svg>
-        `;
-        icon.style.display = 'flex';
-        icon.style.alignItems = 'center';
-        icon.style.flexShrink = '0';
+        container.style.minWidth = '15px'; // minimum size of grid
         
         const text = document.createElement('span');
         text.textContent = `${grid.size} ${grid.unit === 'meters' ? 'm' : 'ac'}`;
         text.style.flexGrow = '1';
         text.style.textAlign = 'center';
         
-        container.appendChild(icon);
         container.appendChild(text);
 
         const updateBackground = () => {
@@ -276,7 +265,7 @@ const GridControl = () => {
       map.off('moveend', drawGrid);
       map.off('zoomend', drawGrid);
     };
-  }, [map, grid.show, grid.size, grid.unit, zoomThreshold]);
+  }, [map, grid.show, grid.size, grid.unit, zoomThreshold, position]);
 
   return null;
 };

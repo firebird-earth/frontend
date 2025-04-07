@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useTransition } from 'react';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import LegendContent from './LegendContent';
 import LegendDialogs from './LegendDialogs';
@@ -22,17 +22,24 @@ const Legend: React.FC = () => {
     categoryId: string;
   } | null>(null);
 
+  // Add useTransition hook
+  const [isPending, startTransition] = useTransition();
+
   const handleMenuClick = (e: React.MouseEvent, categoryId: string, layerId: number) => {
     e.stopPropagation();
-    if (menu?.categoryId === categoryId && menu?.layerId === layerId) {
-      setMenu(null);
-    } else {
-      setMenu({ isOpen: true, categoryId, layerId });
-    }
+    startTransition(() => {
+      if (menu?.categoryId === categoryId && menu?.layerId === layerId) {
+        setMenu(null);
+      } else {
+        setMenu({ isOpen: true, categoryId, layerId });
+      }
+    });
   };
 
   const handleClickOutside = () => {
-    setMenu(null);
+    startTransition(() => {
+      setMenu(null);
+    });
   };
 
   React.useEffect(() => {
@@ -46,33 +53,39 @@ const Legend: React.FC = () => {
     const layer = categories[categoryId]?.layers.find(l => l.id === layerId);
     if (!layer) return;
 
-    setShowGeoTiffAboutPanel({
-      layerName: layer.name,
-      layerId,
-      categoryId
+    startTransition(() => {
+      setShowGeoTiffAboutPanel({
+        layerName: layer.name,
+        layerId,
+        categoryId
+      });
+      setMenu(null);
     });
-    setMenu(null);
   };
 
   const handleShowFeatureAbout = (categoryId: string, layerId: number) => {
     const layer = categories[categoryId]?.layers.find(l => l.id === layerId);
     if (!layer || !layer.source) return;
 
-    setShowFeatureAboutPanel({
-      url: layer.source,
-      layerName: layer.name
+    startTransition(() => {
+      setShowFeatureAboutPanel({
+        url: layer.source,
+        layerName: layer.name
+      });
+      setMenu(null);
     });
-    setMenu(null);
   };
 
   return (
     <div className="h-full flex flex-col">
-      <LegendContent
-        onShowFeatureAbout={handleShowFeatureAbout}
-        onShowAbout={handleShowGeoTiffAbout}
-        onMenuClick={handleMenuClick}
-        menu={menu}
-      />
+      <div style={{ pointerEvents: isPending ? 'none' : 'auto' }}>
+        <LegendContent
+          onShowFeatureAbout={handleShowFeatureAbout}
+          onShowAbout={handleShowGeoTiffAbout}
+          onMenuClick={handleMenuClick}
+          menu={menu}
+        />
+      </div>
 
       <LegendDialogs
         showFeatureAboutPanel={showFeatureAboutPanel}

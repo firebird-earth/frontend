@@ -1,6 +1,9 @@
-import { LayerType } from '../../../../types/map';
+import { LayerType, MapPane } from '../../../../types/map';
 import { LayerCategory, LayersState } from '../types';
 import { MapLayer } from '../../../../types/map';
+
+// Global counter for unique layer IDs
+let globalLayerId = 0;
 
 export function createInitialCategory(
   id: string,
@@ -10,14 +13,27 @@ export function createInitialCategory(
   return {
     id,
     name,
-    layers: layers.map((layer, index) => {
-      // Determine which pane this layer belongs to
-      const pane = id === 'landscapeRisk' || id === 'fuels' ? 'firemetricsPane' : 'layersPane';
+    layers: layers.map((layer) => {
+      // Increment global counter for each new layer
+      globalLayerId++;
+      
+      // Determine pane based on layer type
+      let pane = MapPane.LayersPane; // Default pane
+      
+      if (layer.type === LayerType.ArcGISFeatureService) {
+        pane = MapPane.OverlayPane;      
+      } else if (layer.type === LayerType.GeoTiff) {
+        pane = MapPane.FiremetricsPane;
+      } else if (layer.type === LayerType.ArcGISImageService) {
+        pane = MapPane.LayersPane;
+      } else if (layer.type === LayerType.TileLayer) {
+        pane = MapPane.TilePane;
+      }
       
       return {
-        id: index + 1,
+        id: globalLayerId,
         active: false,
-        pane: pane,
+        pane,
         ...layer
       };
     })
@@ -26,26 +42,6 @@ export function createInitialCategory(
 
 export function findLayer(state: LayersState, categoryId: string, layerId: number): MapLayer | undefined {
   return state.categories[categoryId]?.layers.find(l => l.id === layerId);
-}
-
-/**
- * Checks if a layer is an Esri layer
- * 
- * @param categoryId The category ID
- * @param layerId The layer ID
- * @param categories The layer categories from the Redux store
- * @returns True if the layer is an Esri layer, false otherwise
- */
-export function isEsriLayer(categoryId: string, layerId: number, categories: any): boolean {
-  const category = categories[categoryId];
-  if (!category) return false;
-  
-  const layer = category.layers.find((l: MapLayer) => l.id === layerId);
-  if (!layer) return false;
-  
-  // Check if it's a vector layer in the wildfire category
-  // This includes Crisis Areas layer and potentially other Esri layers
-  return categoryId === 'wildfire' && layer.type === 'vector';
 }
 
 export function findCategory(state: LayersState, categoryId: string): LayerCategory | undefined {

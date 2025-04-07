@@ -49,3 +49,5 @@ export const initialState: LayersState = {
   error: null,
   slopeRenderingRule: 'Hillshade Gray'
 };
+
+//console.log('initial categories:', initialState)

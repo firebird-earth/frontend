@@ -43,10 +43,6 @@
 .leaflet-control-container .leaflet-bottom.leaflet-right {
   margin-bottom: 10px;
   margin-right: 10px;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 10px;
 }
 
 .leaflet-control-container .leaflet-bottom.leaflet-left {
@@ -65,13 +61,16 @@
 }
 
 .leaflet-control-scale-line {
-  border-color: #374151 !important;
+  border-color: rgba(0, 0, 0, 0.2) !important;
   color: #374151 !important;
   background-color: rgba(255, 255, 255, 0.8) !important;
   padding: 4px 8px !important;
   border-radius: 4px !important;
   font-size: 11px !important;
   line-height: 1.2 !important;
+  border-width: 2px !important;
+  border-style: solid !important;
+  border-top: none !important;
 }
 
 /* North Arrow styles */
@@ -175,6 +174,20 @@
   line-height: 1.2 !important;
   color: #374151 !important;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+}
+
+/* Grid control styles */
+.leaflet-control-grid {
+  margin: 0 !important;
+  margin-top: 5px !important;
+  background: rgba(255, 255, 255, 0.8) !important;
+  border: 2px solid rgba(0,0,0,0.2) !important;
+  border-radius: 4px !important;
+  padding: 4px 8px !important;
+  font-size: 11px !important;
+  line-height: 1.2 !important;
+  color: #374151 !important;
+  transform: translateX(-8px) !important;
 }
 
 /* Creating AOI cursor */

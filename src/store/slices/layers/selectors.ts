@@ -1,5 +1,7 @@
+import { createSelector } from 'reselect';
 import type { RootState } from '../types/store';
 import { LayerCategory, MapLayer } from '../../../types/map';
+import { getOrderedLayersByPane } from './utils/orderingGet';
 
 // Basic selectors
 export const selectLayersState = (state: RootState) => state.layers;
@@ -34,3 +36,8 @@ export const selectActiveLayers = (state: RootState): { categoryId: string; laye
 
 export const selectActiveLayersInCategory = (state: RootState, categoryId: string): MapLayer[] => 
   state.layers.categories[categoryId]?.layers.filter(l => l.active) || [];
+
+export const selectOrderedLayers = createSelector(
+  [selectCategories],
+  (categories) => getOrderedLayersByPane(categories)
+);

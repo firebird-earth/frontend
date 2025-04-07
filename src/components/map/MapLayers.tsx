@@ -44,7 +44,7 @@ const MapLayers: React.FC = () => {
   
   // Get active GeoTIFF layers in order with their categories
   const activeGeoTiffLayers = getOrderedGeoTiffLayers(categories).filter(({ layer }) => layer.active);
-
+  
   // Find any layer with showValues enabled
   const layerWithValues = React.useMemo(() => {
     return Object.entries(categories).flatMap(([categoryId, category]) => 

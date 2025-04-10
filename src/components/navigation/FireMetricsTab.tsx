@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Building, Home, Warehouse, Share2, Flame, Zap, Ruler, ThermometerSun, Shield, Network, Trees, Skull, Eye, EyeOff } from 'lucide-react';
+import { Building, Home, Warehouse, Share2, Flame, Zap, Ruler, ThermometerSun, Shield, Network} from 'lucide-react'; 
+import { Trees, Skull, Eye, EyeOff, AlertTriangle, Clock10 } from 'lucide-react'; 
 import SectionHeader from './SectionHeader';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
@@ -19,9 +20,9 @@ const FireMetricsTab: React.FC = () => {
 
   const getLayerIcon = (name: string) => {
     // Value at Risk icons
-    if (name === FIRE_METRICS.VALUE_AT_RISK.FIRESHEDS.name) return Building;
+    if (name === FIRE_METRICS.VALUE_AT_RISK.FIRESHEDS.name) return Clock10;
     if (name === FIRE_METRICS.VALUE_AT_RISK.STRUCTURE_BURN_FREQUENCY.name) return Home;
-    if (name === FIRE_METRICS.VALUE_AT_RISK.STRUCTURE_BURN_HAZARD.name) return Home;
+    if (name === FIRE_METRICS.VALUE_AT_RISK.STRUCTURE_BURN_HAZARD.name) return AlertTriangle;
     if (name === FIRE_METRICS.VALUE_AT_RISK.STRUCTURE_BURN_INFLUENCE.name) return Share2;
 
     // Landscape Risk icons
@@ -29,8 +30,8 @@ const FireMetricsTab: React.FC = () => {
     if (name === FIRE_METRICS.LANDSCAPE_RISK.FLAME_LENGTH.name) return Ruler;
     if (name === FIRE_METRICS.LANDSCAPE_RISK.FIRE_INTENSITY.name) return ThermometerSun;
     if (name === FIRE_METRICS.LANDSCAPE_RISK.SUPPRESSION_DIFFICULTY.name) return Shield;
-    if (name === FIRE_METRICS.LANDSCAPE_RISK.TRANSMISSION_INDEX.name) return Network;
-    if (name === FIRE_METRICS.LANDSCAPE_RISK.TRANSMISSION_INFLUENCE.name) return Network;
+    if (name === FIRE_METRICS.LANDSCAPE_RISK.TRANSMISSION_INDEX.name) return AlertTriangle;
+    if (name === FIRE_METRICS.LANDSCAPE_RISK.TRANSMISSION_INFLUENCE.name) return Share2;
 
     // Fuels icons
     if (name === FIRE_METRICS.FUELS.CANOPY_BULK_DENSITY.name) return Trees;

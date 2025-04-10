@@ -143,7 +143,7 @@ const AboutTiffDialog: React.FC<AboutTiffDialogProps> = ({
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">CRS:</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {getCRSName(metadata.sourceCRS)}
+                {getCRSName(metadata.projection.sourceCRS)}
               </span>
             </div>
             <div className="flex items-center justify-between">

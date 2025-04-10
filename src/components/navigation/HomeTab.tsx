@@ -1,7 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Navigation as NavigationIcon, Activity, MapPin, MapPinOff, Zap } from 'lucide-react';
 import SectionHeader from './SectionHeader';
-import { Location } from '../../types/map';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { toggleSection, startCreatingAOI } from '../../store/slices/uiSlice';
@@ -9,12 +8,18 @@ import { setCurrentAOI } from '../../store/slices/home/actions';
 import { navigateToLocation } from '../../utils/map';
 import { useAOI } from '../../hooks/useAOI';
 import locations from '../../constants/places/locations';
+import { SCENARIO_A_EXPRESSION } from '../../query/expressions';
+import { store } from '../../store';
+import { execExpression } from '../../query/exec';
+import { showDialog } from '../../store/slices/uiSlice';
+import SelectAOIDialog from '../../components/aoi/SelectAOIDialog';
 
 const HomeTab: React.FC = () => {
-  const dispatch = useAppDispatch();
+  const dispatch = store.dispatch;
   const sections = useAppSelector(state => state.ui.sections);
   const currentAOI = useAppSelector(state => state.home.aoi.current);
   const { aois } = useAOI();
+  const [showDialog, setShowDialog] = useState(false);
 
   const handleLocationClick = (location: Location) => {
     dispatch(setCurrentAOI(location));
@@ -33,6 +38,18 @@ const HomeTab: React.FC = () => {
   const handleCreateAOI = (e: React.MouseEvent) => {
     e.stopPropagation();
     dispatch(startCreatingAOI());
+  };
+
+  const handleScenarioClick = (expression: string) => {
+    if (!currentAOI) {
+      setShowDialog(true);
+      return;
+    }
+    try {
+      const ast = execExpression(expression);
+    } catch (error) {
+      console.error('Failed to exec expression:', error);
+    }
   };
 
   const isActive = (id: number | string) => {
@@ -123,9 +140,12 @@ const HomeTab: React.FC = () => {
         />
         {sections.scenarios && (
           <div className="space-y-1">
-            <button className="w-full flex items-center space-x-2 p-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg">
+            <button
+              onClick={() => handleScenarioClick(SCENARIO_A_EXPRESSION)}
+              className="w-full flex items-center space-x-2 p-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
+            >
               <Zap className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <span>View Scenarios</span>
+              <span>Scenario A</span>
             </button>
           </div>
         )}
@@ -147,6 +167,11 @@ const HomeTab: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* SelectAOI Dialog */}
+      {showDialog && (
+        <SelectAOIDialog onClose={() => setShowDialog(false)} />
+      )}
     </div>
   );
 };

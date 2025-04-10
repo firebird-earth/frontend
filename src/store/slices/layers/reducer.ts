@@ -89,7 +89,7 @@ export const layersReducer = createReducer(initialState, (builder) => {
 
         if (!layer.active && !layer.order) {
           layer.order = ++paneCounters[layer.pane];
-          console.log("---> toggle layer:",{name:layer.name, id:layer.id, pane:layer.pane, order: layer.order})
+          console.log("---> toggle layer:",{layer:layer.name, id:layer.id, pane:layer.pane, order:layer.order}) 
         }
         
         layer.active = !layer.active;
@@ -212,6 +212,13 @@ export const layersReducer = createReducer(initialState, (builder) => {
       if (layer) {
         layer.order = order;
       }
+    })
+    .addCase(actions.addLayer, (state, action) => {
+      const { categoryId, layer } = action.payload;
+      const category = state.categories[categoryId];
+      if (!category) return;
+
+      category.layers.push(layer);
     })
     .addCase(actions.setSlopeRenderingRule, (state, action) => {
       state.slopeRenderingRule = action.payload;

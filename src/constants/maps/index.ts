@@ -9,6 +9,7 @@ export enum Tab {
 }
 
 export const CATEGORY_TAB_MAPPING = {
+  scenarios: Tab.HOME,
   basemaps: Tab.LAYERS,
   jurisdictions: Tab.LAYERS,
   wildfire: Tab.LAYERS,

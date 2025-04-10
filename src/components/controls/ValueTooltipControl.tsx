@@ -5,7 +5,7 @@ import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { setShowMapValues } from '../../store/slices/layers';
 import { setIsCancellingTooltip } from '../../store/slices/uiSlice';
-import { rasterDataCache } from '../../utils/geotif/cache';
+import { rasterDataCache } from '../../utils/cache';
 import proj4 from 'proj4';
 
 interface ValueTooltipProps {

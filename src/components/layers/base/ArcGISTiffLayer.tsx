@@ -9,7 +9,7 @@ import { setLayerBounds, initializeLayerValueRange, setLayerMetadata, setLayerLo
 import { validateTiff } from '../../../utils/tiff';
 import { getColorScheme, getColorFromScheme, hexToRgb, GeoTiffNoDataColor } from '../../../utils/colors';
 import { MapServiceConfig } from '../../../services/maps/types';
-import { rasterDataCache } from '../../../utils/geotif/cache';
+import { rasterDataCache } from '../../../utils/cache';
 import { isFiremetricsTab } from '../../../constants/maps';
 import { leafletLayerMap } from '../../../store/slices/layers/state';
 
@@ -67,20 +67,7 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
     return category.layers.find(l => l.id === layerId);
   });
 
-  // Debug logging for props and state
   if (ArcGISTiffLayerConfig.debug) {
-    console.log('ArcGISTiffLayer props:', {
-      active,
-      opacity,
-      colorScheme,
-      categoryId,
-      layerId,
-      renderingRule: renderingRule ? renderingRule.substring(0, 100) + '...' : null
-    });
-  }
-
-  if (ArcGISTiffLayerConfig.debug) {
-    // Debug logging for props and state
     console.log('ArcGISTiffLayer layer:', layer)
   }
   
@@ -197,28 +184,56 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
       }
       const mean = validCount > 0 ? sum / validCount : 0;
 
+      const serializableBounds: [[number, number], [number, number]] = [
+        [bounds.getSouth(), bounds.getWest()],
+        [bounds.getNorth(), bounds.getEast()]
+      ];
+
       dispatch(setLayerMetadata({
         categoryId,
         layerId,
         metadata: {
           width,
           height,
-          bounds: [[bounds.getSouth(), bounds.getWest()], [bounds.getNorth(), bounds.getEast()]],
           noDataValue,
-          sourceCRS: 'EPSG:4326',
-          tiepoint: image.fileDirectory.ModelTiepointTag || [],
-          scale: image.fileDirectory.ModelPixelScaleTag || [],
-          transform: image.fileDirectory.ModelTransformationTag,
+          bitsPerSample: image.fileDirectory.BitsPerSample || [],
+          compression: image.fileDirectory.Compression || null,
+          resolution: {
+            x: Math.abs(rawBounds[2] - rawBounds[0]) / width,
+            y: Math.abs(rawBounds[3] - rawBounds[1]) / height
+          },
+          projection: {
+            sourceCRS: 'EPSG:4326',
+            tiepoint: image.fileDirectory.ModelTiepointTag || [],
+            scale: image.fileDirectory.ModelPixelScaleTag || [],
+            transform: image.fileDirectory.ModelTransformationTag,
+            matrix: image.fileDirectory.ModelTransformationTag,
+            origin: image.fileDirectory.ModelTransformationTag ? 
+              [image.fileDirectory.ModelTransformationTag[3], image.fileDirectory.ModelTransformationTag[7]] : null
+          },
           rawBounds,
-          rawBoundsCRS: 'EPSG:4326',
-          stats: { min, max, mean, validCount, noDataCount, zeroCount }
-        },
-        range: { min, max, mean }
+          serializableBounds,
+          stats: {
+            min,
+            max,
+            mean,
+            totalPixels: width * height,
+            validCount,
+            noDataCount,
+            zeroCount
+          }
+        }
       }));
 
       if (!valueRange) {
         dispatch(initializeLayerValueRange({ categoryId, layerId, min, max }));
       }
+
+      dispatch(setLayerBounds({
+        categoryId,
+        layerId,
+        bounds: serializableBounds
+      }));
 
       updateVisualization();
       setLoading(false);
@@ -398,9 +413,9 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
     return (
       <div className="absolute bottom-4 left-4 p-4 bg-red-50 border border-red-200 rounded-lg shadow-lg max-w-md">
         <div className="flex items-start space-x-2">
-          <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
-          <div className="flex-1">
-            <h3 className="text-sm font-medium text-red-800 mb-1">Failed to load TIFF</h3>
+          <AlertTriangle className="h-5 w-5 text-red-500 mt-0.5" />
+          <div>
+            <h4 className="text-sm font-medium text-red-800">Error</h4>
             <p className="text-sm text-red-600">{error}</p>
           </div>
         </div>
@@ -411,4 +426,4 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
   return null;
 };
 
-export default ArcGISTiffLayer
+export default ArcGISTiffLayer;

@@ -15,16 +15,16 @@ export const VALUE_AT_RISK = {
     source: 'USFS Fire Modeling Institute'
   },
   STRUCTURE_BURN_FREQUENCY: {
-    name: 'Structure Burn Frequency',
-    description: 'Frequency of structure burning',
+    name: 'Structure Burn Exposure',
+    description: 'Frequency of structures burning',
     units: 'fires/year',
     colorScheme: 'none',
     type: LayerType.Vector,
     source: 'USFS Fire Modeling Institute'
   },
   STRUCTURE_BURN_HAZARD: {
-    name: 'Structure Burn Hazard',
-    description: 'Structure burn hazard levels',
+    name: 'Structure Burn Risk',
+    description: 'Structure burn risk levels',
     units: 'level',
     colorScheme: 'none',
     type: LayerType.Vector,
@@ -43,7 +43,7 @@ export const VALUE_AT_RISK = {
 // Layer category constant
 export const VALUE_AT_RISK_CATEGORY: LayerCategory = createInitialCategory('valueAtRisk', 'Value At Risk', [
   VALUE_AT_RISK.FIRESHEDS,
-  VALUE_AT_RISK.STRUCTURE_BURN_FREQUENCY,
   VALUE_AT_RISK.STRUCTURE_BURN_HAZARD,
-  VALUE_AT_RISK.STRUCTURE_BURN_INFLUENCE
+  VALUE_AT_RISK.STRUCTURE_BURN_INFLUENCE,
+  VALUE_AT_RISK.STRUCTURE_BURN_FREQUENCY,
 ]);

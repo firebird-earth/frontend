@@ -1,12 +1,7 @@
 import * as GeoTIFF from 'geotiff';
-import { loadGeoTiffFromUrl, validateGeoTiff, extractGeoTiffMetadata } from '../../utils/geotif/utils';
-import { GeoTiffMetadata } from '../../utils/geotif/types';
-
-interface GeoTiffCache {
-  arrayBuffer?: ArrayBuffer;
-  metadata?: GeoTiffMetadata;
-  lastFetched: number;
-}
+import { loadGeoTiffFromUrl, validateGeoTiff, extractGeoTiffMetadata } from './utils';
+import { GeoTiffMetadata } from '../../types/geotiff';
+import { MapLayer } from '../../types/map';
 
 // Debug configuration
 const GeoTiffServiceConfig = {
@@ -15,6 +10,11 @@ const GeoTiffServiceConfig = {
 
 export function setGeoTiffServiceDebug(enabled: boolean) {
   (GeoTiffServiceConfig as any).debug = enabled;
+}
+
+interface GeoTiffCache {
+  arrayBuffer?: ArrayBuffer;
+  metadata?: GeoTiffMetadata;
 }
 
 class GeoTiffService {
@@ -35,6 +35,16 @@ class GeoTiffService {
     return this.cache;
   }
 
+  // New method for layerCache compatibility
+  public async getLayerData(layer: MapLayer): Promise<ArrayBuffer> {
+    return this.getGeoTiffData(layer.source);
+  }
+
+  // New method for layerCache compatibility
+  public async getLayerMetadata(layer: MapLayer): Promise<GeoTiffMetadata> {
+    return this.getGeoTiffMetadata(layer.source);
+  }
+
   public async getGeoTiffData(url: string, onProgress?: (progress: number) => void): Promise<ArrayBuffer> {
     // Check if we're already loading this URL
     if (this.loadingPromises.has(url)) {
@@ -49,9 +59,7 @@ class GeoTiffService {
     // Check if we have a cached version
     if (this.cache.has(url)) {
       const cached = this.cache.get(url)!;
-      
-      // If the cache is less than 5 minutes old, use it
-      if (cached.arrayBuffer && Date.now() - cached.lastFetched < 5 * 60 * 1000) {
+      if (cached.arrayBuffer) {
         if (GeoTiffServiceConfig.debug) {
           console.log('Using cached GeoTIFF data for:', url);
         }
@@ -86,9 +94,7 @@ class GeoTiffService {
     // Check if we have a cached version with metadata
     if (this.cache.has(url)) {
       const cached = this.cache.get(url)!;
-      
-      // If the cache is less than 5 minutes old and has metadata, use it
-      if (cached.metadata && Date.now() - cached.lastFetched < 5 * 60 * 1000) {
+      if (cached.metadata) {
         if (GeoTiffServiceConfig.debug) {
           console.log('Using cached GeoTIFF metadata for:', url);
         }
@@ -135,8 +141,7 @@ class GeoTiffService {
       // Cache the result
       const cacheEntry: GeoTiffCache = {
         arrayBuffer,
-        metadata,
-        lastFetched: Date.now()
+        metadata
       };
       
       this.cache.set(url, cacheEntry);

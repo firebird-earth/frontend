@@ -3,16 +3,16 @@ import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import * as GeoTIFF from 'geotiff';
 import { AlertTriangle, Loader2 } from 'lucide-react';
-import { validateGeoTiff } from '../../../utils/geotif/utils';
 import { getColorScheme, getColorFromScheme, hexToRgb, GeoTiffNoDataColor } from '../../../utils/colors';
 import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { useAppSelector } from '../../../hooks/useAppSelector';
 import { setLayerBounds, initializeLayerValueRange, setLayerMetadata, setLayerLoading } from '../../../store/slices/layers';
-import { LayerType, GeoTiffRasterData } from '../../../types/map';
-import { rasterDataCache } from '../../../utils/geotif/cache';
+import { LayerType, RasterData } from '../../../types/map';
+import { rasterDataCache } from '../../../utils/cache';
 import { defaultColorScheme } from '../../../constants/colors';
-import { geotiffService } from '../../../services/maps/geotiffService';
-import { getGeoTiffBounds } from '../../../utils/geotif/bounds';
+import { geotiffService } from '../../../services/geotiffService/geotiffService';
+import { getGeoTiffBounds } from '../../../services/geotiffService/bounds';
+import { validateGeoTiff } from '../../../services/geotiffService/validation';
 import { leafletLayerMap } from '../../../store/slices/layers/state';
 
 interface GeoTiffLayerProps {
@@ -243,18 +243,18 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
         const data = rasters[0] as Float32Array;
 
         const boundsInfo = await getGeoTiffBounds(image);
-        const leafletBounds = L.latLngBounds(
-          L.latLng(boundsInfo.bounds[0][0], boundsInfo.bounds[0][1]),
-          L.latLng(boundsInfo.bounds[1][0], boundsInfo.bounds[1][1])
+        const leafletBoundsLatLng = L.latLngBounds(
+          L.latLng(boundsInfo.leafletBounds[0][0], boundsInfo.leafletBounds[0][1]),
+          L.latLng(boundsInfo.leafletBounds[1][0], boundsInfo.leafletBounds[1][1])
         );
 
-        boundsRef.current = leafletBounds;
+        boundsRef.current = leafletBoundsLatLng;
 
         // Get the GDAL_NODATA value
         const rawNoData = image.fileDirectory.GDAL_NODATA;
         const noDataValue = rawNoData !== undefined ? Number(rawNoData.replace('\x00', '')) : null;
 
-        const rasterData: GeoTiffRasterData = {
+        const rasterData: RasterData = {
           data,
           width,
           height,
@@ -269,7 +269,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
           throw new Error('Metadata not found in cache');
         }
 
-        let resolutionCached = cachedMetadata.metadata.standard.resolution;
+        let resolutionCached = cachedMetadata.resolution;
   
         // Get statistics
         let min = Infinity;
@@ -279,12 +279,12 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
         let noDataCount = 0;
         let zeroCount = 0;
 
-        validCount = cachedMetadata.metadata.standard.nonNullValues;
-        noDataCount = cachedMetadata.metadata.standard.noDataCount;
-        zeroCount = cachedMetadata.metadata.standard.zeroCount;    
-        min = cachedMetadata.range.min;
-        max = cachedMetadata.range.max;
-        mean = cachedMetadata.range.mean;
+        validCount = cachedMetadata.stats.validCount;
+        noDataCount = cachedMetadata.stats.noDataCount;
+        zeroCount = cachedMetadata.stats.zeroCount;    
+        min = cachedMetadata.stats.min;
+        max = cachedMetadata.stats.max;
+        mean = cachedMetadata.stats.mean;
           
         if (categoryId && layerId) {
           // Update layer metadata
@@ -294,18 +294,25 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
             metadata: {
               width,
               height,
-              bounds: boundsInfo.bounds,
               noDataValue,
-              sourceCRS: boundsInfo.sourceCRS,
-              tiepoint: boundsInfo.tiepoint || [],
-              scale: boundsInfo.pixelScale || [],
-              transform: boundsInfo.transform,
+              bitsPerSample: cachedMetadata.bitsPerSample,
+              compression: image.fileDirectory.Compression || null,
+              resolution: cachedMetadata.resolution,
+              projection: {
+                sourceCRS: boundsInfo.sourceCRS,
+                tiepoint: boundsInfo.tiepoint || [],
+                scale: boundsInfo.pixelScale || [],
+                transform: boundsInfo.transform,
+                matrix: boundsInfo.transform,
+                origin: boundsInfo.transform ? [boundsInfo.transform[3], boundsInfo.transform[7]] : null
+              },
               rawBounds: boundsInfo.rawBounds,
-              resolution: cachedMetadata.metadata.standard.resolution,
+              leafletBounds: boundsInfo.leafletBounds,
               stats: {
                 min,
                 max,
                 mean,
+                totalPixels: width * height,
                 validCount,
                 noDataCount,
                 zeroCount
@@ -327,7 +334,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
           dispatch(setLayerBounds({
             categoryId,
             layerId,
-            bounds: boundsInfo.bounds
+            bounds: boundsInfo.leafletBounds
           }));
         }
 

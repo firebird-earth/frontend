@@ -3,10 +3,8 @@ import proj4 from 'proj4';
 import { validateGeoTiff } from './validation';
 import { GeoTiffMetadata } from './types';
 import { getGeoTiffBounds } from './bounds';
-import { extractGeoTiffMetadata } from './metadata';
 
 // Re-export everything
-export * from './types';
 export * from './loaders';
 export * from './validation';
 export * from './bounds';

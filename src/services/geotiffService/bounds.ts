@@ -182,11 +182,11 @@ export async function getGeoTiffBounds(image: GeoTIFF.GeoTIFFImage): Promise<Geo
   }
 
   // Return Leaflet-friendly bounds: [[south, west], [north, east]]
-  const bounds: [[number, number], [number, number]] = [[south, west], [north, east]];
+  const leafletBounds: [[number, number], [number, number]] = [[south, west], [north, east]];
   
   if (BoundsConfig.debug) {
     console.log('Final bounds:', {
-      bounds,
+      leafletBounds,
       sourceCRS,
       transform,
       tiepoint,
@@ -201,7 +201,8 @@ export async function getGeoTiffBounds(image: GeoTIFF.GeoTIFFImage): Promise<Geo
   }
 
   return {
-    bounds,
+    rawBounds,
+    leafletBounds,
     sourceCRS,
     transform,
     tiepoint,

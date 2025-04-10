@@ -1,3 +1,4 @@
+// src/services/geotiffService/metadata.ts
 import * as GeoTIFF from 'geotiff';
 import { GeoTiffMetadata } from './types';
 import { validateGeoTiff } from './validation';
@@ -5,11 +6,17 @@ import { getGeoTiffBounds } from './bounds';
 
 // Debug configuration
 const MetadataConfig = {
-  debug: false
+  debug: true
 } as const;
 
 export function setMetadataDebug(enabled: boolean) {
   (MetadataConfig as any).debug = enabled;
+}
+
+// Validation function for GeoTiffMetadata
+function isValidGeoTiffMetadata(data: any): data is GeoTiffMetadata {
+  const requiredKeys: (keyof GeoTiffMetadata)[] = ['width', 'height', 'noDataValue', 'bitsPerSample', 'compression', 'resolution', 'projection', 'rawBounds', 'stats'];
+  return requiredKeys.every(key => key in data);
 }
 
 export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadata> {
@@ -148,84 +155,59 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
       });
     }
 
-    // Get custom metadata
-    const customMetadata = {
-      units: '',
-      description: ''
-    };
-
     if (image.fileDirectory.GDAL_METADATA) {
       if (MetadataConfig.debug) {
         console.log('Raw GDAL metadata:', image.fileDirectory.GDAL_METADATA);
       }
       try {
         const metadata = image.fileDirectory.GDAL_METADATA;
-        const unitsMatch = metadata.match(/<Item name="units">(.*?)<\/Item>/);
-        const descMatch = metadata.match(/<Item name="description">(.*?)<\/Item>/);
-        
-        if (unitsMatch) customMetadata.units = unitsMatch[1];
-        if (descMatch) customMetadata.description = descMatch[1];
-        
-        if (MetadataConfig.debug) {
-          console.log('Parsed custom metadata:', customMetadata);
-        }
       } catch (e) {
         console.warn('Failed to parse GDAL metadata:', e);
       }
     }
 
+    // Convert BitsPerSample to a proper array of numbers
+    const bitsPerSample = Array.from(image.fileDirectory.BitsPerSample || []).map(Number);
+    console.log('bitsPerSample:', bitsPerSample)
+      
     // Construct the final metadata object
-    const metadata: GeoTiffMetadata = {
-      metadata: {
-        standard: {
-          imageWidth: width,
-          imageHeight: height,
-          bitsPerSample: image.fileDirectory.BitsPerSample || [],
-          compression: image.fileDirectory.Compression || null,
-          modelTransform: {
-            matrix: boundsInfo.transform,
-            tiepoint: boundsInfo.tiepoint,
-            origin: boundsInfo.transform ? [boundsInfo.transform[3], boundsInfo.transform[7]] : null
-          },
-          resolution,
-          noData: noDataValue,
-          nonNullValues: validCount,
-          totalPixels: width * height,
-          zeroCount,
-          noDataCount,
-          crs: boundsInfo.sourceCRS,
-          projectionName: '',
-          datum: '',
-          rawBounds: boundsInfo.rawBounds,
-          sourceCRS: boundsInfo.sourceCRS,
-          tiepoint: boundsInfo.tiepoint,
-          scale: boundsInfo.pixelScale,
-          transform: boundsInfo.transform
-        },
-        custom: customMetadata
+    const metadata = {
+      width,
+      height,
+      noDataValue,
+      bitsPerSample: bitsPerSample,
+      compression: image.fileDirectory.Compression || null,
+      resolution: {
+        x: resolution.x,
+        y: resolution.y
       },
-      range: {
+      projection: {
+        sourceCRS: boundsInfo.sourceCRS,
+        tiepoint: boundsInfo.tiepoint,
+        scale: boundsInfo.pixelScale,
+        transform: boundsInfo.transform,
+        matrix: boundsInfo.transform,
+        origin: boundsInfo.transform ? [boundsInfo.transform[3], boundsInfo.transform[7]] : null
+      },
+      rawBounds: boundsInfo.rawBounds,
+      bounds: boundsInfo.bounds,
+      stats: {
         min,
         max,
-        mean
+        mean,
+        totalPixels: width * height,
+        validCount,
+        zeroCount,
+        noDataCount
       }
-    };
+    } satisfies GeoTiffMetadata;
+
+    if (!isValidGeoTiffMetadata(metadata)) {
+      throw new Error('Invalid GeoTiffMetadata: Missing or incorrect properties');
+    }
 
     if (MetadataConfig.debug) {
-      console.log('Final metadata:', {
-        dimensions: `${width}x${height}`,
-        bounds: boundsInfo.bounds,
-        sourceCRS: boundsInfo.sourceCRS,
-        resolution,
-        stats: {
-          min,
-          max,
-          mean,
-          validCount,
-          noDataCount,
-          zeroCount
-        }
-      });
+      console.log('Final metadata:', metadata);
     }
 
     return metadata;

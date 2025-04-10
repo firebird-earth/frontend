@@ -12,18 +12,18 @@ export const FUELS = {
   CANOPY_BULK_DENSITY: {
     name: 'Canopy Bulk Density',
     description: 'Forest canopy bulk density',
-    units: 'kg/m³',
-    source: `${STORAGE}/TMV/cbd.tif`,
-    colorScheme: colorSchemes.greenYellowRed.name,
     type: LayerType.GeoTiff,
+    source: `${STORAGE}/TMV/cbd.tif`,
+    units: 'kg/m³',
+    colorScheme: colorSchemes.greenYellowRed.name
   },
   CANOPY_COVER: {
     name: 'Canopy Cover',
     description: 'Forest canopy cover percentage',
-    units: 'percent',
-    source: `${STORAGE}/TMV/canopy_cover.tif`,
-    colorScheme: colorSchemes.canopyCover.name,
     type: LayerType.GeoTiff,
+    source: `${STORAGE}/TMV/canopy_cover.tif`,
+    units: 'percent',
+    colorScheme: colorSchemes.canopyCover.name,
     domain: [0, 100], // Canopy cover percentage range
     legend: {
       items: [
@@ -38,10 +38,10 @@ export const FUELS = {
   CANOPY_HEIGHT: {
     name: 'Canopy Height',
     description: 'Forest canopy height',
-    units: 'meters',
-    source: `${STORAGE}/TMV/canopy_height.tif`,
-    colorScheme: colorSchemes.greenYellowRed.name,
     type: LayerType.GeoTiff,
+    source: `${STORAGE}/TMV/canopy_height.tif`,
+    units: 'meters',
+    colorScheme: colorSchemes.greenYellowRed.name,
     domain: [0, 50], // Canopy height range in meters
     legend: {
       items: [
@@ -56,10 +56,10 @@ export const FUELS = {
   MORTALITY: {
     name: 'Mortality',
     description: 'Tree mortality risk',
-    units: 'percent',
-    source: 'USFS Forest Health Technology Enterprise Team',
-    colorScheme: colorSchemes.greenYellowRed.name,
     type: LayerType.GeoTiff,
+    source: 'USFS Forest Health Technology Enterprise Team',
+    units: 'percent',
+    colorScheme: colorSchemes.greenYellowRed.name,
     domain: [0, 100], // Mortality percentage range
     legend: {
       items: [

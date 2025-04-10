@@ -26,6 +26,9 @@ export const setLayerLoading = createAction<SetLayerLoadingPayload>('layers/setL
 export const setLayerPane = createAction<SetLayerPanePayload>('layers/setLayerPane');
 export const setLayerOrder = createAction<SetLayerOrderPayload>('layers/setLayerOrder');
 
+// Add Layer action
+export const addLayer = createAction<{categoryId: string; layer: any}>('layers/addLayer');
+
 // Layer ordering actions
 export const bringLayerToFront = createAction<ToggleLayerPayload>('layers/bringLayerToFront');
 export const sendLayerToBack = createAction<ToggleLayerPayload>('layers/sendLayerToBack');

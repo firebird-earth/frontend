@@ -45,8 +45,8 @@ export const LANDSCAPE_RISK = {
     domain: [0, 5] // Suppression difficulty index
   },
   TRANSMISSION_INDEX: {
-    name: 'Transmission Index',
-    description: 'Fire transmission index',
+    name: 'Explosive Fire Risk',
+    description: 'Explosive Fire Risk',
     type: LayerType.Vector,
     source: 'USFS Fire Modeling Institute',
     units: 'index',
@@ -69,7 +69,7 @@ export const LANDSCAPE_RISK_CATEGORY: LayerCategory = createInitialCategory('lan
   LANDSCAPE_RISK.BURN_PROBABILITY,
   LANDSCAPE_RISK.FLAME_LENGTH,
   LANDSCAPE_RISK.FIRE_INTENSITY,
-  LANDSCAPE_RISK.SUPPRESSION_DIFFICULTY,
   LANDSCAPE_RISK.TRANSMISSION_INDEX,
-  LANDSCAPE_RISK.TRANSMISSION_INFLUENCE
+  LANDSCAPE_RISK.TRANSMISSION_INFLUENCE,
+  LANDSCAPE_RISK.SUPPRESSION_DIFFICULTY
 ]);

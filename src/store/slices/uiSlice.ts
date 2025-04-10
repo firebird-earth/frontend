@@ -24,7 +24,7 @@ const initialState: UIState = {
   sections: {
     aois: true,
     treatments: false,
-    scenarios: false,
+    scenarios: true,
     basemaps: false,
     jurisdictions: false,
     wildfire: false,

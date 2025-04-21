@@ -152,7 +152,7 @@ const AOIPanel: React.FC = () => {
       <div className="p-4">
         <div className="flex items-center justify-between mb-4">
           {isCreatingAOI ? (
-            <h3 className="text-lg font-semibold text-gray-900">New AOI</h3>
+            <h3 className="text-lg font-semibold text-gray-900">New Location</h3>
           ) : (
             <div className="flex-1">
               {isEditing ? (

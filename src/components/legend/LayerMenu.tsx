@@ -8,6 +8,7 @@ import {
   setShowMapValues
 } from '../../store/slices/layers';
 import OpacityControl from '../controls/OpacityControl';
+import TransparencyControl from '../controls/TransparencyControl';
 import ValueRangeControl from '../controls/ValueRangeControl';
 import LayerOrderControl from '../controls/LayerOrderControl';
 
@@ -64,15 +65,16 @@ const LayerMenu: React.FC<LayerMenuProps> = ({
 
   return (
     <div className="absolute right-0 top-[calc(100%+4.375rem)] w-56 bg-white rounded-lg shadow-lg py-1 border z-50">
-      {/* Opacity Control */}
+      {/* Transparency Control */}
       {(isGeoTiff || isArcGISImageService) && (
         <div className="px-4 py-2">
-          <OpacityControl
+          <TransparencyControl
             categoryId={categoryId}
             layerId={layerId}
             opacity={layer?.opacity || 1}
             showLabel={true}
             showValue={true}
+            label="Transparency"
           />
         </div>
       )}
@@ -92,15 +94,18 @@ const LayerMenu: React.FC<LayerMenuProps> = ({
 
       {/* Show Values button */}
       {(isGeoTiff || isArcGISImageService) && layer?.valueRange && (
-        <button
-          onClick={handleShowValuesClick}
-          className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center space-x-2 ${
-            layer?.showValues ? 'text-blue-600' : 'text-gray-700'
-          }`}
-        >
-          <BarChart2 className="h-4 w-4" />
-          <span>Show Map Values</span>
-        </button>
+        <>
+          <div className="my-1 border-t border-gray-200"></div>
+          <button
+            onClick={handleShowValuesClick}
+            className={`w-full px-4 py-2 text-left text-sm hover:bg-gray-100 flex items-center space-x-2 ${
+              layer?.showValues ? 'text-blue-600' : 'text-gray-700'
+            }`}
+          >
+            <BarChart2 className="h-4 w-4" />
+            <span>Show Map Values</span>
+          </button>
+        </>
       )}
 
       {/* Layer ordering controls */}

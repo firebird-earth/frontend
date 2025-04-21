@@ -1,31 +1,12 @@
-// geoQueryBinder.ts (Module)
-
 /**
  * Binds raster and vector layer references in an AST by fetching them from a provided cache.
  *
  * Input:
  *   - AST produced by `parseExpression()`
- *   - LayerCache: object with `getLayer(name: string)` → Promise<Raster | Vector>
+ *   - LayerCache: object with `get(name: string)` → Promise<Raster | Vector | { data: Raster }>
  *
  * Output:
- *   - New AST with all `LayerNode`s replaced with nodes of shape:
- *       { type: 'layer', name: 'burn', source: Raster | Vector }
- *     or
- *       { type: 'layer', name: 'burn', error: Error } if fetch fails
- *
- * Example:
- *   Input node:
- *     { op: 'AND', left: { type: 'layer', name: 'burn' }, right: { type: 'literal', value: 1 } }
- *
- *   Output node:
- *     {
- *       op: 'AND',
- *       left: { type: 'layer', name: 'burn', source: [Raster] },
- *       right: { type: 'literal', value: 1 }
- *     }
- *
- * Usage:
- *   const boundAST = await bindLayers(ast, myCache);
+ *   - AST with all LayerNode `source` fields populated with `RasterData` or `Vector`
  */
 
 import { ASTNode, ASTNodeMap, LayerNode } from './parser';
@@ -38,13 +19,13 @@ export interface BoundLayerNode extends LayerNode {
   error?: Error;
 }
 
-export interface LayerCache {
-  get(name: string): Promise<Raster | Vector>;
+export interface LayerDataCache {
+  get(name: string): Promise<any>; // may return Raster, Vector, or { data: Raster, metadata?: any }
 }
 
 export async function bindLayers(
   ast: ASTNode | ASTNodeMap,
-  cache: LayerCache,
+  cache: LayerDataCache,
   onProgress?: (layerName: string) => void
 ): Promise<ASTNode | ASTNodeMap> {
   const visited = new Map<ASTNode, ASTNode>();
@@ -67,7 +48,26 @@ export async function bindLayers(
   await Promise.all(Array.from(layerNames).map(async name => {
     try {
       const layer = await cache.get(name);
-      layerCache.set(name, layer);
+
+      const resolved =
+        layer &&
+        typeof layer === 'object' &&
+        'data' in layer &&
+        ArrayBuffer.isView(layer.data) &&
+        'width' in layer &&
+        'height' in layer
+          ? layer // already in RasterData format
+          : 'data' in layer && 'width' in layer.data
+            ? layer.data // wrapped { data, metadata }
+            : null;
+
+      if (!resolved) {
+        console.warn(`[Binder] Could not resolve layer: ${name}`);
+      } else {
+        console.debug(`[Binder] Resolved layer: ${name}`, resolved);
+      }
+
+      layerCache.set(name, resolved ?? new Error('Invalid layer structure'));
       onProgress?.(name);
     } catch (err) {
       layerCache.set(name, err instanceof Error ? err : new Error(String(err)));
@@ -83,8 +83,20 @@ export async function bindLayers(
         ...node,
         ...(entry instanceof Error ? { error: entry } : { source: entry })
       };
+      if (!bound.source && !bound.error) {
+        console.warn(`[Binder] No source or error for layer: ${node.name}`);
+      }
       visited.set(node, bound);
       return bound;
+    }
+
+    if (node.type === 'function') {
+      const out = {
+        ...node,
+        args: await Promise.all(node.args.map(walk))
+      };
+      visited.set(node, out);
+      return out;
     }
 
     if ('op' in node) {
@@ -108,14 +120,6 @@ export async function bindLayers(
           condition: await walk(node.condition),
           trueExpr: await walk(node.trueExpr),
           falseExpr: await walk(node.falseExpr)
-        };
-        visited.set(node, out);
-        return out;
-      }
-      if ('args' in node) {
-        const out = {
-          ...node,
-          args: await Promise.all(node.args.map(walk))
         };
         visited.set(node, out);
         return out;

@@ -113,20 +113,7 @@ const FireMetricsTab: React.FC = () => {
 
   return (
     <div className="space-y-3">
-      {/* Value At Risk Section */}
-      <div>
-        <SectionHeader 
-          title={FIRE_METRICS.VALUE_AT_RISK.label}
-          isOpen={sections.valueAtRisk} 
-          onToggle={() => dispatch(toggleSection(FIRE_METRICS.VALUE_AT_RISK.name))}
-        />
-        {sections.valueAtRisk && (
-          <div className="space-y-1">
-            {valueAtRiskLayers.map(layer => renderLayerItem(layer, FIRE_METRICS.VALUE_AT_RISK.name))}
-          </div>
-        )}
-      </div>
-
+      
       {/* Landscape Risk Section */}
       <div>
         <SectionHeader 
@@ -141,6 +128,20 @@ const FireMetricsTab: React.FC = () => {
         )}
       </div>
 
+      {/* Value At Risk Section */}
+      <div>
+        <SectionHeader 
+          title={FIRE_METRICS.VALUE_AT_RISK.label}
+          isOpen={sections.valueAtRisk} 
+          onToggle={() => dispatch(toggleSection(FIRE_METRICS.VALUE_AT_RISK.name))}
+        />
+        {sections.valueAtRisk && (
+          <div className="space-y-1">
+            {valueAtRiskLayers.map(layer => renderLayerItem(layer, FIRE_METRICS.VALUE_AT_RISK.name))}
+          </div>
+        )}
+      </div>
+      
       {/* Fuels Section */}
       <div>
         <SectionHeader 

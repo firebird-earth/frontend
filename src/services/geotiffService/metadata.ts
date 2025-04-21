@@ -1,4 +1,5 @@
 // src/services/geotiffService/metadata.ts
+
 import * as GeoTIFF from 'geotiff';
 import { GeoTiffMetadata } from './types';
 import { validateGeoTiff } from './validation';
@@ -92,24 +93,45 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
     // Get bounds information
     const boundsInfo = await getGeoTiffBounds(image);
 
-    // Calculate resolution from bounds and dimensions if ModelPixelScaleTag is missing
+    // Calculate resolution based on available information
     let resolution = { x: NaN, y: NaN };
+
     if (image.fileDirectory.ModelPixelScaleTag) {
+      // Use ModelPixelScaleTag if available (typically for GeoTIFFs)
       const scale = image.fileDirectory.ModelPixelScaleTag;
       resolution = {
         x: Math.abs(scale[0]),
         y: Math.abs(scale[1])
       };
     } else if (boundsInfo.rawBounds) {
-      // Calculate from raw bounds (in source CRS units) and image dimensions
+      // Calculate resolution from bounds and dimensions
       const [minX, minY, maxX, maxY] = boundsInfo.rawBounds;
-      resolution = {
-        x: Math.abs(maxX - minX) / width,
-        y: Math.abs(maxY - minY) / height
-      };
-      if (MetadataConfig.debug) {
-        console.log('Calculated resolution from bounds:', resolution);
+      const latSpan = Math.abs(maxY - minY);
+      const lngSpan = Math.abs(maxX - minX);
+      
+      // For geographic coordinates (degrees), convert to approximate meters
+      const isGeographic = boundsInfo.sourceCRS === 'EPSG:4326';
+      if (isGeographic) {
+        // At the equator, 1 degree ≈ 111,319.5 meters
+        const metersPerDegree = 111319.5;
+        const centerLat = (maxY + minY) / 2;
+        const lngCorrection = Math.cos(centerLat * Math.PI / 180);
+        
+        resolution = {
+          x: (lngSpan * metersPerDegree * lngCorrection) / width,
+          y: (latSpan * metersPerDegree) / height
+        };
+      } else {
+        // For projected coordinates (already in meters)
+        resolution = {
+          x: lngSpan / width,
+          y: latSpan / height
+        };
       }
+    }
+
+    if (MetadataConfig.debug) {
+      console.log('Resolution:', resolution);
     }
 
     // Calculate statistics
@@ -167,9 +189,10 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
     }
 
     // Convert BitsPerSample to a proper array of numbers
-    const bitsPerSample = Array.from(image.fileDirectory.BitsPerSample || []).map(Number);
-    console.log('bitsPerSample:', bitsPerSample)
-      
+    const bitsPerSample = Array.isArray(image.fileDirectory.BitsPerSample) 
+      ? Array.from(image.fileDirectory.BitsPerSample).map(Number)
+      : [Number(image.fileDirectory.BitsPerSample)];
+
     // Construct the final metadata object
     const metadata = {
       width,
@@ -177,10 +200,7 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
       noDataValue,
       bitsPerSample: bitsPerSample,
       compression: image.fileDirectory.Compression || null,
-      resolution: {
-        x: resolution.x,
-        y: resolution.y
-      },
+      resolution,
       projection: {
         sourceCRS: boundsInfo.sourceCRS,
         tiepoint: boundsInfo.tiepoint,
@@ -190,7 +210,7 @@ export async function extractGeoTiffMetadata(file: File): Promise<GeoTiffMetadat
         origin: boundsInfo.transform ? [boundsInfo.transform[3], boundsInfo.transform[7]] : null
       },
       rawBounds: boundsInfo.rawBounds,
-      bounds: boundsInfo.bounds,
+      leafletBounds: boundsInfo.leafletBounds,
       stats: {
         min,
         max,

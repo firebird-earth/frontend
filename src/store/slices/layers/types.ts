@@ -12,7 +12,6 @@ export interface LayersState {
   };
   loading: boolean;
   error: string | null;
-  slopeRenderingRule: string;
 }
 
 export interface ToggleLayerPayload {

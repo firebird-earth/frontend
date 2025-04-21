@@ -2,47 +2,90 @@
  * Evaluates a bound AST and produces a resulting raster.
  *
  * Input:
- *   - AST where all layer nodes have been resolved (contain `source` Raster or Vector)
+ *   - AST where all layer nodes have been resolved (contain `source` RasterData)
  *
  * Output:
- *   - A new raster containing the result of the expression
+ *   - A new RasterData containing the result of the expression
  *
  * Assumptions:
  *   - All raster layers have the same dimensions and alignment
  *   - Vector layers have been rasterized or masked in preprocessing
- *   - `Raster` is assumed to be a 2D array of numbers (or booleans)
  */
 
 import { ASTNode } from './parser';
 
-export type Raster = number[][];
+export interface RasterData {
+  data: Int16Array | Float32Array | Uint8Array | number[];
+  width: number;
+  height: number;
+  noDataValue: number | null;
+}
 
-export async function evaluateAST(ast: ASTNode): Promise<Raster> {
-  const rows = getRasterSize(ast).rows;
-  const cols = getRasterSize(ast).cols;
+export async function evaluateAST(ast: ASTNode, outputNoDataValue: number = NaN): Promise<RasterData> {
+  //console.debug('AST before getRasterSize:', JSON.stringify(ast, null, 2));
+  const { rows, cols } = getRasterSize(ast);
+  const total = rows * cols;
+  const output = new Float32Array(total);
 
-  const result: Raster = Array.from({ length: rows }, () => Array(cols).fill(null));
+  let validPixelCount = 0;
+  let zeroValuePixelCount = 0;
+  let oneValuePixelCount = 0;
+  let noDataPixelCount = 0;
 
   for (let r = 0; r < rows; r++) {
     for (let c = 0; c < cols; c++) {
-      result[r][c] = evaluateAtPixel(ast, r, c);
+      const value = evaluateAtPixel(ast, r, c);
+      const numeric = typeof value === 'boolean' ? (value ? 1 : 0) : value;
+      const index = r * cols + c;
+
+      if (numeric == null || isNaN(numeric)) {
+        output[index] = outputNoDataValue;
+        noDataPixelCount++;
+      } else {
+        const num = Number(numeric);
+        output[index] = num;
+        validPixelCount++;
+        if (num === 0) zeroValuePixelCount++;
+        else if (num === 1) oneValuePixelCount++;
+      }
     }
   }
 
-  return result;
+  const isBinary = validPixelCount === (zeroValuePixelCount + oneValuePixelCount);
+
+  console.debug('Result Stats:', {
+    totalPixelCount: total,
+    zeroValuePixelCount,
+    oneValuePixelCount,
+    validDataPixelCount: validPixelCount,
+    noDataPixelCount,
+    outputType: isBinary ? 'binary (0/1)' : 'range/mask',
+    check: isBinary
+      ? `0 + 1 + noData = ${zeroValuePixelCount + oneValuePixelCount + noDataPixelCount} / ${total}`
+      : `0 + valid + noData = ${zeroValuePixelCount + validPixelCount + noDataPixelCount} / ${total}`
+  });
+
+  return {
+    data: output,
+    width: cols,
+    height: rows,
+    noDataValue: outputNoDataValue
+  };
 }
 
 function evaluateAtPixel(node: ASTNode, row: number, col: number): number | boolean | null {
   if ('value' in node) return node.value;
 
   if (node.type === 'layer') {
-    const source = (node as any).source;
-    if (!source) {
-      console.warn(`Layer '${node.name}' has no source raster`);
-      return null;
+    const source = (node as any).source as RasterData;
+    if (!source || !source.rasterArray) {
+      throw new Error(`Layer '${node.name}' has no source raster`);
     }
-    const val = source?.[row]?.[col];
-    return val ?? null;
+    if (row >= source.height || col >= source.width) return null;
+    const index = row * source.width + col;
+    const raw = source.rasterArray[index];
+    if (raw === undefined || isNaN(raw) || raw === source.noDataValue || raw === Number(source.noDataValue)) return null;
+    return raw;
   }
 
   if ('op' in node) {
@@ -66,10 +109,10 @@ function evaluateAtPixel(node: ASTNode, row: number, col: number): number | bool
       const right = evaluateAtPixel(node.right, row, col);
       if (left == null || right == null) return null;
       switch (op) {
-        case '>': return left > right;
-        case '<': return left < right;
-        case '>=': return left >= right;
-        case '<=': return left <= right;
+        case '>': return (left as number) > (right as number);
+        case '<': return (left as number) < (right as number);
+        case '>=': return (left as number) >= (right as number);
+        case '<=': return (left as number) <= (right as number);
         case '==': return left === right;
         case '!=': return left !== right;
         case 'AND': return Boolean(left) && Boolean(right);
@@ -105,42 +148,61 @@ function evaluateAtPixel(node: ASTNode, row: number, col: number): number | bool
   }
 
   if (node.type === 'function') {
-    const args = node.args.map(arg => evaluateAtPixel(arg, row, col));
-    if (args.includes(null)) return null;
-    switch (node.name) {
+    const { name, args } = node;
+    const evaluatedArgs = args.map(arg => evaluateAtPixel(arg, row, col));
+
+    if (evaluatedArgs.includes(null)) return null;
+
+    switch (name) {
       case 'abs':
-        if (args.length !== 1) throw new Error('abs() expects 1 argument');
-        return Math.abs(args[0] as number);
+        if (evaluatedArgs.length !== 1) throw new Error('abs() expects 1 argument');
+        return Math.abs(evaluatedArgs[0] as number);
       case 'min':
-        if (args.length < 1) throw new Error('min() expects at least 1 argument');
-        return Math.min(...(args as number[]));
+        if (evaluatedArgs.length < 1) throw new Error('min() expects at least 1 argument');
+        return Math.min(...(evaluatedArgs as number[]));
       case 'max':
-        if (args.length < 1) throw new Error('max() expects at least 1 argument');
-        return Math.max(...(args as number[]));
+        if (evaluatedArgs.length < 1) throw new Error('max() expects at least 1 argument');
+        return Math.max(...(evaluatedArgs as number[]));
+      case 'mask':
+        if (evaluatedArgs.length !== 2) throw new Error('mask(layer, condition) expects 2 arguments');
+        return evaluatedArgs[1] ? evaluatedArgs[0] : null;
       default:
-        throw new Error(`Unsupported function: ${node.name}`);
+        throw new Error(`Unsupported function: ${name}`);
     }
   }
 
   return null;
 }
 
-function getRasterSize(node: ASTNode): { rows: number, cols: number } {
-  if (node.type === 'layer' && (node as any).source) {
-    const raster = (node as any).source as Raster;
-    if (Array.isArray(raster) && raster.length > 0 && Array.isArray(raster[0])) {
-      return { rows: raster.length, cols: raster[0].length };
-    } else {
-      console.warn('Invalid raster format:', raster);
-      return { rows: 0, cols: 0 };
+function getRasterSize(node: ASTNode): { rows: number; cols: number } {
+  if (node.type === 'layer' && 'source' in node) {
+    const raster = (node as any).source as RasterData;
+    if (raster && typeof raster.width === 'number' && typeof raster.height === 'number') {
+      return { rows: raster.height, cols: raster.width };
     }
   }
+
+  if (node.type === 'function' && node.args.length > 0) {
+    for (const arg of node.args) {
+      const size = getRasterSize(arg);
+      if (size.rows > 0 && size.cols > 0) return size;
+    }
+  }
+
   if ('op' in node) {
-    for (const key of ['expr', 'left', 'right', 'condition', 'trueExpr', 'falseExpr', 'layer']) {
-      if (key in node) return getRasterSize((node as any)[key]);
+    for (const key of ['expr', 'left', 'right', 'condition', 'trueExpr', 'falseExpr', 'layer', 'low', 'high']) {
+      if ((node as any)[key]) {
+        const size = getRasterSize((node as any)[key]);
+        if (size.rows > 0 && size.cols > 0) return size;
+      }
     }
-    if ('args' in node && node.args.length) return getRasterSize(node.args[0]);
-    if ('values' in node && node.values.length) return getRasterSize(node.values[0]);
+    if ('args' in node) {
+      for (const arg of node.args) {
+        const size = getRasterSize(arg);
+        if (size.rows > 0 && size.cols > 0) return size;
+      }
+    }
   }
+
   return { rows: 0, cols: 0 };
 }

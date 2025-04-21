@@ -48,7 +48,7 @@ export { default as GeoTiffLayer } from '../base/GeoTiffLayer';
 export { default as GeoTiffLegend } from '../../legend/GeoTiffLegend';
 
 // Export factory functions
+export { createGeoTiffLayer } from '../base/GeoTiffFactory';
 export { createDynamicLayer } from '../base/ArcGISDynamicLayer';
 export { createFeatureLayer } from '../base/ArcGISFeatureLayer';
 export { createTileLayer } from '../base/TileLayer';
-export { createGeoTiffLayer } from '../base/GeoTiffFactory';

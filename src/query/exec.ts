@@ -1,7 +1,7 @@
 // src/query/exec.ts
 import { parseExpression } from './parser';
 import { bindLayers } from './binder';
-import { layerCache } from '../cache/layerCache';
+import { layerDataCache } from '../cache/cache';
 import { evaluateAST } from './evaluator';
 import { store } from '../store';
 import { LayerType, MapPane } from '../types/map';
@@ -12,6 +12,9 @@ export const execExpression = async (expression: string) => {
   try {
     // First check if we already have a layer for this expression
     const state = store.getState();
+
+    console.log('getState():', state)
+    
     const existingLayer = state.layers.categories.scenarios?.layers.find(
       l => l.metadata?.expression === expression
     );
@@ -25,21 +28,23 @@ export const execExpression = async (expression: string) => {
       return;
     }
 
-    console.log('Expression:', expression);
+    console.log('parseExpression:', expression);
     
     // Parse the expression into an AST
     const ast = parseExpression(expression);
     console.log('Parsed AST:', ast);
 
+    console.log('bindLayers:');
+    
     // Bind layer references using the layer cache
-    const boundAst = await bindLayers(ast, layerCache, (layerName) => {
+    const boundAst = await bindLayers(ast, layerDataCache, (layerName) => {
       console.log(`Binding layer: ${layerName}`);
     });
     console.log('Bound AST:', boundAst);
 
     // Evaluate the bound AST
-    const result = await evaluateAST(boundAst);
-    console.log('Evaluation result:', result);
+    const rasterData = await evaluateAST(boundAst) satisfies RasterData;
+    console.log('Evaluation result:', rasterData);
 
     // Create a new GeoTIFF layer from the result
     const layer = {

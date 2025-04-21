@@ -95,7 +95,7 @@ const CreateAOIPanel: React.FC = () => {
     <div className="absolute top-4 right-4 w-80 bg-white rounded-lg shadow-lg border border-gray-200">
       <div className="p-4">
         <div className="mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">New AOI</h3>
+          <h3 className="text-lg font-semibold text-gray-900">New Location</h3>
         </div>
 
         <div className="space-y-4">

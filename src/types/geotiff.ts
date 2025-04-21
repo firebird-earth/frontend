@@ -1,8 +1,9 @@
+import L from 'leaflet';
 import { GeoJSON } from 'geojson';
 
-// Non-serializable raster data used by the LayerCache. 
+// Non-serializable raster data.
 export interface RasterData {
-  data: Int16Array | Float32Array;
+  rasterArray: Int16Array | Float32Array;
   width: number;
   height: number;
   noDataValue: number | null;
@@ -15,6 +16,7 @@ export type LeafletBounds = [[number, number], [number, number]]; // [[south, we
 export interface GeoTiffBounds {
   rawBounds: RawBounds;
   leafletBounds: LeafletBounds;
+  leafletBoundsLatLng: L.LatLngBounds;
   sourceCRS: string;
   transform?: number[];
   tiepoint?: number[];

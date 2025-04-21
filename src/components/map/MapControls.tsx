@@ -48,10 +48,9 @@ const MapControls: React.FC = () => {
 
       {layerWithValues && (
         <ValueTooltipControl
-          key={`${layerWithValues.categoryId}-${layerWithValues.layer.id}`}
           categoryId={layerWithValues.categoryId}
           layerId={layerWithValues.layer.id}
-          layer={layerWithValues.layer}
+          layerName={layerWithValues.layer.name}
         />
       )}
     </>

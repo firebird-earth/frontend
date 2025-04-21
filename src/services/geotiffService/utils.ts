@@ -2,13 +2,11 @@ import * as GeoTIFF from 'geotiff';
 import proj4 from 'proj4';
 import { validateGeoTiff } from './validation';
 import { GeoTiffMetadata } from './types';
-import { getGeoTiffBounds } from './bounds';
 
 // Re-export everything
 export * from './loaders';
 export * from './validation';
 export * from './bounds';
-export * from './circles';
 export * from './metadata';
 
 // Helper to safely parse TIFF data

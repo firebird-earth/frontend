@@ -6,7 +6,6 @@ import { getOrderedLayersByPane } from './utils/orderingGet';
 // Basic selectors
 export const selectLayersState = (state: RootState) => state.layers;
 export const selectCategories = (state: RootState) => state.layers.categories;
-export const selectSlopeRenderingRule = (state: RootState) => state.layers.slopeRenderingRule;
 
 // Category selectors
 export const selectCategory = (state: RootState, categoryId: string): LayerCategory | undefined => 

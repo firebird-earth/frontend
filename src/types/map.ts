@@ -1,13 +1,15 @@
-import { GeoJSON } from 'geojson';
 import L from 'leaflet';
+import { GeoJSON } from 'geojson';
+import { ElementType } from 'react';
+import { MapIcon } from 'lucide-react';
 
 export enum LayerType {
   Basemap = 'basemap',
+  GeoTiff = 'geoTiff',
+  ArcGISImageService = 'ArcGIS_imageService',
   ArcGISFeatureService = 'ArcGIS_featureService',
   ArcGISMapService = 'ArcGIS_mapService',
-  ArcGISImageService = 'ArcGIS_imageService',
   DynamicService = 'dynamicService',
-  GeoTiff = 'geoTiff',
   WMS = 'wms',
   Vector = 'vector',
   Raster = 'raster',
@@ -44,17 +46,17 @@ export interface Legend {
 export interface MapLayer {
   id: number;
   name: string;
+  icon: MapIcon;
   type: LayerType;
   source: string;
   renderingRule?: string;
-  attribution?: string;
   pane?: MapPane;
   order?: number;
-  domain?: [number, number];
+  attribution?: string;
   units?: string;
+  domain?: [number, number];
   legend?: Legend;
   colorScheme?: string;
-  bounds?: SerializableBounds;
   active: boolean;
   loading?: boolean;
   minZoom?: number;
@@ -67,6 +69,8 @@ export interface MapLayer {
     defaultMax: number;
   };
   showValues?: boolean;
+  
+  bounds?: SerializableBounds;
   metadata?: GeoTiffMetadata;
 }
 

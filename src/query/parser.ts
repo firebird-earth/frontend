@@ -8,7 +8,7 @@
  *   - Comparison ops: >, <, >=, <=, ==, !=
  *   - Math ops: +, -, *, /
  *   - Unary negation (e.g., -slope or -5)
- *   - Functions: abs(), min(), max(), distance_to()
+ *   - Functions: abs(), min(), max(), distance_to(), mask()
  *   - Spatial ops: INTERSECTS(), WITHIN(), CONTAINS(), TOUCHES()
  *   - Categorical IN queries: e.g., ownership IN ('federal', 'blm')
  *   - Null checks: IS NULL, IS NOT NULL
@@ -21,10 +21,6 @@
  *   - Support for quoted layer names with spaces (e.g., "Canopy Bulk Density")
  *
  * Output: an abstract syntax tree (AST) representing the expression or a sequence of assignments
- *
- * Example Input:
- *   parseExpression("burn > 5 AND landownership == 'federal'")
- *   parseExpression("\"Canopy Bulk Density\" > 25 AND \"Burn Probability\" > 6")
  */
 
 export type LiteralNode = { type: 'literal'; value: string | number | boolean | null };
@@ -118,7 +114,7 @@ export function parseExpression(expr: string): ASTNode | ASTNodeMap {
       if (["intersects", "within", "contains", "touches", "distance_to"].includes(fnName)) {
         return { op: fnName, args };
       }
-      return { type: 'function', name: fnName, args };
+      return { type: 'function', name: fnName, args }; // includes mask()
     }
     if (peek() === 'IN') {
       const layer = parseValue(token);

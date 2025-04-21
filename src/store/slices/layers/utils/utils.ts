@@ -40,10 +40,20 @@ export function createInitialCategory(
   };
 }
 
+export function findCategory(state: LayersState, categoryId: string): LayerCategory | undefined {
+  return state.categories[categoryId];
+}
+
 export function findLayer(state: LayersState, categoryId: string, layerId: number): MapLayer | undefined {
   return state.categories[categoryId]?.layers.find(l => l.id === layerId);
 }
 
-export function findCategory(state: LayersState, categoryId: string): LayerCategory | undefined {
-  return state.categories[categoryId];
+export function findLayerByName(state: LayersState, layerName: string): MapLayer | undefined {
+  for (const categoryId in state.categories) {
+    const foundLayer = state.categories[categoryId].layers.find(l => l.name === layerName);
+    if (foundLayer) {
+      return foundLayer;
+    }
+  }
+  return undefined;
 }

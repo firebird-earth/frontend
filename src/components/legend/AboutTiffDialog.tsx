@@ -75,19 +75,19 @@ const AboutTiffDialog: React.FC<AboutTiffDialogProps> = ({
           <div className="space-y-1">
             <h4 className="text-sm font-medium text-gray-700 mb-2">Statistics</h4>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Min:</span>
+              <span className="text-sm text-gray-600">Min</span>
               <span className="text-sm font-medium text-gray-700 text-right">
                 {min.toFixed(3)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Max:</span>
+              <span className="text-sm text-gray-600">Max</span>
               <span className="text-sm font-medium text-gray-700 text-right">
                 {max.toFixed(3)}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Mean:</span>
+              <span className="text-sm text-gray-600">Mean</span>
               <span className="text-sm font-medium text-gray-700 text-right">
                 {mean.toFixed(3)}
               </span>
@@ -98,41 +98,47 @@ const AboutTiffDialog: React.FC<AboutTiffDialogProps> = ({
           <div className="space-y-1">
             <h4 className="text-sm font-medium text-gray-700 mb-2">Pixel Analysis</h4>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Dimensions:</span>
+              <span className="text-sm text-gray-600">Resolution</span>
+              <span className="text-sm font-medium text-gray-700 text-right">
+                {metadata.resolution?.x 
+                  ? `${metadata.resolution.x.toFixed(2)} meters`
+                  : 'Unknown'}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Dimensions</span>
               <span className="text-sm font-medium text-gray-700 text-right">
                 {metadata.width} × {metadata.height}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Valid Pixels:</span>
-              <span className="text-sm font-medium text-gray-700 text-right">
-                {validPixels.toLocaleString()}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Zero Pixels:</span>
-              <span className="text-sm font-medium text-gray-700 text-right">
-                {zeroPixels.toLocaleString()}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">NoData Pixels:</span>
-              <span className="text-sm font-medium text-gray-700 text-right">
-                {noDataPixels.toLocaleString()}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Total Pixels:</span>
+              <span className="text-sm text-gray-600">Total Pixels</span>
               <span className="text-sm font-medium text-gray-700 text-right">
                 {totalPixels.toLocaleString()}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">Resolution:</span>
+              <span className="text-sm text-gray-600">Valid Pixels</span>
               <span className="text-sm font-medium text-gray-700 text-right">
-                {metadata.resolution?.x 
-                  ? `${metadata.resolution.x.toFixed(2)} meters`
-                  : 'Unknown'}
+                {validPixels.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Zero Pixels</span>
+              <span className="text-sm font-medium text-gray-700 text-right">
+                {zeroPixels.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">NoData Pixels</span>
+              <span className="text-sm font-medium text-gray-700 text-right">
+                {noDataPixels.toLocaleString()}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">NoData Value</span>
+              <span className="text-sm font-medium text-gray-700 text-right">
+                {metadata.noDataValue ?? 'None'}
               </span>
             </div>
           </div>
@@ -141,15 +147,9 @@ const AboutTiffDialog: React.FC<AboutTiffDialogProps> = ({
           <div className="space-y-1">
             <h4 className="text-sm font-medium text-gray-700 mb-2">Properties</h4>
             <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">CRS:</span>
+              <span className="text-sm text-gray-600">CRS</span>
               <span className="text-sm font-medium text-gray-700 text-right">
                 {getCRSName(metadata.projection.sourceCRS)}
-              </span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-gray-600">NoData Value:</span>
-              <span className="text-sm font-medium text-gray-700 text-right">
-                {metadata.noDataValue ?? 'None'}
               </span>
             </div>
           </div>

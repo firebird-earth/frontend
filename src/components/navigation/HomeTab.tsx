@@ -8,7 +8,7 @@ import { setCurrentAOI } from '../../store/slices/home/actions';
 import { navigateToLocation } from '../../utils/map';
 import { useAOI } from '../../hooks/useAOI';
 import locations from '../../constants/places/locations';
-import { SCENARIO_A_EXPRESSION } from '../../query/expressions';
+import { scenarios } from '../../constants/maps/layers/scenarios';
 import { store } from '../../store';
 import { execExpression } from '../../query/exec';
 import { showDialog } from '../../store/slices/uiSlice';
@@ -40,13 +40,13 @@ const HomeTab: React.FC = () => {
     dispatch(startCreatingAOI());
   };
 
-  const handleScenarioClick = (expression: string) => {
+  const handleScenarioClick = (scenario: Scenario) => {
     if (!currentAOI) {
       setShowDialog(true);
       return;
     }
     try {
-      const ast = execExpression(expression);
+      execExpression(scenario.expression);
     } catch (error) {
       console.error('Failed to exec expression:', error);
     }
@@ -85,18 +85,12 @@ const HomeTab: React.FC = () => {
                 `}
               >
                 <div className="flex items-center space-x-2">
-                  <NavigationIcon className={`h-4 w-4 ${isActive(location.id) ? 'text-blue-500 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                  <MapPin className={`h-4 w-4 ${isActive(location.id) ? 'text-blue-500 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
                   <span className={`text-sm ${isActive(location.id) ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
                     {location.name}
                   </span>
                 </div>
-                <div className="text-gray-400 dark:text-gray-500">
-                  {isActive(location.id) ? (
-                    <MapPin className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-                  ) : (
-                    <MapPinOff className="h-4 w-4" />
-                  )}
-                </div>
+
               </div>
             ))}
 
@@ -113,17 +107,10 @@ const HomeTab: React.FC = () => {
                 `}
               >
                 <div className="flex items-center space-x-2">
-                  <NavigationIcon className={`h-4 w-4 ${isActive(aoi.id) ? 'text-blue-500 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
+                  <MapPin className={`h-4 w-4 ${isActive(aoi.id) ? 'text-blue-500 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
                   <span className={`text-sm ${isActive(aoi.id) ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
                     {aoi.name}
                   </span>
-                </div>
-                <div className="text-gray-400 dark:text-gray-500">
-                  {isActive(aoi.id) ? (
-                    <MapPin className="h-4 w-4 text-blue-500 dark:text-blue-400" />
-                  ) : (
-                    <MapPinOff className="h-4 w-4" />
-                  )}
                 </div>
               </div>
             ))}
@@ -133,20 +120,24 @@ const HomeTab: React.FC = () => {
 
       <div>
         <SectionHeader 
-          title="Scenarios" 
+          title="Wildfire Mitigation" 
           isOpen={sections.scenarios} 
           onToggle={() => dispatch(toggleSection('scenarios'))}
           showAdd
         />
         {sections.scenarios && (
           <div className="space-y-1">
-            <button
-              onClick={() => handleScenarioClick(SCENARIO_A_EXPRESSION)}
-              className="w-full flex items-center space-x-2 p-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
-            >
-              <Zap className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <span>Scenario A</span>
-            </button>
+            {scenarios.map(scenario => (
+              <button
+                key={scenario.id}
+                onClick={() => handleScenarioClick(scenario)}
+                className="w-full flex items-center space-x-2 p-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
+                title={scenario.expression.replace(/"/g, '')}
+              >
+                <Zap className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+                <span>{scenario.name}</span>
+              </button>
+            ))}
           </div>
         )}
       </div>

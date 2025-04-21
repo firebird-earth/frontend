@@ -220,7 +220,4 @@ export const layersReducer = createReducer(initialState, (builder) => {
 
       category.layers.push(layer);
     })
-    .addCase(actions.setSlopeRenderingRule, (state, action) => {
-      state.slopeRenderingRule = action.payload;
-    });
 });

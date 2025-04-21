@@ -34,6 +34,3 @@ export const bringLayerToFront = createAction<ToggleLayerPayload>('layers/bringL
 export const sendLayerToBack = createAction<ToggleLayerPayload>('layers/sendLayerToBack');
 export const bringLayerForward = createAction<ToggleLayerPayload>('layers/bringLayerForward');
 export const sendLayerBackward = createAction<ToggleLayerPayload>('layers/sendLayerBackward');
-
-// Slope rendering actions
-export const setSlopeRenderingRule = createAction<string>('layers/setSlopeRenderingRule');

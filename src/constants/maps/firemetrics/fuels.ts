@@ -8,7 +8,7 @@ import { STORAGE } from '../../../constants/urls';
 
 export const FUELS = {
   name: 'fuels',
-  label: 'Fules',
+  label: 'Fuels',
   CANOPY_BULK_DENSITY: {
     name: 'Canopy Bulk Density',
     description: 'Forest canopy bulk density',

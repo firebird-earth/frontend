@@ -18,7 +18,6 @@ import {
   GeoTiffLayer
 } from '../layers/maps';
 import AOIBoundaryLayer from '../layers/home/AOIBoundaryLayer';
-import ValueTooltipControl from '../controls/ValueTooltipControl';
 import { getOrderedGeoTiffLayers } from '../../store/slices/layers';
 
 const MapLayers: React.FC = () => {
@@ -113,14 +112,6 @@ const MapLayers: React.FC = () => {
           layerId={layer.id}
         />
       ))}
-
-      {layerWithValues && (
-        <ValueTooltipControl
-          categoryId={layerWithValues.categoryId}
-          layerId={layerWithValues.layer.id}
-          layer={layerWithValues.layer}
-        />
-      )}
     </>
   );
 };

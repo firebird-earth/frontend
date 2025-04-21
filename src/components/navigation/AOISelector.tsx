@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MapPin, Plus, Navigation, MapPinOff } from 'lucide-react';
+import { Plus, Navigation } from 'lucide-react';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { setCurrentAOI } from '../../store/slices/home/actions';
@@ -19,7 +19,6 @@ const AOISelector: React.FC<AOISelectorProps> = ({ onClose }) => {
   const isNavOpen = useAppSelector(state => state.ui.isNavOpen);
   const dropdownRef = useRef<HTMLDivElement>(null);
   
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -34,7 +33,6 @@ const AOISelector: React.FC<AOISelectorProps> = ({ onClose }) => {
   }, [onClose]);
   
   const handleSelectLocation = (location: any) => {
-    // Make sure we have valid coordinates before navigating
     if (location && location.coordinates) {
       dispatch(setCurrentAOI(location));
       navigateToLocation(location);
@@ -84,17 +82,17 @@ const AOISelector: React.FC<AOISelectorProps> = ({ onClose }) => {
             key={location.id}
             onClick={() => handleSelectLocation(location)}
             className={`
-              w-full flex items-center justify-between px-3 py-2 rounded-md text-left
+              w-full flex items-center px-3 py-2 rounded-md text-left
               ${isActive(location.id)
                 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                 : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}
             `}
           >
             <div className="flex items-center space-x-2">
-              <MapPin className={`h-4 w-4 ${isActive(location.id) ? 'text-blue-500 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
+              <Navigation className={`h-4 w-4 ${isActive(location.id) ? 'text-blue-500 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
               <span className="text-sm">{location.name}</span>
             </div>
-         </button>
+          </button>
         ))}
 
         {aois.map(aoi => (
@@ -102,7 +100,7 @@ const AOISelector: React.FC<AOISelectorProps> = ({ onClose }) => {
             key={aoi.id}
             onClick={() => handleAOIClick(aoi)}
             className={`
-              flex items-center justify-between p-1 rounded-lg cursor-pointer
+              flex items-center p-1 rounded-lg cursor-pointer
               ${isActive(aoi.id)
                 ? 'bg-blue-50 dark:bg-blue-900/20' 
                 : 'hover:bg-gray-50 dark:hover:bg-gray-700'
@@ -110,7 +108,7 @@ const AOISelector: React.FC<AOISelectorProps> = ({ onClose }) => {
             `}
           >
             <div className="flex items-center space-x-2">
-              <MapPin className={`h-4 w-4 ${isActive(aoi.id) ? 'text-blue-500 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
+              <Navigation className={`h-4 w-4 ${isActive(aoi.id) ? 'text-blue-500 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
               <span className={`text-sm ${isActive(aoi.id) ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
                 {aoi.name}
               </span>

@@ -1,6 +1,6 @@
 import { LayersState } from './types';
 import { LayerType, MapLayer } from '../../../types/map';
-import { TILE_LAYERS, WUI_LAYER, CRISIS_AREAS_LAYER, GEOTIFF_LAYERS } from '../../../constants/urls';
+import { BASEMAP_LAYERS, WUI_LAYER, CRISIS_AREAS_LAYER, GEOTIFF_LAYERS } from '../../../constants/urls';
 import { createInitialCategory } from '../common/utils/utils';
 import { JURISDICTIONS, JURISDICTIONS_CATEGORY } from '../../../constants/maps/layers/jurisdictions';
 import { BASEMAPS, BASEMAPS_CATEGORY } from '../../../constants/maps/layers/basemaps';
@@ -16,7 +16,7 @@ import { TRANSPORTATION, TRANSPORTATION_CATEGORY } from '../../../constants/maps
 import { WATER, WATER_CATEGORY } from '../../../constants/maps/layers/water';
 import { INFRASTRUCTURE, INFRASTRUCTURE_CATEGORY } from '../../../constants/maps/layers/infrastructure';
 import { RESTORATION_CLASS, RESTORATION_CLASS_CATEGORY } from '../../../constants/maps/layers/restorationClass';
-import { SCENARIOS, SCENARIOS_CATEGORY } from '../../../constants/maps/layers/scenarios';
+import { SCENARIOS_CATEGORY } from '../../../constants/maps/layers/scenarios';
 import L from 'leaflet';
 
 // Create a WeakMap to store Leaflet layer instances
@@ -30,9 +30,10 @@ export const paneCounters: Record<string, number> = {
 
 export const initialState: LayersState = {
   categories: {
+    
     scenarios: SCENARIOS_CATEGORY,
-    valueAtRisk: VALUE_AT_RISK_CATEGORY,
     landscapeRisk: LANDSCAPE_RISK_CATEGORY,
+    valueAtRisk: VALUE_AT_RISK_CATEGORY,
     fuels: FUELS_CATEGORY,
       
     basemaps: BASEMAPS_CATEGORY,
@@ -46,8 +47,6 @@ export const initialState: LayersState = {
     restorationClass: RESTORATION_CLASS_CATEGORY,
     habitat: HABITAT_CATEGORY
   },
-  
   loading: false,
-  error: null,
-  slopeRenderingRule: 'Hillshade Gray'
+  error: null
 };

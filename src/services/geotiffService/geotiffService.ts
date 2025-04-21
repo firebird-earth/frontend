@@ -35,14 +35,8 @@ class GeoTiffService {
     return this.cache;
   }
 
-  // New method for layerCache compatibility
-  public async getLayerData(layer: MapLayer): Promise<ArrayBuffer> {
-    return this.getGeoTiffData(layer.source);
-  }
-
-  // New method for layerCache compatibility
-  public async getLayerMetadata(layer: MapLayer): Promise<GeoTiffMetadata> {
-    return this.getGeoTiffMetadata(layer.source);
+  public validateGeoTiff(arrayBuffer: ArrayBuffer): void {
+    validateGeoTiff(arrayBuffer);
   }
 
   public async getGeoTiffData(url: string, onProgress?: (progress: number) => void): Promise<ArrayBuffer> {
@@ -123,7 +117,7 @@ class GeoTiffService {
     }
     
     try {
-      // Load the GeoTIFF data
+      // Load and process GeoTIFF
       const arrayBuffer = await loadGeoTiffFromUrl(url, onProgress);
       validateGeoTiff(arrayBuffer);
 

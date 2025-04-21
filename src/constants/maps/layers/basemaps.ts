@@ -2,13 +2,13 @@ import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
 import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
-import { TILE_LAYERS } from '../../urls';
+import { BASEMAP_LAYERS } from '../../urls';
 
 export const BASEMAPS = {
   STREET: {
     name: 'Street',
     type: LayerType.Basemap,
-    source: TILE_LAYERS.STREET,
+    source: BASEMAP_LAYERS.STREET,
     description: 'OpenStreetMap standard style',
     units: '',
     colorScheme: 'none',
@@ -19,7 +19,7 @@ export const BASEMAPS = {
   STREET_LIGHT: {
     name: 'Street (light)',
     type: LayerType.Basemap,
-    source: TILE_LAYERS.STREET_LIGHT,
+    source: BASEMAP_LAYERS.STREET_LIGHT,
     description: 'Light-colored street map style',
     units: '',
     colorScheme: 'none',
@@ -30,7 +30,7 @@ export const BASEMAPS = {
   TERRAIN: {
     name: 'Terrain',
     type: LayerType.Basemap,
-    source: TILE_LAYERS.TERRAIN,
+    source: BASEMAP_LAYERS.TERRAIN,
     description: 'Topographic map style',
     units: '',
     colorScheme: 'none',
@@ -41,7 +41,7 @@ export const BASEMAPS = {
   SATELLITE: {
     name: 'Satellite',
     type: LayerType.Basemap,
-    source: TILE_LAYERS.SATELLITE,
+    source: BASEMAP_LAYERS.SATELLITE,
     description: 'Aerial/satellite imagery',
     units: '',
     colorScheme: 'none',
@@ -52,7 +52,7 @@ export const BASEMAPS = {
   TOPO: {
     name: 'Topographic',
     type: LayerType.Basemap,
-    source: TILE_LAYERS.TOPO,
+    source: BASEMAP_LAYERS.TOPO,
     description: 'USGS topographic map style',
     units: '',
     colorScheme: 'none',

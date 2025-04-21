@@ -2,14 +2,32 @@ import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
 import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
+import { STORAGE } from '../../../constants/urls';
+import { colorSchemes } from '../../../constants/colors';
 
 export const VALUE_AT_RISK = {
   name: 'valueAtRisk',
   label: 'Value at Risk',
   FIRESHEDS: {
-    name: 'Firesheds',
+    name: '24 Hour Fireshed',
     description: 'Fireshed boundaries',
     units: 'category',
+    colorScheme: 'none',
+    type: LayerType.Vector,
+    source: 'USFS Fire Modeling Institute'
+  },
+  STRUCTURE_BURN_HAZARD: {
+    name: 'Structure Burn Risk',
+    description: 'Structure burn risk levels',
+    type: LayerType.GeoTiff,
+    source: `${STORAGE}/TMV/structure_burn_risk.tif`,
+    units: '% of Structures Burned',
+    colorScheme: colorSchemes.greenYellowRed.name,
+  },
+  STRUCTURE_BURN_INFLUENCE: {
+    name: 'Structure Burn Influence',
+    description: 'Structure burn influence zones',
+    units: 'index',
     colorScheme: 'none',
     type: LayerType.Vector,
     source: 'USFS Fire Modeling Institute'
@@ -22,22 +40,6 @@ export const VALUE_AT_RISK = {
     type: LayerType.Vector,
     source: 'USFS Fire Modeling Institute'
   },
-  STRUCTURE_BURN_HAZARD: {
-    name: 'Structure Burn Risk',
-    description: 'Structure burn risk levels',
-    units: 'level',
-    colorScheme: 'none',
-    type: LayerType.Vector,
-    source: 'USFS Fire Modeling Institute'
-  },
-  STRUCTURE_BURN_INFLUENCE: {
-    name: 'Structure Burn Influence',
-    description: 'Structure burn influence zones',
-    units: 'index',
-    colorScheme: 'none',
-    type: LayerType.Vector,
-    source: 'USFS Fire Modeling Institute'
-  }
 } as const;
 
 // Layer category constant

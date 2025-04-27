@@ -9,6 +9,9 @@ export interface AOI {
     zoom: number;
   };
   boundary?: GeoJSON.FeatureCollection;
+  boundaryRadius: number;
+  bufferedRadius: number;
+  bufferedBounds: BoundingBox;
   tags: string[];
   createdAt: string;
   updatedAt: string;

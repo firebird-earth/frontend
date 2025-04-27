@@ -47,28 +47,6 @@ export function createTileLayer(categoryId: string, config: LayerConfig) {
     );
   };
 
-  // Add Legend component if legend config exists
-  if (config.legend) {
-    TileLayerInstance.Legend = () => (
-      <div className="space-y-2">
-        {config.legend.items.map((item, index) => (
-          <div key={index} className="flex items-center space-x-2">
-            <div 
-              className="w-6 h-6 rounded" 
-              style={{ backgroundColor: item.color }}
-            />
-            <span className="text-xs text-gray-600">
-              {item.label}
-            </span>
-          </div>
-        ))}
-        <div className="mt-2 text-xs text-gray-500 dark:text-gray-400 italic">
-          Source: {config.description}
-        </div>
-      </div>
-    );
-  }
-
   TileLayerInstance.displayName = `${config.name}Layer`;
   return TileLayerInstance;
 }

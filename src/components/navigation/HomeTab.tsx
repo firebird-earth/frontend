@@ -13,11 +13,15 @@ import { store } from '../../store';
 import { execExpression } from '../../query/exec';
 import { showDialog } from '../../store/slices/uiSlice';
 import SelectAOIDialog from '../../components/aoi/SelectAOIDialog';
+import { toggleLayer, toggleSingleLayer } from '../../store/slices/layers';
+import { hashString } from '../../utils/utils';
+import { MapLayer } from '../../types/map'
 
 const HomeTab: React.FC = () => {
   const dispatch = store.dispatch;
   const sections = useAppSelector(state => state.ui.sections);
   const currentAOI = useAppSelector(state => state.home.aoi.current);
+  const scenarioLayers = useAppSelector(state => state.layers.categories.scenarios?.layers || []);
   const { aois } = useAOI();
   const [showDialog, setShowDialog] = useState(false);
 
@@ -40,16 +44,14 @@ const HomeTab: React.FC = () => {
     dispatch(startCreatingAOI());
   };
 
-  const handleScenarioClick = (scenario: Scenario) => {
+  const handleScenarioClick = (layer: MapLayer) => {
     if (!currentAOI) {
       setShowDialog(true);
       return;
     }
-    try {
-      execExpression(scenario.expression);
-    } catch (error) {
-      console.error('Failed to exec expression:', error);
-    }
+    console.log('[HomeTab dispatch toggleSingleLayer')
+    //const layerId = hashString(`${layer.name}-${layer.expression}`);
+    dispatch(toggleSingleLayer({ categoryId: 'scenarios', layerId: layer.id }));
   };
 
   const isActive = (id: number | string) => {
@@ -72,28 +74,6 @@ const HomeTab: React.FC = () => {
         />
         {sections.aois && (
           <div className="space-y-1">
-            {locations.map(location => (
-              <div
-                key={location.id}
-                onClick={() => handleLocationClick(location)}
-                className={`
-                  flex items-center justify-between p-1 rounded-lg cursor-pointer
-                  ${isActive(location.id)
-                    ? 'bg-blue-50 dark:bg-blue-900/20' 
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-700'
-                  }
-                `}
-              >
-                <div className="flex items-center space-x-2">
-                  <MapPin className={`h-4 w-4 ${isActive(location.id) ? 'text-blue-500 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
-                  <span className={`text-sm ${isActive(location.id) ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
-                    {location.name}
-                  </span>
-                </div>
-
-              </div>
-            ))}
-
             {aois.map(aoi => (
               <div
                 key={aoi.id}
@@ -120,24 +100,24 @@ const HomeTab: React.FC = () => {
 
       <div>
         <SectionHeader 
-          title="Wildfire Mitigation" 
+          title="Mitigation Scenarios" 
           isOpen={sections.scenarios} 
           onToggle={() => dispatch(toggleSection('scenarios'))}
           showAdd
         />
         {sections.scenarios && (
           <div className="space-y-1">
-            {scenarios.map(scenario => (
-              <button
-                key={scenario.id}
-                onClick={() => handleScenarioClick(scenario)}
-                className="w-full flex items-center space-x-2 p-1 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg"
-                title={scenario.expression.replace(/"/g, '')}
-              >
-                <Zap className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-                <span>{scenario.name}</span>
-              </button>
-            ))}
+            {scenarioLayers.map(layer => (
+            <button
+              key={layer.id}
+              onClick={() => handleScenarioClick(layer)}
+              className={`w-full flex items-center space-x-2 p-1 text-sm text-gray-700 dark:text-gray-300 rounded-lg ${layer.active ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+              title={layer.expression}
+            >
+              <Zap className="h-4 w-4 text-gray-500 dark:text-gray-400" />
+              <span>{layer.name}</span>
+            </button>
+          ))}
           </div>
         )}
       </div>

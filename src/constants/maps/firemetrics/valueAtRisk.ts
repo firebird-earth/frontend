@@ -20,7 +20,7 @@ export const VALUE_AT_RISK = {
     name: 'Structure Burn Risk',
     description: 'Structure burn risk levels',
     type: LayerType.GeoTiff,
-    source: `${STORAGE}/TMV/structure_burn_risk.tif`,
+    source: `${STORAGE}/{aoi}/structure_burn_risk.tif`,
     units: '% of Structures Burned',
     colorScheme: colorSchemes.greenYellowRed.name,
   },
@@ -35,10 +35,10 @@ export const VALUE_AT_RISK = {
   STRUCTURE_BURN_FREQUENCY: {
     name: 'Structure Burn Exposure',
     description: 'Frequency of structures burning',
-    units: 'fires/year',
-    colorScheme: 'none',
-    type: LayerType.Vector,
-    source: 'USFS Fire Modeling Institute'
+    type: LayerType.GeoTiff,
+    source: `${STORAGE}/{aoi}/structure_burn_exposure.tif`,
+    units: '% of fires that burn structures',
+    colorScheme: colorSchemes.greenYellowRed.name,
   },
 } as const;
 

@@ -13,7 +13,7 @@ export const LANDSCAPE_RISK = {
     name: 'Burn Probability',
     description: 'Annual burn probability',
     type: LayerType.GeoTiff,
-    source: `${STORAGE}/TMV/burn_probability.tif`,
+    source: `${STORAGE}/{aoi}/burn_probability.tif`,
     units: 'probability',
     colorScheme: colorSchemes.burnProbability.name
   },
@@ -21,7 +21,7 @@ export const LANDSCAPE_RISK = {
     name: 'Flame Length',
     description: 'Conditional flame length',
     type: LayerType.GeoTiff,
-    source: `${STORAGE}/TMV/flame_length.tif`,
+    source: `${STORAGE}/{aoi}/flame_length.tif`,
     units: 'feet',
     colorScheme: colorSchemes.fireIntensity.name,
     domain: [0, 100] // Flame length range in feet
@@ -47,10 +47,10 @@ export const LANDSCAPE_RISK = {
   TRANSMISSION_INDEX: {
     name: 'Explosive Fire Risk',
     description: 'Explosive Fire Risk',
-    type: LayerType.Vector,
-    source: 'USFS Fire Modeling Institute',
+    type: LayerType.GeoTiff,
+    source: `${STORAGE}/{aoi}/explosive_fire_risk.tif`,
     units: 'index',
-    colorScheme: 'none',
+    colorScheme: colorSchemes.greenYellowRed.name,
     domain: [0, 100] // Transmission index range
   },
   TRANSMISSION_INFLUENCE: {

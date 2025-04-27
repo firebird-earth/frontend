@@ -3,19 +3,26 @@
  *   - Raster layer names (e.g., burn, slope)
  *   - Vector layer attributes (e.g., landownership)
  *   - Predefined constants (e.g., thresholds)
+ *
  * Supports:
  *   - Logical ops: AND, OR, NOT
  *   - Comparison ops: >, <, >=, <=, ==, !=
  *   - Math ops: +, -, *, /
  *   - Unary negation (e.g., -slope or -5)
- *   - Functions: abs(), min(), max(), distance_to(), mask()
+ *   - Functions: abs(), min(), max()
+ *   - Vector-to-raster functions:
+ *       - mask(layer)
+ *       - label(layer, "attribute")
+ *       - category(layer, "attribute")
+ *       - distance_to(layer)
+ *       - edge(layer)
  *   - Spatial ops: INTERSECTS(), WITHIN(), CONTAINS(), TOUCHES()
  *   - Categorical IN queries: e.g., ownership IN ('federal', 'blm')
  *   - Null checks: IS NULL, IS NOT NULL
  *   - Range checks: BETWEEN a AND b
  *   - Ternary expressions: condition ? value1 : value2
  *   - Variable assignment (LET var = expr)
- *   - Parentheses for grouping
+ *   - Unit literals: e.g., 0.25 miles, 1000 meters, 500 ft
  *   - Comments using // or #
  *   - Support for named constants and string escaping (e.g., 'O\'Connor')
  *   - Support for quoted layer names with spaces (e.g., "Canopy Bulk Density")
@@ -76,14 +83,37 @@ export function parseExpression(expr: string): ASTNode | ASTNodeMap {
     return token;
   }
 
+  function convertToMeters(value: number, unit: string): number {
+    switch (unit.toLowerCase()) {
+      case 'mile':
+      case 'miles': return value * 1609.34;
+      case 'km': return value * 1000;
+      case 'meter':
+      case 'meters': return value;
+      case 'ft':
+      case 'feet': return value * 0.3048;
+      default: throw new Error(`Unknown unit: ${unit}`);
+    }
+  }
+
   function parseValue(token: string): ASTNode {
     if (/^".*"$/.test(token)) return { type: 'layer', name: token.slice(1, -1) };
     if (/^'.*'$/.test(token)) return { type: 'literal', value: token.slice(1, -1).replace(/\\'/g, "'") };
     if (token === 'true') return { type: 'literal', value: true };
     if (token === 'false') return { type: 'literal', value: false };
     if (token === 'null') return { type: 'literal', value: null };
+
     const num = parseFloat(token);
-    return isNaN(num) ? { type: 'layer', name: token } : { type: 'literal', value: num };
+    if (!isNaN(num)) {
+      const next = peek();
+      if (next && ['miles', 'mile', 'km', 'meters', 'meter', 'ft', 'feet'].includes(next.toLowerCase())) {
+        const unit = consume();
+        return { type: 'literal', value: convertToMeters(num, unit) };
+      }
+      return { type: 'literal', value: num };
+    }
+
+    return { type: 'layer', name: token };
   }
 
   function parseAtom(): ASTNode {
@@ -101,7 +131,9 @@ export function parseExpression(expr: string): ASTNode | ASTNodeMap {
       consume('-');
       return { op: 'neg', expr: parseAtom() };
     }
+
     const token = consume();
+
     if (peek() === '(') {
       const fnName = token.toLowerCase();
       consume('(');
@@ -111,11 +143,21 @@ export function parseExpression(expr: string): ASTNode | ASTNodeMap {
         if (peek() === ',') consume(',');
       }
       consume(')');
-      if (["intersects", "within", "contains", "touches", "distance_to"].includes(fnName)) {
+
+      const spatialOps = ["intersects", "within", "contains", "touches"];
+      const vectorRasterFns = ["mask", "label", "category", "distance_to", "edge"];
+
+      if (spatialOps.includes(fnName)) {
         return { op: fnName, args };
       }
-      return { type: 'function', name: fnName, args }; // includes mask()
+
+      if (vectorRasterFns.includes(fnName)) {
+        return { type: 'function', name: fnName, args };
+      }
+
+      return { type: 'function', name: fnName, args };
     }
+
     if (peek() === 'IN') {
       const layer = parseValue(token);
       consume('IN');
@@ -128,6 +170,7 @@ export function parseExpression(expr: string): ASTNode | ASTNodeMap {
       consume(')');
       return { op: 'in', layer, values };
     }
+
     if (peek() === 'IS') {
       const layer = parseValue(token);
       consume('IS');
@@ -140,6 +183,7 @@ export function parseExpression(expr: string): ASTNode | ASTNodeMap {
         return { op: 'isnull', layer };
       }
     }
+
     if (peek() === 'BETWEEN') {
       const layer = parseValue(token);
       consume('BETWEEN');
@@ -148,6 +192,7 @@ export function parseExpression(expr: string): ASTNode | ASTNodeMap {
       const high = parseAddSub();
       return { op: 'between', layer, low, high };
     }
+
     return assignments[token] || parseValue(token);
   }
 

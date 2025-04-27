@@ -1,10 +1,11 @@
+import * as L from 'leaflet';
 import { MapLayer } from '../types/map';
 import { ArcTiffExportParams } from '../services/arcGISTiffService/types';
 import * as GeoTIFF from 'geotiff';
 import { RasterData } from '../types/map';
 import { arcGISTiffService } from '../services/arcGISTiffService';
 
-export async function fetchArcGISTiffLayer(layer: MapLayer): Promise<[RasterData, any]> {
+export async function fetchArcGISTiffLayer(layer: MapLayer, bounds: L.LatLngBounds): Promise<[RasterData, GeoTiffMetadata]> {
   
   console.log(`[LayerDataCache] Starting Image Service fetch for: ${layer.name}`);
   
@@ -24,13 +25,7 @@ export async function fetchArcGISTiffLayer(layer: MapLayer): Promise<[RasterData
 
     // Get the map instance
     const map = window.leafletMap;
-    if (!map) {
-      throw new Error('Map instance not found');
-    }
-
-    // Get current map bounds and size
-    const bounds = map.getBounds();
-    const size = map.getSize();
+    //const bounds = map.getBounds();
     const zoom = map.getZoom();
     const pixelsPerDegree = Math.pow(2, zoom + 8) / 360;
     const degreesLng = Math.abs(bounds.getEast() - bounds.getWest());

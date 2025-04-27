@@ -14,6 +14,9 @@ import MapClickHandler from './MapClickHandler';
 import LocationMarkers from './LocationMarkers';
 import MapControls from './MapControls';
 import MapLayers from './MapLayers';
+import { MapPane } from '../../types/map'
+import { PaneZIndex } from '../../types/map'
+
 import 'leaflet/dist/leaflet.css';
 
 // Fix for default marker icons in React-Leaflet
@@ -48,12 +51,14 @@ const MapComponent: React.FC = () => {
     const map = mapRef.current;
 
     // Create panes with specific z-index values that sit below the default feature pane
+    map.createPane('scenariosPane');
     map.createPane('firemetricsPane');
     map.createPane('layersPane');
-    
+
     // Set z-index for each pane (default feature pane is 400)
-    map.getPane('firemetricsPane')!.style.zIndex = '375';
-    map.getPane('layersPane')!.style.zIndex = '350';
+    map.getPane('scenariosPane')!.style.zIndex = PaneZIndex[MapPane.ScenariosPane].toString();
+    map.getPane('firemetricsPane')!.style.zIndex = PaneZIndex[MapPane.FiremetricsPane].toString();
+    map.getPane('layersPane')!.style.zIndex = PaneZIndex[MapPane.LayersPane].toString();
 
     // Ensure pointer events are enabled
     map.getPane('firemetricsPane')!.style.pointerEvents = 'auto';

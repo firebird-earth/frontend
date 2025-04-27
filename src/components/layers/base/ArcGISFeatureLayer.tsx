@@ -33,6 +33,7 @@ interface FeatureLayerProps {
 }
 
 export function createFeatureLayer(categoryId: string, config: LayerConfig) {
+  
   // Get the style from the first legend item if it exists
   const baseStyle = config.legend?.items[0] || {
     color: '#374151',
@@ -58,15 +59,6 @@ export function createFeatureLayer(categoryId: string, config: LayerConfig) {
         style={baseStyle}
       />
     );
-  };
-
-  // Create layer object with legend configuration
-  const layer = {
-    name: config.name,
-    type: LayerType.ArcGISFeatureService,
-    source: config.source,
-    active: false,
-    legend: config.legend // Make sure to include the legend configuration
   };
 
   FeatureLayerInstance.displayName = `${config.name}Layer`;

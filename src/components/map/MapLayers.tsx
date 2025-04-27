@@ -1,6 +1,4 @@
-// src/components/map/MapLayers.tsx
-import React from 'react';
-import { useAppSelector } from '../../hooks/useAppSelector';
+import React, { useMemo } from 'react';
 import { TileLayer } from 'react-leaflet';
 import { 
   StatesLayer,
@@ -15,60 +13,97 @@ import {
   ContourLayer,
   WUILayer,
   ElevationLayer,
-  GeoTiffLayer
+  GeoTiffLayer,
 } from '../layers/maps';
+import QueryLayer from '../layers/home/QueryLayer';
 import AOIBoundaryLayer from '../layers/home/AOIBoundaryLayer';
 import { getOrderedGeoTiffLayers } from '../../store/slices/layers';
+import { useAppSelector } from '../../hooks/useAppSelector';
+import { leafletLayerMap } from '../../store/slices/layers/state';
+
+function hashString(input: string): string {
+  let hash = 0;
+  for (let i = 0; i < input.length; i++) {
+    const chr = input.charCodeAt(i);
+    hash = (hash << 5) - hash + chr;
+    hash |= 0;
+  }
+  return Math.abs(hash).toString(36);
+}
 
 const MapLayers: React.FC = () => {
   const { categories } = useAppSelector(state => state.layers);
   const currentAOI = useAppSelector(state => state.home.aoi.current);
   const coordinates = useAppSelector(state => state.home.aoi.coordinates);
-  
-  const activeBasemap = categories.basemaps?.layers.find(l => l.active);
-  const wuiLayer = categories.wildfire?.layers.find(l => l.name === 'WUI' && l.active);
-  const crisisAreasLayer = categories.wildfire?.layers.find(l => l.name === 'Wildfire Crisis Areas' && l.active);
-  const statesLayer = categories.jurisdictions?.layers.find(l => l.name === 'States' && l.active);
-  const countiesLayer = categories.jurisdictions?.layers.find(l => l.name === 'Counties' && l.active);
-  const federalLandsLayer = categories.jurisdictions?.layers.find(l => l.name === 'US Federal Lands' && l.active);
-  const usfsLayer = categories.jurisdictions?.layers.find(l => l.name === 'US Forest Service' && l.active);
-  const usfwsLayer = categories.jurisdictions?.layers.find(l => l.name === 'US Fish and Wildlife' && l.active);
-  
-  // Get elevation layers - only if active
-  const elevationLayer = categories.elevation?.layers.find(l => l.name === 'Elevation' && l.active);
-  const hillshadeLayer = categories.elevation?.layers.find(l => l.name === 'Hillshade' && l.active);
-  const aspectLayer = categories.elevation?.layers.find(l => l.name === 'Aspect' && l.active);
-  const slopeLayer = categories.elevation?.layers.find(l => l.name === 'Slope Steepness' && l.active);
-  const contourLayer = categories.elevation?.layers.find(l => l.name === 'Contour' && l.active);
-  
-  // Get active GeoTIFF layers in order with their categories
-  const activeGeoTiffLayers = getOrderedGeoTiffLayers(categories).filter(({ layer }) => layer.active);
-  
-  // Find any layer with showValues enabled
-  const layerWithValues = React.useMemo(() => {
-    return Object.entries(categories).flatMap(([categoryId, category]) => 
-      category.layers
-        .filter(layer => layer.showValues && layer.active)
-        .map(layer => ({ categoryId, layer }))
-    )[0];
-  }, [categories]);
+
+  const {
+    basemaps,
+    wildfire,
+    jurisdictions,
+    elevation,
+    scenarios: scenarioCategory,
+  } = categories;
+
+  const {
+    activeBasemap,
+    activeLayers,
+    scenarioLayers,
+    activeGeoTiffLayers,
+  } = useMemo(() => {
+    const activeBasemap = basemaps?.layers.find(l => l.active);
+
+    const activeLayers = {
+      wui: wildfire?.layers.find(l => l.name === 'WUI' && l.active),
+      crisis: wildfire?.layers.find(l => l.name === 'Wildfire Crisis Areas' && l.active),
+      states: jurisdictions?.layers.find(l => l.name === 'States' && l.active),
+      counties: jurisdictions?.layers.find(l => l.name === 'Counties' && l.active),
+      federal: jurisdictions?.layers.find(l => l.name === 'US Federal Lands' && l.active),
+      usfs: jurisdictions?.layers.find(l => l.name === 'US Forest Service' && l.active),
+      usfws: jurisdictions?.layers.find(l => l.name === 'US Fish and Wildlife' && l.active),
+      elevation: elevation?.layers.find(l => l.name === 'Elevation' && l.active),
+      hillshade: elevation?.layers.find(l => l.name === 'Hillshade' && l.active),
+      aspect: elevation?.layers.find(l => l.name === 'Aspect' && l.active),
+      slope: elevation?.layers.find(l => l.name === 'Slope Steepness' && l.active),
+      contour: elevation?.layers.find(l => l.name === 'Contour' && l.active),
+    };
+
+    const scenarioLayers = scenarioCategory?.layers || [];
+
+    const activeGeoTiffLayers = getOrderedGeoTiffLayers(categories)
+      .filter(({ layer }) => layer.active);
+
+    return {
+      activeBasemap,
+      activeLayers,
+      scenarioLayers,
+      activeGeoTiffLayers,
+    };
+  }, [basemaps, wildfire, jurisdictions, elevation, scenarioCategory, categories]);
+
+  const { displayCoords, boundary } = useMemo(() => {
+    if (currentAOI) {
+      if ('location' in currentAOI) {
+        return {
+          displayCoords: [currentAOI.location.center[1], currentAOI.location.center[0]] as [number, number],
+          boundary: currentAOI.boundary || null
+        };
+      }
+      if ('coordinates' in currentAOI) {
+        return {
+          displayCoords: [currentAOI.coordinates[1], currentAOI.coordinates[0]] as [number, number],
+          boundary: currentAOI.boundary || null
+        };
+      }
+    } else if (coordinates) {
+      return {
+        displayCoords: [coordinates[1], coordinates[0]] as [number, number],
+        boundary: null
+      };
+    }
+    return { displayCoords: null, boundary: null };
+  }, [currentAOI, coordinates]);
 
   if (!activeBasemap) return null;
-
-  let displayCoords: [number, number] | null = null;
-  let boundary: GeoJSON.FeatureCollection | null = null;
-
-  if (currentAOI) {
-    if ('location' in currentAOI) {
-      displayCoords = [currentAOI.location.center[1], currentAOI.location.center[0]];
-      boundary = currentAOI.boundary || null;
-    } else if ('coordinates' in currentAOI) {
-      displayCoords = [currentAOI.coordinates[1], currentAOI.coordinates[0]];
-      boundary = currentAOI.boundary || null;
-    }
-  } else if (coordinates) {
-    displayCoords = [coordinates[1], coordinates[0]];
-  }
 
   return (
     <>
@@ -77,22 +112,52 @@ const MapLayers: React.FC = () => {
         maxZoom={22}
         minZoom={4}
       />
-      
-      {wuiLayer && <WUILayer active={true} />}
-      {crisisAreasLayer && <CrisisAreasLayer active={true} />}
-      {statesLayer && <StatesLayer active={true} />}
-      {countiesLayer && <CountiesLayer active={true} />}
-      {federalLandsLayer && <FederalLandsLayer active={true} />}
-      {usfsLayer && <USFSLayer active={true} />}
-      {usfwsLayer && <USFWSLayer active={true} />}
-      
+
+      {/* Scenario Layers */}
+      {scenarioLayers.map(layer => {
+        const scenarioKey = `scenario-${layer.name}-${hashString(layer.expression || '')}`;
+        
+        // Only render QueryLayer if:
+        // 1. Layer is active and not in leafletLayerMap, OR
+        // 2. Layer is inactive and IS in leafletLayerMap (needs cleanup)
+       // if (!layer.active && !leafletLayerMap.has(scenarioKey)) {
+       //   console.log('dont render QueryLayer', layer.name)
+       //   return null;
+       // }
+
+        console.log('[MapLayers] render QueryLayer', layer.name)
+        return (
+          <QueryLayer
+            key={layer.name}
+            active={layer.active}
+            scenario={{
+              name: layer.name,
+              description: layer.description || '',
+              expression: layer.expression || ''
+            }}
+          />
+        );
+      })}
+
+      {/* Jurisdiction Layers */}
+      {activeLayers.states && <StatesLayer active={true} />}
+      {activeLayers.counties && <CountiesLayer active={true} />}
+      {activeLayers.federal && <FederalLandsLayer active={true} />}
+      {activeLayers.usfs && <USFSLayer active={true} />}
+      {activeLayers.usfws && <USFWSLayer active={true} />}
+
       {/* Elevation Layers */}
-      {elevationLayer && <ElevationLayer active={true} />}
-      {slopeLayer && <SlopeLayer active={true} />}
-      {hillshadeLayer && <HillshadeLayer active={true} />}
-      {aspectLayer && <AspectLayer active={true} />}
-      {contourLayer && <ContourLayer active={true} />}
-      
+      {activeLayers.elevation && <ElevationLayer active={true} />}
+      {activeLayers.hillshade && <HillshadeLayer active={true} />}
+      {activeLayers.aspect && <AspectLayer active={true} />}
+      {activeLayers.slope && <SlopeLayer active={true} />}
+      {activeLayers.contour && <ContourLayer active={true} />}
+
+      {/* Wildfire Layers */}
+      {activeLayers.wui && <WUILayer active={true} />}
+      {activeLayers.crisis && <CrisisAreasLayer active={true} />}
+
+      {/* AOI Boundary */}
       {displayCoords && (
         <AOIBoundaryLayer
           locationId={currentAOI ? (typeof currentAOI.id === 'string' ? parseInt(currentAOI.id) : currentAOI.id) : 0}
@@ -102,14 +167,15 @@ const MapLayers: React.FC = () => {
         />
       )}
 
+      {/* GeoTIFF Layers */}
       {activeGeoTiffLayers.map(({ layer, categoryId }) => (
         <GeoTiffLayer
+          categoryId={categoryId}
+          layerId={layer.id}
           key={`${categoryId}-${layer.id}-${layer.name}-${layer.active}-${layer.order}`}
           url={layer.source}
           active={true}
           zIndex={layer.order || 0}
-          categoryId={categoryId}
-          layerId={layer.id}
         />
       ))}
     </>

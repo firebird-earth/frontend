@@ -8,6 +8,7 @@ import { toggleSettings, toggleNav, setActiveTab, setTheme } from '../../store/s
 import { initializeSettings } from '../../store/slices/settingsSlice';
 import firebirdLogo from '../../assets/firebird-logo.png';
 import CurrentAOI from '../header/CurrentAOI';
+import { store } from '../../store';
 
 const App: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -22,6 +23,7 @@ const App: React.FC = () => {
   useEffect(() => {
     if (settings) {
       dispatch(setTheme(settings.preferences.theme.mode));
+      console.log('App fully initialized, current state:', store.getState());
     }
   }, [settings, dispatch]);
 

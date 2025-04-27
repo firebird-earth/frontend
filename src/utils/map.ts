@@ -26,7 +26,7 @@ export function navigateToLocation(location: Location): void {
   dispatch(setCenter([bufferCircle.center[1], bufferCircle.center[0]])); // Convert back to [lng, lat]
   
   // Calculate appropriate zoom level based on radius
-  const radiusInKm = bufferCircle.radius / 1000;
+  const radiusInKm = bufferCircle.bufferedRadius / 1000;
   const baseZoom = Math.floor(14 - Math.log2(radiusInKm));
   
   // Clamp zoom between 11 and 16 for better visibility

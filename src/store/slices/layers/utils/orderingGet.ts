@@ -1,5 +1,5 @@
-import { LayerType } from '../../../../types/map';
-import { MapLayer } from '../../../../types/map';
+import { LayerType, MapLayer } from '../../../../types/map';
+import { PaneZIndex } from '../../../../types/map'
 
 // Debug configuration
 const OrderingGetConfig = {
@@ -85,16 +85,8 @@ export function getOrderedLayersByPane(categories: any): { layer: MapLayer; cate
     })));
   }
 
-  // Define pane z-index values
-  const paneZIndex = {
-    'overlayPane': 400,    // Default Leaflet overlay pane
-    'firemetricsPane': 375, // Custom pane for fire metrics
-    'layersPane': 350,      // Custom pane for other layers
-    'tilePane': 200
-  };
-
   if (OrderingGetConfig.debug) {
-    console.log('\nPane Z-Index Values:', paneZIndex);
+    console.log('\nPane Z-Index Values:', PaneZIndex);
   }
 
   // Group layers by pane
@@ -111,7 +103,7 @@ export function getOrderedLayersByPane(categories: any): { layer: MapLayer; cate
   if (OrderingGetConfig.debug) {
     console.log('\nLayers Grouped by Pane:');
     paneGroups.forEach((paneLayers, pane) => {
-      console.log(`\n${pane} (z-index: ${paneZIndex[pane]}):`);
+      console.log(`\n${pane} (z-index: ${PaneZIndex[pane]}):`);
       paneLayers.forEach(({ layer }) => {
         console.log(`  - ${layer.name} (order: ${layer.order})`);
       });
@@ -124,7 +116,7 @@ export function getOrderedLayersByPane(categories: any): { layer: MapLayer; cate
   });
 
   // Sort panes by z-index (highest to lowest)
-  const sortedPanes = Object.entries(paneZIndex)
+  const sortedPanes = Object.entries(PaneZIndex)
     .sort(([, aZIndex], [, bZIndex]) => bZIndex - aZIndex)
     .map(([pane]) => pane);
 

@@ -2,19 +2,26 @@ import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { useMap } from 'react-leaflet';
 import { calculateBufferCircle } from '../../../utils/geometry';
-import { useAppSelector } from '../../../hooks/useAppSelector';
 
 interface AOIBoundaryLayerProps {
   locationId: number;
   active: boolean;
   geojson: GeoJSON.FeatureCollection | null;
   center: [number, number]; // [lat, lng]
+  showBufferBounds?: boolean;
 }
 
-const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active, geojson, center }) => {
+const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ 
+  locationId, 
+  active, 
+  geojson, 
+  center,
+  showBufferBounds = false
+}) => {
   const map = useMap();
   const boundaryRef = useRef<L.GeoJSON | null>(null);
   const bufferCircleRef = useRef<L.Circle | null>(null);
+  const bufferBoundsRef = useRef<L.Rectangle | null>(null);
   const opacityRef = useRef<number>(1.0);
   
   const opacity = 1.0;
@@ -22,7 +29,7 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active,
   // Create or remove layers based on active state and center
   useEffect(() => {
     if (!active || !center) {
-      [boundaryRef, bufferCircleRef].forEach(ref => {
+      [boundaryRef, bufferCircleRef, bufferBoundsRef].forEach(ref => {
         if (ref.current) {
           map.removeLayer(ref.current);
           ref.current = null;
@@ -32,7 +39,7 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active,
     }
 
     // Clean up existing layers
-    [boundaryRef, bufferCircleRef].forEach(ref => {
+    [boundaryRef, bufferCircleRef, bufferBoundsRef].forEach(ref => {
       if (ref.current) {
         map.removeLayer(ref.current);
         ref.current = null;
@@ -64,7 +71,7 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active,
     
     const bufferCircle = L.circle(circleResult.center, {
       interactive: false,
-      radius: circleResult.radius,
+      radius: circleResult.bufferedRadius,
       color: '#2563eb',
       weight: 2,
       fillColor: '#2563eb',
@@ -75,17 +82,36 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active,
     bufferCircle.addTo(map);
     bufferCircleRef.current = bufferCircle;
 
+    // Create buffer bounds rectangle if enabled
+    if (showBufferBounds) {
+      const bounds = circleResult.bufferedBounds;
+      const bufferBounds = L.rectangle(
+        [[bounds.minLat, bounds.minLng], [bounds.maxLat, bounds.maxLng]],
+        {
+          interactive: false,
+          color: '#2563eb',
+          weight: 1,
+          fillColor: '#2563eb',
+          fillOpacity: 0.05,
+          opacity: opacity * 0.5,
+          dashArray: '5,5'
+        }
+      );
+      bufferBounds.addTo(map);
+      bufferBoundsRef.current = bufferBounds;
+    }
+
     opacityRef.current = opacity;
 
     return () => {
-      [boundaryRef, bufferCircleRef].forEach(ref => {
+      [boundaryRef, bufferCircleRef, bufferBoundsRef].forEach(ref => {
         if (ref.current) {
           map.removeLayer(ref.current);
           ref.current = null;
         }
       });
     };
-  }, [active, geojson, center, map, opacity]);
+  }, [active, geojson, center, map, opacity, showBufferBounds]);
 
   // Handle opacity changes
   useEffect(() => {
@@ -101,6 +127,13 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ locationId, active,
         bufferCircleRef.current.setStyle({
           opacity: opacity,
           fillOpacity: 0
+        });
+      }
+
+      if (bufferBoundsRef.current) {
+        bufferBoundsRef.current.setStyle({
+          opacity: opacity * 0.5,
+          fillOpacity: 0.05
         });
       }
       

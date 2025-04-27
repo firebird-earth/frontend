@@ -3,26 +3,22 @@ import { GeoJSON } from 'geojson';
 import { ElementType } from 'react';
 import { MapIcon } from 'lucide-react';
 
-export enum LayerType {
-  Basemap = 'basemap',
-  GeoTiff = 'geoTiff',
-  ArcGISImageService = 'ArcGIS_imageService',
-  ArcGISFeatureService = 'ArcGIS_featureService',
-  ArcGISMapService = 'ArcGIS_mapService',
-  DynamicService = 'dynamicService',
-  WMS = 'wms',
-  Vector = 'vector',
-  Raster = 'raster',
-  TileLayer = 'tileLayer',
-  Placeholder = 'placeholder'
-}
-
 export enum MapPane {
   OverlayPane = 'overlayPane',
+  ScenariosPane = 'scenariosPane',
   FiremetricsPane = 'firemetricsPane',
   LayersPane = 'layersPane',
   TilePane = 'tilePane'
 }
+
+// Define pane z-index values
+export const PaneZIndex = {
+  'overlayPane': 400,      // Default Leaflet overlay pane
+  'scenariosPane': 350,    // Custom pane for fire metrics
+  'firemetricsPane': 300,  // Custom pane for fire metrics
+  'layersPane': 250,       // Custom pane for other layers
+  'tilePane': 200
+};
 
 export interface Coordinates {
   lat: number;
@@ -43,6 +39,17 @@ export interface Legend {
   items: LegendItem[];
 }
 
+export enum LayerType {
+  Basemap = 'basemap',
+  GeoTiff = 'geoTiff',
+  ArcGISImageService = 'ArcGIS_imageService',
+  ArcGISFeatureService = 'ArcGIS_featureService',
+  TileLayer = 'tileLayer',
+  WMS = 'wms',
+  Vector = 'vector',
+  Raster = 'raster',
+}
+
 export interface MapLayer {
   id: number;
   name: string;
@@ -52,7 +59,9 @@ export interface MapLayer {
   renderingRule?: string;
   pane?: MapPane;
   order?: number;
+  description?: string;
   attribution?: string;
+  expression?: string;
   units?: string;
   domain?: [number, number];
   legend?: Legend;
@@ -80,6 +89,13 @@ export interface LayerCategory {
   layers: MapLayer[];
 }
 
+export interface BoundingBox {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
+
 export interface Location {
   id: number;
   name: string;
@@ -98,11 +114,8 @@ export interface ColorScheme {
   type: 'sequential' | 'diverging' | 'qualitative';
 }
 
-export interface BufferCircleResult {
-  center: [number, number]; // [lat, lng]
-  radius: number; // meters
-  boundaryCircle?: {
-    center: [number, number]; // [lat, lng]
-    radius: number; // meters
-  };
+export interface QueryExpression {
+  name: string;
+  description: string;
+  expression: string;
 }

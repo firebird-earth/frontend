@@ -2,7 +2,7 @@ import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
 import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
-import { ELEVATION_SERVICE } from '../../../services/maps/services';
+import { MapServiceConfig } from '../../../services/maps/types';
 import { colorSchemes } from '../../../constants/colors';
 
 // Define rendering rules for each layer type
@@ -52,6 +52,18 @@ const CONTOUR_RULE = {
     "ContourStyle": "LINE",
     "LineWidth": 1,
     "LineColor": [100, 100, 100]
+  }
+};
+
+export const ELEVATION_SERVICE: MapServiceConfig = {
+  baseUrl: 'https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer/exportImage',
+  serviceUrl: 'https://elevation.nationalmap.gov/arcgis/rest/services/3DEPElevation/ImageServer',
+  defaultParams: {
+    bboxSR: '3857',
+    imageSR: '3857',
+    format: 'png32',
+    interpolation: 'RSP_BilinearInterpolation',
+    f: 'image'
   }
 };
 

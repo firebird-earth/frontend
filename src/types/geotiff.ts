@@ -3,7 +3,7 @@ import { GeoJSON } from 'geojson';
 
 // Non-serializable raster data.
 export interface RasterData {
-  rasterArray: Int16Array | Float32Array;
+  rasterArray: Int16Array | Float32Array | Uint8Array | number[];
   width: number;
   height: number;
   noDataValue: number | null;

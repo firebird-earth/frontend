@@ -6,11 +6,52 @@ import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { useAppSelector } from '../../../hooks/useAppSelector';
 import { setLayerBounds, initializeLayerValueRange, setLayerMetadata, setLayerLoading } from '../../../store/slices/layers';
 import { arcGISTiffService } from '../../../services/arcGISTiffService';
-import { getColorScheme } from '../../../utils/colors';
 import { colorizeRasterImage } from '../../../utils/colorizeRaster';
 import { MapServiceConfig } from '../../../services/maps/types';
 import { layerDataCache } from '../../../cache/cache';
 import { leafletLayerMap } from '../../../store/slices/layers/state';
+import { useLayerFromCategory } from '../../../hooks/useLayerFromCategory';
+import { getColorScheme, getGradientForScheme } from '../../../utils/colors';
+import { defaultColorScheme } from '../../../constants/colors';
+import { ELEVATION_SERVICE } from '../../../constants/maps/layers/elevation';
+
+interface LayerConfig {
+  name: string;
+  description: string;
+  source: string;
+  type: string;
+  renderingRule: string;
+  units: string;
+  colorScheme?: string;
+  order?: number;
+}
+
+export function createTiffLayer(categoryId: string, config: LayerConfig) {
+  const TiffLayerInstance: React.FC<{ active: boolean }> = ({ active }) => {
+    const layer = useLayerFromCategory(categoryId, config.name);
+    const opacity = useAppSelector(state => {
+      const cat = state.layers.categories[categoryId];
+      return cat?.layers.find(l => l.name === config.name)?.opacity ?? 1.0;
+    });
+
+    if (!layer) return null;
+
+    return (
+      <ArcGISTiffLayer
+        active={active}
+        opacity={opacity}
+        serviceConfig={ELEVATION_SERVICE}
+        renderingRule={config.renderingRule}
+        colorScheme={layer.colorScheme || config.colorScheme || defaultColorScheme}
+        categoryId={categoryId}
+        layerId={layer.id}
+      />
+    );
+  };
+
+  TiffLayerInstance.displayName = `${config.name}Layer`;
+  return TiffLayerInstance;
+}
 
 interface ArcGISTiffLayerProps {
   active: boolean;

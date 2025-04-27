@@ -201,4 +201,4 @@ export const colorSchemes: Record<string, ColorScheme> = {
   }
 };
 
-export const defaultColorScheme = colorSchemes.blueToRed.name;
+export const defaultColorScheme = colorSchemes.greenYellowRed.name;

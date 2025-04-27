@@ -1,11 +1,13 @@
 import { v4 as uuidv4 } from 'uuid';
-import { AOI, CreateAOIInput, UpdateAOIInput, AOIState } from '../types/aoi';
-import { store } from '../store';
-import { setActiveLocation } from '../store/slices/mapSlice';
-import { setCurrentAOI } from '../store/slices/home/actions';
-import { showAOIPanel, toggleLegend } from '../store/slices/uiSlice';
-import { navigateToLocation } from '../utils/map';
-import { clearActiveLayers } from '../store/slices/layers';
+import { AOI, CreateAOIInput, UpdateAOIInput, AOIState } from './types';
+import { store } from '../../store';
+import { setActiveLocation } from '../../store/slices/mapSlice';
+import { setCurrentAOI } from '../../store/slices/home/actions';
+import { showAOIPanel, toggleLegend } from '../../store/slices/uiSlice';
+import { navigateToLocation } from '../../utils/map';
+import { clearActiveLayers } from '../../store/slices/layers';
+import { calculateBufferCircle } from '../../utils/geometry';
+import locations from '../../constants/places/locations';
 
 class AOIService {
   private static instance: AOIService;
@@ -16,7 +18,39 @@ class AOIService {
   };
   private subscribers: Set<(state: AOIState) => void> = new Set();
 
-  private constructor() {}
+  private constructor() {
+    // Initialize static locations as AOIs
+    const initialAois = locations.map(location => {
+      const bufferCircle = calculateBufferCircle(
+        [location.coordinates[1], location.coordinates[0]], // Convert to [lat, lng]
+        location.boundary,
+        8
+      );
+
+      const newAOI: AOI = {
+        //id: uuidv4(),
+        id: location.id,
+        name: location.name,
+        description: 'Default Location',
+        location: {
+          center: location.coordinates,
+          zoom: 10
+        },
+        boundary: location.boundary,
+        boundryRadius: bufferCircle.bufferedRadius,
+        bufferedRadius: bufferCircle.bufferedRadius,
+        bufferedBounds: bufferCircle.bufferedBounds,
+        tags: [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+      return newAOI;
+    });
+
+    console.log('[aoiService] AOIs', initialAois);
+    
+    this.state.aois = initialAois;
+  }
 
   public static getInstance(): AOIService {
     if (!AOIService.instance) {
@@ -46,9 +80,25 @@ class AOIService {
     try {
       this.setState({ loading: true, error: null });
 
+      const bufferCircle = calculateBufferCircle(
+        [input.location.center[1], input.location.center[0]], // Convert to [lat, lng]
+        input.boundary,
+        8
+      );
+
       const newAOI: AOI = {
         id: uuidv4(),
-        ...input,
+        name: input.name,
+        description: input.description,
+        location: {
+         center: input.location.center,
+         zoom: input.location.zoom
+        },
+        boundary: input.boundary,
+        boundryRadius: bufferCircle.bufferedRadius,
+        bufferedRadius: bufferCircle.bufferedRadius,
+        bufferedBounds: bufferCircle.bufferedBounds,
+        tags: input.tags,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -60,6 +110,8 @@ class AOIService {
         error: null
       });
 
+      console.log('[aoiService] AOIs', updatedAOIs)
+      
       const dispatch = store.dispatch;
       
       // Clear all active layers when creating a new AOI

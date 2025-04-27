@@ -1,4 +1,3 @@
-import { LayerMetadata } from '../types';
 import { LayerType } from '../../../types/map';
 import { LayerCategory } from '../../../store/slices/layers/types';
 import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
@@ -13,7 +12,7 @@ export const FUELS = {
     name: 'Canopy Bulk Density',
     description: 'Forest canopy bulk density',
     type: LayerType.GeoTiff,
-    source: `${STORAGE}/TMV/cbd.tif`,
+    source: `${STORAGE}/{aoi}/cbd.tif`,
     units: 'kg/m³',
     colorScheme: colorSchemes.greenYellowRed.name
   },
@@ -21,7 +20,7 @@ export const FUELS = {
     name: 'Canopy Cover',
     description: 'Forest canopy cover percentage',
     type: LayerType.GeoTiff,
-    source: `${STORAGE}/TMV/canopy_cover.tif`,
+    source: `${STORAGE}/{aoi}/canopy_cover.tif`,
     units: 'percent',
     colorScheme: colorSchemes.canopyCover.name,
     domain: [0, 100], // Canopy cover percentage range
@@ -39,7 +38,7 @@ export const FUELS = {
     name: 'Canopy Height',
     description: 'Forest canopy height',
     type: LayerType.GeoTiff,
-    source: `${STORAGE}/TMV/canopy_height.tif`,
+    source: `${STORAGE}/{aoi}/canopy_height.tif`,
     units: 'meters',
     colorScheme: colorSchemes.greenYellowRed.name,
     domain: [0, 50], // Canopy height range in meters

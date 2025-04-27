@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AOI, AOIState } from '../types/aoi';
-import { aoiService } from '../services/aoiService';
+import { aoiService } from '../services/aoiService/aoiService';
 
 export function useAOI() {
   const [state, setState] = useState<AOIState>({

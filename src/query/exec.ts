@@ -43,30 +43,13 @@ export const execExpression = async (expression: string) => {
     console.log('Bound AST:', boundAst);
 
     // Evaluate the bound AST
-    const rasterData = await evaluateAST(boundAst) satisfies RasterData;
-    console.log('Evaluation result:', rasterData);
-
-    // Create a new GeoTIFF layer from the result
-    const layer = {
-      id: Date.now(), 
-      name: 'Scenario A Result',
-      type: LayerType.GeoTiff,
-      source: result,
-      active: true,
-      pane: MapPane.FiremetricsPane,
-      colorScheme: 'redYellowGreen',
-      metadata: {
-        expression,
-        width: Array.isArray(result) && result.length > 0 ? result[0].length : 0,
-        height: Array.isArray(result) ? result.length : 0
-      }
-    };
-
-    // Add the layer to the scenarios category
-    store.dispatch(addLayer({
-      categoryId: 'scenarios', 
-      layer
-    }));
+    const result = await evaluateAST(boundAst) satisfies RasterData;
+    console.log('Evaluation result:', {
+      rasterArray: result.rasterArray,
+      width: result.width,
+      height: result.height,
+      metadata: result.metadata
+    });
 
     return result;
 

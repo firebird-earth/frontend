@@ -9,7 +9,7 @@ import { ELEVATION, ELEVATION_CATEGORY } from '../../../constants/maps/layers/el
 import { FIRE_METRICS } from '../../../constants/maps/firemetrics';
 import { VALUE_AT_RISK, VALUE_AT_RISK_CATEGORY } from '../../../constants/maps/firemetrics/valueAtRisk';
 import { LANDSCAPE_RISK, LANDSCAPE_RISK_CATEGORY } from '../../../constants/maps/firemetrics/landscapeRisk';
-import { FUELS, FUELS_CATEGORY } from '../../../constants/maps/firemetrics/fuels';
+import { FUELS, FUELS_CATEGORY } from '../../../constants/maps/fuels';
 import { HABITAT, HABITAT_CATEGORY } from '../../../constants/maps/layers/habitat';
 import { LANDSCAPE, LANDSCAPE_CATEGORY } from '../../../constants/maps/layers/landscape';
 import { TRANSPORTATION, TRANSPORTATION_CATEGORY } from '../../../constants/maps/layers/transportation';

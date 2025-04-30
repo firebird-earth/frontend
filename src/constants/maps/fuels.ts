@@ -1,9 +1,9 @@
-import { LayerType } from '../../../types/map';
-import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
-import { GEOTIFF_LAYERS } from '../../../constants/urls';
-import { colorSchemes } from '../../../constants/colors';
-import { STORAGE } from '../../../constants/urls';
+import { LayerType } from '../../types/map';
+import { LayerCategory } from '../../store/slices/layers/types';
+import { createInitialCategory } from '../../store/slices/layers/utils/utils';
+import { GEOTIFF_LAYERS } from '../urls';
+import { colorSchemes } from '../colors';
+import { STORAGE } from '../urls';
 
 export const FUELS = {
   name: 'fuels',

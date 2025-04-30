@@ -4,7 +4,7 @@ import SectionHeader from './SectionHeader';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { toggleSection, startCreatingAOI } from '../../store/slices/uiSlice';
-import { setCurrentAOI } from '../../store/slices/home/actions';
+import { setCurrentAOI } from '../../store/slices/homeSlice/actions';
 import { navigateToLocation } from '../../utils/map';
 import { useAOI } from '../../hooks/useAOI';
 import locations from '../../constants/places/locations';
@@ -13,7 +13,7 @@ import { store } from '../../store';
 import { execExpression } from '../../query/exec';
 import { showDialog } from '../../store/slices/uiSlice';
 import SelectAOIDialog from '../../components/aoi/SelectAOIDialog';
-import { toggleLayer, toggleSingleLayer } from '../../store/slices/layers';
+import { toggleLayer, toggleSingleLayer } from '../../store/slices/layersSlice';
 import { hashString } from '../../utils/utils';
 import { MapLayer } from '../../types/map'
 

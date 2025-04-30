@@ -6,7 +6,7 @@ import {
   sendLayerToBack,
   bringLayerForward,
   sendLayerBackward
-} from '../../store/slices/layers';
+} from '../../store/slices/layersSlice';
 
 interface LayerOrderControlProps {
   categoryId: string;

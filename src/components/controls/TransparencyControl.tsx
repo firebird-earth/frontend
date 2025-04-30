@@ -1,7 +1,7 @@
 // src/components/controls/TransparencyControl.tsx
 import React, { useRef, useState } from 'react';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
-import { setLayerOpacity } from '../../store/slices/layers';
+import { setLayerOpacity } from '../../store/slices/layersSlice';
 
 interface TransparencyControlProps {
   categoryId: string;

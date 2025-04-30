@@ -1,9 +1,9 @@
 import { configureStore } from '@reduxjs/toolkit';
 import uiReducer from './slices/uiSlice';
-import settingsReducer from './slices/settingsSlice'; // Import settingsReducer early
-import layersReducer from './slices/layers'; // Import layersReducer before other reducers that might depend on it
+import settingsReducer from './slices/settingsSlice'; 
+import layersReducer from './slices/layersSlice'; 
 import mapReducer from './slices/mapSlice';
-import homeReducer from './slices/home';
+import homeReducer from './slices/homeSlice';
 
 export const store = configureStore({
   reducer: {

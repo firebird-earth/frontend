@@ -1,6 +1,6 @@
 import { FirebaseUserSettings } from './settings';
 import { HomeState } from '../store/slices/home/types';
-import { LayersState } from '../store/slices/layers/types';
+import { LayersState } from '../store/slices/layersSlice/types';
 
 export interface RootState {
   ui: {

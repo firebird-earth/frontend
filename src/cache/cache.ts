@@ -2,7 +2,7 @@
 
 import { store } from '../store';
 import { MapLayer } from '../types/map';
-import { findLayer, findLayerByName } from '../store/slices/layers/utils/utils';
+import { findLayer, findLayerByName } from '../store/slices/layersSlice/utils/utils';
 import { fetchGeoTiffLayer } from './fetchGeoTiffLayer';
 import { fetchArcGISTiffLayer } from './fetchArcGISTiffLayer';
 import { LayerType } from '../types/map';

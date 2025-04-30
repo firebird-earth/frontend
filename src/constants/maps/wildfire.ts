@@ -1,6 +1,6 @@
 import { LayerType } from '../../types/map';
-import { LayerCategory } from '../../store/slices/layers/types';
-import { createInitialCategory } from '../../store/slices/layers/utils/utils';
+import { LayerCategory } from '../../store/slices/layersSlice/types';
+import { createInitialCategory } from '../../store/slices/layersSlice/utils/utils';
 import { WUI_LAYER, CRISIS_AREAS_LAYER } from '../urls';
 
 export const WILDFIRE = {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
-import { setLayerValueRange } from '../../store/slices/layers';
+import { setLayerValueRange } from '../../store/slices/layersSlice';
 
 interface ValueRangeControlProps {
   categoryId: string;

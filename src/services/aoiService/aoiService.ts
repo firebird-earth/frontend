@@ -2,10 +2,10 @@ import { v4 as uuidv4 } from 'uuid';
 import { AOI, CreateAOIInput, UpdateAOIInput, AOIState } from './types';
 import { store } from '../../store';
 import { setActiveLocation } from '../../store/slices/mapSlice';
-import { setCurrentAOI } from '../../store/slices/home/actions';
+import { setCurrentAOI } from '../../store/slices/homeSlice/actions';
 import { showAOIPanel, toggleLegend } from '../../store/slices/uiSlice';
 import { navigateToLocation } from '../../utils/map';
-import { clearActiveLayers } from '../../store/slices/layers';
+import { clearActiveLayers } from '../../store/slices/layersSlice';
 import { calculateBufferCircle } from '../../utils/geometry';
 import locations from '../../constants/places/locations';
 

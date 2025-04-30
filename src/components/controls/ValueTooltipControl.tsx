@@ -3,12 +3,12 @@ import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
-import { setShowMapValues } from '../../store/slices/layers';
+import { setShowMapValues } from '../../store/slices/layersSlice';
 import { setIsCancellingTooltip } from '../../store/slices/uiSlice';
 import { layerDataCache } from '../../cache/cache';
 import { getColorScheme, getColorFromScheme } from '../../utils/colors';
 import { defaultColorScheme } from '../../constants/colors';
-import { leafletLayerMap } from '../../store/slices/layers/state';
+import { leafletLayerMap } from '../../store/slices/layersSlice/state';
 
 const ValueTooltipConfig = {
   debug: false,

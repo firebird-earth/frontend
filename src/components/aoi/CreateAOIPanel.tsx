@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { stopCreatingAOI } from '../../store/slices/uiSlice';
-import { clearAOI, setCoordinates } from '../../store/slices/home/actions';
+import { clearAOI, setCoordinates } from '../../store/slices/homeSlice/actions';
 import { clearActiveLocation } from '../../store/slices/mapSlice';
 import { clearActiveLayers } from '../../store/slices/layersSlice';
 import { useAOI } from '../../hooks/useAOI';

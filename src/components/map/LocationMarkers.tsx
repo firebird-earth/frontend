@@ -3,7 +3,7 @@ import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
-import { setCurrentAOI } from '../../store/slices/home/actions';
+import { setCurrentAOI } from '../../store/slices/homeSlice/actions';
 import { showAOIPanel } from '../../store/slices/uiSlice';
 import SelectAOIDialog from '../aoi/SelectAOIDialog';
 

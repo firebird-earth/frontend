@@ -4,7 +4,7 @@ import SectionHeader from './SectionHeader';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { toggleSection } from '../../store/slices/uiSlice';
-import { toggleLayer, toggleSingleLayer } from '../../store/slices/layers';
+import { toggleLayer, toggleSingleLayer } from '../../store/slices/layersSlice';
 import SelectAOIDialog from '../aoi/SelectAOIDialog';
 import { getIconForLayer } from '../../utils/icons';
 import { isLayersTab, isFiremetricsTab } from '../../constants/maps';

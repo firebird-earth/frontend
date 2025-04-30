@@ -5,7 +5,7 @@ import { layerDataCache } from '../cache/cache';
 import { evaluateAST, EvaluateResult } from './evaluator';
 import { store } from '../store';
 import { LayerType, MapPane } from '../types/map';
-import { toggleLayer } from '../store/slices/layers';
+import { toggleLayer } from '../store/slices/layersSlice';
 import { RasterData } from '../types/geotiff';
 import { defaultColorScheme, defaultColorSchemeBinary } from '../constants/colors';
 

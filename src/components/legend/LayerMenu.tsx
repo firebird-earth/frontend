@@ -6,7 +6,7 @@ import {
   toggleLayer,
   toggleSingleLayer,
   setShowMapValues
-} from '../../store/slices/layers';
+} from '../../store/slices/layersSlice';
 import OpacityControl from '../controls/OpacityControl';
 import TransparencyControl from '../controls/TransparencyControl';
 import ValueRangeControl from '../controls/ValueRangeControl';

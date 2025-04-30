@@ -17,9 +17,9 @@ import {
 } from '../layers';
 import QueryLayer from '../layers/QueryLayer';
 import AOIBoundaryLayer from '../layers/AOIBoundaryLayer';
-import { getOrderedLayers } from '../../store/slices/layers';
+import { getOrderedLayers } from '../../store/slices/layersSlice';
 import { useAppSelector } from '../../hooks/useAppSelector';
-import { leafletLayerMap } from '../../store/slices/layers/state';
+import { leafletLayerMap } from '../../store/slices/layersSlice/state';
 import { LayerType } from '../../types/map';
 import { hashString } from '../../utils/utils';
 

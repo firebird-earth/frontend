@@ -2,7 +2,7 @@ import { current } from 'immer';
 import { LayersState } from '../types';
 import { findLayer, findCategory } from './utils';
 import { MapLayer, LayerType } from '../../../../types/map';
-import { leafletLayerMap } from '../../../slices/layers/state';
+import { leafletLayerMap } from '../../../slices/layersSlice/state';
 import { current } from 'immer'
 
 /**

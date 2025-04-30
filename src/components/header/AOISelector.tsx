@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { MapPin, Plus, Navigation, MapPinOff } from 'lucide-react';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
-import { setCurrentAOI } from '../../store/slices/home/actions';
+import { setCurrentAOI } from '../../store/slices/homeSlice/actions';
 import { startCreatingAOI } from '../../store/slices/uiSlice';
 import { useAOI } from '../../hooks/useAOI';
 import { navigateToLocation } from '../../utils/map';

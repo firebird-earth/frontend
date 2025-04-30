@@ -4,9 +4,9 @@ import L from 'leaflet';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { showAOIPanel, toggleLegend } from '../../store/slices/uiSlice';
-import { setCoordinates, clearAOI } from '../../store/slices/home/actions';
+import { setCoordinates, clearAOI } from '../../store/slices/homeSlice/actions';
 import { clearActiveLocation } from '../../store/slices/mapSlice';
-import { clearActiveLayers } from '../../store/slices/layers';
+import { clearActiveLayers } from '../../store/slices/layersSlice';
 
 const MapClickHandler: React.FC = () => {
   const dispatch = useAppDispatch();

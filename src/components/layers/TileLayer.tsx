@@ -1,8 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
-import { LayerType } from '../../../types/map';
-import { useAppSelector } from '../../../hooks/useAppSelector';
+import { LayerType } from '../../types/map';
+import { useAppSelector } from '../../hooks/useAppSelector';
 
 interface TileLayerProps {
   active: boolean;

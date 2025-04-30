@@ -1,6 +1,6 @@
-import { createTiffLayer } from '../base/ArcGISTiffLayer';
-import { createFeatureLayer } from '../base/ArcGISFeatureLayer';
-import { createTileLayer } from '../base/TileLayer';
+import { createTiffLayer } from '../ArcGISTiffLayer';
+import { createFeatureLayer } from '../ArcGISFeatureLayer';
+import { createTileLayer } from '../TileLayer';
 import { createGeoTiffLayer } from '../GeoTiffLayer';
 import { createQueryLayer } from '../QueryLayer';
 import { ELEVATION, ELEVATION_CATEGORY } from '../../../constants/maps/layers/elevation';

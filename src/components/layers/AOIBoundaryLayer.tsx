@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import L from 'leaflet';
 import { useMap } from 'react-leaflet';
-import { calculateBufferCircle } from '../../../utils/geometry';
+import { calculateBufferCircle } from '../../utils/geometry';
 
 interface AOIBoundaryLayerProps {
   locationId: number;

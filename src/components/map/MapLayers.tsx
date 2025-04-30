@@ -16,7 +16,7 @@ import {
   GeoTiffLayer,
 } from '../layers/maps';
 import QueryLayer from '../layers/QueryLayer';
-import AOIBoundaryLayer from '../layers/home/AOIBoundaryLayer';
+import AOIBoundaryLayer from '../layers/AOIBoundaryLayer';
 import { getOrderedLayers } from '../../store/slices/layers';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { leafletLayerMap } from '../../store/slices/layers/state';

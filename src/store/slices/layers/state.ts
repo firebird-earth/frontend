@@ -7,8 +7,8 @@ import { BASEMAPS, BASEMAPS_CATEGORY } from '../../../constants/maps/layers/base
 import { WILDFIRE, WILDFIRE_CATEGORY } from '../../../constants/maps/layers/wildfire';
 import { ELEVATION, ELEVATION_CATEGORY } from '../../../constants/maps/layers/elevation';
 import { FIRE_METRICS } from '../../../constants/maps/firemetrics';
-import { VALUE_AT_RISK, VALUE_AT_RISK_CATEGORY } from '../../../constants/maps/firemetrics/valueAtRisk';
-import { LANDSCAPE_RISK, LANDSCAPE_RISK_CATEGORY } from '../../../constants/maps/firemetrics/landscapeRisk';
+import { VALUE_AT_RISK, VALUE_AT_RISK_CATEGORY } from '../../../constants/maps/valueAtRisk';
+import { LANDSCAPE_RISK, LANDSCAPE_RISK_CATEGORY } from '../../../constants/maps/landscapeRisk';
 import { FUELS, FUELS_CATEGORY } from '../../../constants/maps/fuels';
 import { HABITAT, HABITAT_CATEGORY } from '../../../constants/maps/layers/habitat';
 import { LANDSCAPE, LANDSCAPE_CATEGORY } from '../../../constants/maps/layers/landscape';

@@ -1,8 +1,8 @@
-import { LayerType } from '../../../types/map';
-import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
-import { STORAGE } from '../../../constants/urls';
-import { colorSchemes } from '../../../constants/colors';
+import { LayerType } from '../../types/map';
+import { LayerCategory } from '../../store/slices/layers/types';
+import { createInitialCategory } from '../../store/slices/layers/utils/utils';
+import { STORAGE } from '../urls';
+import { colorSchemes } from '../colors';
 
 export const VALUE_AT_RISK = {
   name: 'valueAtRisk',

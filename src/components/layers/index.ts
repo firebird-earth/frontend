@@ -7,7 +7,7 @@ import { ELEVATION, ELEVATION_CATEGORY } from '../../constants/maps/layers/eleva
 import { JURISDICTIONS, JURISDICTIONS_CATEGORY } from '../../constants/maps/layers/jurisdictions';
 import { WILDFIRE, WILDFIRE_CATEGORY } from '../../constants/maps/layers/wildfire';
 import { FIRE_METRICS } from '../../constants/maps';
-import { LANDSCAPE_RISK_CATEGORY } from '../../constants/maps/firemetrics/landscapeRisk';
+import { LANDSCAPE_RISK_CATEGORY } from '../../constants/maps/landscapeRisk';
 import { FUELS_CATEGORY } from '../../constants/maps/fuels';
 import { scenarios } from '../../constants/maps/layers/scenarios';
 

@@ -1,8 +1,7 @@
-import { FIRE_METRICS } from './firemetrics';
 import { MAP_LAYERS } from './layers';
 
-import { VALUE_AT_RISK } from './valueAtRisk';
 import { LANDSCAPE_RISK } from './landscapeRisk';
+import { VALUE_AT_RISK } from './valueAtRisk';
 import { FUELS } from './fuels';
 
 export const FIRE_METRICS = {
@@ -16,8 +15,6 @@ export {
   VALUE_AT_RISK,
   FUELS
 };
-
-
 
 // Tab enum and category mapping
 export enum Tab {
@@ -47,4 +44,4 @@ export const isHomeTab = (categoryId: string): boolean => CATEGORY_TAB_MAPPING[c
 export const isLayersTab = (categoryId: string): boolean => categoryId !== 'basemaps' && CATEGORY_TAB_MAPPING[categoryId] === Tab.LAYERS;
 export const isFiremetricsTab = (categoryId: string): boolean => CATEGORY_TAB_MAPPING[categoryId] === Tab.FIREMETRICS;
 
-export { FIRE_METRICS, MAP_LAYERS };
+export { MAP_LAYERS };

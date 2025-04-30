@@ -165,7 +165,7 @@ export const layersReducer = createReducer(initialState, (builder) => {
       const { categoryId, layerId, min, max } = action.payload;
       handleValueRange(state, categoryId, layerId, min, max);
     })
-    .addCase(actions.initializeLayerValueRange, (state, action) => {
+    .addCase(actions.initLayerValueRange, (state, action) => {
       const { categoryId, layerId, min, max } = action.payload;
       handleValueRange(state, categoryId, layerId, min, max, true);
     })
@@ -232,11 +232,18 @@ export const layersReducer = createReducer(initialState, (builder) => {
         layer.colorScheme = colorScheme;
         layer.units = units;
       }
-    })    .addCase(actions.addLayer, (state, action) => {
+    })
+    .addCase(actions.setLayerLegend, (state, action) => {
+      const { categoryId, layerId, legend } = action.payload;
+      const layer = findLayer(state, categoryId, layerId);
+      if (layer) {
+        layer.legend = legend;
+      }
+    })
+    .addCase(actions.addLayer, (state, action) => {
       const { categoryId, layer } = action.payload;
       const category = state.categories[categoryId];
       if (!category) return;
-
       category.layers.push(layer);
-    })
+    });
 });

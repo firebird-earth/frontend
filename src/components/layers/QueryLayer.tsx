@@ -3,12 +3,13 @@ import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
-import { setLayerBounds, setLayerMetadata, initializeLayerValueRange, setLayerLegendInfo } from '../../store/slices/layers';
+import { setLayerBounds, setLayerMetadata, initLayerValueRange, setLayerLegend, setLayerLegendInfo } from '../../store/slices/layers';
 import { MapPane, QueryExpression } from '../../types/map';
 import { leafletLayerMap } from '../../store/slices/layers/state';
 import { colorizeRasterImage } from '../../utils/colorizeRaster';
 import { getColorScheme } from '../../utils/colors';
 import { defaultColorScheme, defaultColorSchemeBinary } from '../../constants/colors';
+import { scenarioLegendBinary } from '../../constants/maps/layers/scenarios';
 import { execExpression } from '../../query/exec';
 import { layerDataCache } from '../../cache/cache';
 import { hashString } from '../../utils/utils';
@@ -147,6 +148,7 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
               min: 1,
               max: 1
             };
+          dispatch(setLayerLegend({ categoryId, layerId, legend: scenarioLegendBinary }));
         } else {
           metadata.colorScheme = defaultColorScheme;
           metadata.units = '???';
@@ -155,12 +157,11 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
         renderOverlay(rasterData, metadata);
         
         layerDataCache.set(key, rasterData, metadata);
-        
+
         dispatch(setLayerLegendInfo({ categoryId, layerId, colorScheme: metadata.colorScheme, units: metadata.units }));
         dispatch(setLayerBounds({ categoryId, layerId, bounds: metadata.leafletBounds }));
         dispatch(setLayerMetadata({ categoryId, layerId, metadata }));
-        dispatch(
-          initializeLayerValueRange({
+        dispatch(initLayerValueRange({
             categoryId,
             layerId,
             min: metadata.stats.min,

@@ -32,13 +32,13 @@ export const scenarios: QueryExpression[] = [
     }
   ];
 
-  export const binaryLegend: Legend = {
+  export const scenarioLegendBinary: Legend = {
     items: [
       {
         color: '#d73027',
         weight: 1,
         fillColor: '#d73027',
-        fillOpacity: 0.2, 
+        fillOpacity: 1.0, 
         label: 'Viable Areas'
       }
     ]

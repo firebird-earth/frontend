@@ -4,7 +4,7 @@ import L from 'leaflet';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 import { useAppDispatch } from '../../../hooks/useAppDispatch';
 import { useAppSelector } from '../../../hooks/useAppSelector';
-import { setLayerBounds, initializeLayerValueRange, setLayerMetadata, setLayerLoading } from '../../../store/slices/layers';
+import { setLayerBounds, initLayerValueRange, setLayerMetadata, setLayerLoading } from '../../../store/slices/layers';
 import { arcGISTiffService } from '../../../services/arcGISTiffService';
 import { colorizeRasterImage } from '../../../utils/colorizeRaster';
 import { MapServiceConfig } from '../../../services/maps/types';
@@ -243,7 +243,7 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
         if (categoryId && layerId) {
           dispatch(setLayerMetadata({ categoryId, layerId, metadata }));
           if (!valueRange) {
-            dispatch(initializeLayerValueRange({ categoryId, layerId, min, max }));
+            dispatch(initLayerValueRange({ categoryId, layerId, min, max }));
           }
           dispatch(setLayerBounds({ categoryId, layerId, bounds }));
         }

@@ -7,7 +7,7 @@ import { useAppSelector } from '../../hooks/useAppSelector';
 import { useLayer } from '../../hooks/useLayer';
 import { useLayerOpacity } from '../../hooks/useLayerOpacity';
 import { useLayerValueRange } from '../../hooks/useLayerValueRange';
-import { setLayerBounds, initializeLayerValueRange, setLayerMetadata, setLayerLoading } from '../../store/slices/layers';
+import { setLayerBounds, initLayerValueRange, setLayerMetadata, setLayerLoading } from '../../store/slices/layers';
 import { defaultColorScheme } from '../../constants/colors';
 import { leafletLayerMap } from '../../store/slices/layers/state';
 import { layerDataCache } from '../../cache/cache';
@@ -232,7 +232,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
         if (categoryId && layerId) {
           dispatch(setLayerMetadata({ categoryId, layerId, metadata }));
           if (!valueRange) {
-            dispatch(initializeLayerValueRange({ categoryId, layerId, min, max }));
+            dispatch(initLayerValueRange({ categoryId, layerId, min, max }));
           }
           dispatch(setLayerBounds({ categoryId, layerId, bounds }));
         }

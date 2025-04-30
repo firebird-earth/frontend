@@ -1,4 +1,5 @@
 import { MapLayer } from '../../../types/map';
+import { Legend } from '../../../types/map';
 
 export interface LayerCategory {
   id: string;
@@ -73,4 +74,10 @@ export interface SetLayerLegendInfoPayload {
   layerId: number;
   colorScheme: string;
   units: string;
+}
+
+export interface SetLayerLegendPayload {
+  categoryId: string;
+  layerId: number;
+  legend: Legend;
 }

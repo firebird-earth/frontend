@@ -28,9 +28,11 @@ export function colorizeRasterImage(
   const ctx = canvas.getContext('2d');
   if (!ctx) throw new Error('Could not get 2D context');
   const imageData = ctx.createImageData(width, height);
+
   const fullRange = domain[1] - domain[0];
 
-  if (!Array.isArray(scheme) || scheme.length < 2) {
+  // Allow schemes with at least one color
+  if (!Array.isArray(scheme) || scheme.length < 1) {
     throw new Error(`Invalid color scheme provided to colorizeRasterImage: ${JSON.stringify(scheme)}`);
   }
 
@@ -50,8 +52,10 @@ export function colorizeRasterImage(
       continue;
     }
 
-    const clampedNormalized = Math.min(Math.max((value - domain[0]) / fullRange, 0), 1);
-    const clampedIndex = Math.min(Math.floor(clampedNormalized * (scheme.length - 1)), scheme.length - 1);
+    const clampedNormalized = fullRange === 0 ? 0 : Math.min(Math.max((value - domain[0]) / fullRange, 0), 1);
+    const clampedIndex = fullRange === 0
+      ? 0
+      : Math.min(Math.floor(clampedNormalized * (scheme.length - 1)), scheme.length - 1);
     const hex = scheme[clampedIndex];
 
     if (!hex || typeof hex !== 'string' || !hex.startsWith('#')) {

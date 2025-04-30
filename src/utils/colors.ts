@@ -6,38 +6,40 @@ import { colorSchemes, GeoTiffNoDataColor } from '../constants/colors';
  * @param hex The hex color string (e.g., "#ff0000")
  * @returns An object with r, g, b components (0-255)
  */
-export function hexToRgb(hex: string | undefined): { r: number, g: number, b: number } {
+export function hexToRgb(hex: string | undefined): { r: number, g: number, b: number, a:number } {
   // Handle undefined or invalid input
   if (!hex) {
     console.warn('Invalid hex color value:', hex);
-    return { r: 0, g: 0, b: 0 };
+    return { r: 0, g: 0, b: 0, a: 0 };
   }
 
   // Remove # if present
   const cleanHex = hex.startsWith('#') ? hex.slice(1) : hex;
 
-  // Validate hex format
-  if (!/^[0-9A-Fa-f]{6}$/.test(cleanHex)) {
-    console.warn('Invalid hex color format:', hex);
-    return { r: 0, g: 0, b: 0 };
+  let r = 0, g = 0, b = 0, a = 255;
+
+  // Parse different hex formats
+  if (cleanHex.length === 6) {
+      r = parseInt(cleanHex.substring(0, 2), 16);
+      g = parseInt(cleanHex.substring(2, 4), 16);
+      b = parseInt(cleanHex.substring(4, 6), 16);
+  } else if (cleanHex.length === 8) {
+      r = parseInt(cleanHex.substring(0, 2), 16);
+      g = parseInt(cleanHex.substring(2, 4), 16);
+      b = parseInt(cleanHex.substring(4, 6), 16);
+      a = parseInt(cleanHex.substring(6, 8), 16);
+  } else {
+      console.warn('Invalid hex color format:', hex);
+      return { r: 0, g: 0, b: 0, a: 0 };
+  }
+
+  // Validate parsed values
+  if (isNaN(r) || isNaN(g) || isNaN(b) || isNaN(a)) {
+      console.warn('Failed to parse hex color components');
+      return { r: 0, g: 0, b: 0, a: 0 };
   }
   
-  try {
-    // Parse the hex values
-    const r = parseInt(cleanHex.substring(0, 2), 16);
-    const g = parseInt(cleanHex.substring(2, 4), 16);
-    const b = parseInt(cleanHex.substring(4, 6), 16);
-
-    // Validate parsed values
-    if (isNaN(r) || isNaN(g) || isNaN(b)) {
-      throw new Error('Failed to parse hex color components');
-    }
-    
-    return { r, g, b };
-  } catch (error) {
-    console.warn('Error parsing hex color:', error);
-    return { r: 0, g: 0, b: 0 };
-  }
+  return { r, g, b, a };
 }
 
 /**

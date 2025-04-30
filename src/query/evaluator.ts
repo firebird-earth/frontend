@@ -1,3 +1,20 @@
+/**
+ * Evaluates a bound AST by executing pixelwise operations over raster data.
+ *
+ * Input:
+ *   - AST where all LayerNodes are already bound to RasterData (with source, metadata, etc.)
+ *
+ * Output:
+ *   - RasterData: raster array resulting from evaluating the expression
+ *   - GeoTiffMetadata: metadata for the output raster, derived from source layers
+ *     (augmented with an `isBinary` flag if the result is purely binary)
+ *
+ * Notes:
+ *   - Assumes all input rasters are aligned (same grid, same resolution).
+ *   - Supports raster math, logic operations, masking, and simple functions.
+ *   - Vector-based operations must already be rasterized before evaluation.
+ */
+
 import { ASTNode } from './parser';
 import { GeoTiffMetadata } from '../types/geotiff';
 
@@ -8,151 +25,175 @@ export interface RasterData {
   noDataValue: number | null;
 }
 
+export interface EvaluateResult {
+  data: RasterData;
+  metadata: GeoTiffMetadata & { isBinary: boolean };
+}
+
 export async function evaluateAST(
   ast: ASTNode,
   outputNoDataValue: number = NaN
-): Promise<{ data: RasterData; metadata: GeoTiffMetadata }> {
-  const { rows, cols } = getRasterSize(ast);
+): Promise<EvaluateResult> {
+  console.log('Calling evaluateAST with boundAst:', ast);
+
+  // Prepare raster dimensions
+  const { rows, cols } = getRasterSizeFromInput(ast);
   const total = rows * cols;
   const rasterArray = new Float32Array(total);
 
+  // Evaluate pixelwise, mapping:
+  //   true  -> 1
+  //   false -> noDataValue
   for (let r = 0; r < rows; r++) {
+    const rowOffset = r * cols;
     for (let c = 0; c < cols; c++) {
-      const value = evaluateAtPixel(ast, r, c);
-      const numeric = typeof value === 'boolean' ? (value ? 1 : 0) : value;
-      const index = r * cols + c;
-      rasterArray[index] = numeric == null || isNaN(numeric) ? outputNoDataValue : Number(numeric);
+      const idx = rowOffset + c;
+      const value = evaluateAtPixel(ast, r, c, outputNoDataValue);
+      let num: number | null;
+      if (typeof value === 'boolean') {
+        num = value ? 1 : null;
+      } else {
+        num = value as number;
+      }
+      rasterArray[idx] = (num == null || isNaN(num))
+        ? outputNoDataValue
+        : Number(num);
     }
   }
 
-  const sourceMeta = extractMetadata(ast);
-  const metadata: GeoTiffMetadata = {
-    ...(sourceMeta || {}),
-    width: cols,
-    height: rows,
-    noDataValue: outputNoDataValue
+  console.log('Evaluation result (first 10 pixels):', rasterArray.slice(0, 10));
+
+  // Detect if output is binary (only 1 values present, aside from NoData)
+  const unique = new Set<number>();
+  for (let i = 0; i < rasterArray.length; i++) {
+    const v = rasterArray[i];
+    if (v === outputNoDataValue || isNaN(v)) continue;
+    unique.add(v);
+    if (unique.size > 1) break;
+  }
+  const isBinary = unique.size === 1 && [...unique][0] === 1;
+
+  // Extract and augment metadata
+  const baseMetadata = extractMetadata(ast);
+  const metadata: GeoTiffMetadata & { isBinary: boolean } = {
+    ...baseMetadata,
+    isBinary
   };
 
   return {
-    data: {
-      rasterArray,
-      width: cols,
-      height: rows,
-      noDataValue: outputNoDataValue
-    },
+    data: { rasterArray, width: cols, height: rows, noDataValue: outputNoDataValue },
     metadata
   };
 }
 
-function evaluateAtPixel(node: ASTNode, row: number, col: number): number | boolean | null {
-  if ('value' in node) return node.value;
-
-  if (node.type === 'layer') {
-    const source = (node as any).source as RasterData;
-    if (!source?.rasterArray) throw new Error(`Layer '${node.name}' has no source raster`);
-    if (row >= source.height || col >= source.width) return null;
-    const index = row * source.width + col;
-    const raw = source.rasterArray[index];
-    return raw === undefined || isNaN(raw) || raw === source.noDataValue ? null : raw;
+function evaluateAtPixel(
+  ast: ASTNode,
+  r: number,
+  c: number,
+  outputNoDataValue: number
+): number | boolean | null {
+  if ((ast as any).type === 'literal') {
+    return (ast as any).value;
   }
 
-  if ('op' in node) {
-    const { op } = node;
-    if (op === 'neg') return -evaluateAtPixel(node.expr, row, col);
-    if (op === 'NOT') return !evaluateAtPixel(node.expr, row, col);
-    if (["+", "-", "*", "/"].includes(op)) {
-      const left = evaluateAtPixel(node.left, row, col);
-      const right = evaluateAtPixel(node.right, row, col);
-      if (left == null || right == null) return null;
-      if (op === '/' && right === 0) return null;
-      return eval(`(${left})${op}(${right})`);
+  if ((ast as any).type === 'layer') {
+    const layer = ast as any;
+    if (!layer.source) {
+      throw new Error(`Layer "${layer.name}" not bound to raster source`);
     }
-    if ([">", "<", ">=", "<=", "==", "!=", "AND", "OR"].includes(op)) {
-      const left = evaluateAtPixel(node.left, row, col);
-      const right = evaluateAtPixel(node.right, row, col);
-      if (left == null || right == null) return null;
-      switch (op) {
-        case '>': return left > right;
-        case '<': return left < right;
-        case '>=': return left >= right;
-        case '<=': return left <= right;
-        case '==': return left === right;
-        case '!=': return left !== right;
-        case 'AND': return Boolean(left) && Boolean(right);
-        case 'OR': return Boolean(left) || Boolean(right);
-      }
-    }
-    if (op === 'ternary') {
-      const cond = evaluateAtPixel(node.condition, row, col);
-      return cond ? evaluateAtPixel(node.trueExpr, row, col) : evaluateAtPixel(node.falseExpr, row, col);
-    }
-    if (op === 'in') {
-      const val = evaluateAtPixel(node.layer, row, col);
-      return node.values.some(v => v.value === val);
-    }
-    if (op === 'between') {
-      const val = evaluateAtPixel(node.layer, row, col);
-      const low = evaluateAtPixel(node.low, row, col);
-      const high = evaluateAtPixel(node.high, row, col);
-      return val >= low && val <= high;
-    }
-    if (op === 'isnull') return evaluateAtPixel(node.layer, row, col) == null;
-    if (op === 'isnotnull') return evaluateAtPixel(node.layer, row, col) != null;
+    const idx = r * layer.source.width + c;
+    return layer.source.rasterArray[idx];
   }
 
-  if (node.type === 'function') {
-    const args = node.args.map(arg => evaluateAtPixel(arg, row, col));
-    if (args.includes(null)) return null;
-    switch (node.name) {
-      case 'abs': return Math.abs(args[0] as number);
-      case 'min': return Math.min(...(args as number[]));
-      case 'max': return Math.max(...(args as number[]));
-      case 'mask': return args.length === 2 ? (args[1] ? args[0] : null) : null;
-      default: throw new Error(`Unsupported function: ${node.name}`);
+  // binary or logical op
+  if ('op' in ast && 'left' in ast && 'right' in ast) {
+    const left = evaluateAtPixel((ast as any).left, r, c, outputNoDataValue);
+    const right = evaluateAtPixel((ast as any).right, r, c, outputNoDataValue);
+    const ln = typeof left === 'number' ? left : NaN;
+    const rn = typeof right === 'number' ? right : NaN;
+    switch ((ast as any).op) {
+      case '+':  return ln + rn;
+      case '-':  return ln - rn;
+      case '*':  return ln * rn;
+      case '/':  return ln / rn;
+      case '>':  return ln > rn;
+      case '<':  return ln < rn;
+      case '>=': return ln >= rn;
+      case '<=': return ln <= rn;
+      case '==': return ln === rn;
+      case '!=': return ln !== rn;
+      case '&&':
+      case 'AND': return Boolean(left) && Boolean(right);
+      case '||':
+      case 'OR':  return Boolean(left) || Boolean(right);
+      default:
+        throw new Error(`Unsupported operator: ${(ast as any).op}`);
     }
   }
 
-  return null;
+  // unary
+  if ('op' in ast && 'operand' in ast) {
+    const v = evaluateAtPixel((ast as any).operand, r, c, outputNoDataValue);
+    switch ((ast as any).op) {
+      case '-': return -(v as number);
+      case '!': return !v;
+      default:
+        throw new Error(`Unsupported unary operator: ${(ast as any).op}`);
+    }
+  }
+
+  // function
+  if ((ast as any).type === 'function') {
+    if ((ast as any).name === 'mask') {
+      const [img, cond] = (ast as any).args;
+      const cv = evaluateAtPixel(cond, r, c, outputNoDataValue);
+      return cv
+        ? evaluateAtPixel(img, r, c, outputNoDataValue)
+        : outputNoDataValue;
+    }
+    throw new Error(`Unsupported function: ${(ast as any).name}`);
+  }
+
+  throw new Error(`Unsupported AST node: ${(ast as any).op ?? (ast as any).type}`);
 }
 
-function getRasterSize(node: ASTNode): { rows: number; cols: number } {
-  if (node.type === 'layer' && 'source' in node) {
-    const src = (node as any).source as RasterData;
-    if (src?.width && src?.height) return { rows: src.height, cols: src.width };
+function getRasterSizeFromInput(ast: ASTNode): { rows: number; cols: number } {
+  if ((ast as any).type === 'layer' && (ast as any).source) {
+    const layer = ast as any;
+    return { rows: layer.source.height, cols: layer.source.width };
   }
-  if ('args' in node) for (const arg of node.args) {
-    const size = getRasterSize(arg);
-    if (size.rows && size.cols) return size;
+  if ('op' in ast && 'left' in ast && 'right' in ast) {
+    return getRasterSizeFromInput((ast as any).left);
   }
-  if ('op' in node) {
-    const keys = ['expr', 'left', 'right', 'condition', 'trueExpr', 'falseExpr', 'layer', 'low', 'high'];
-    for (const key of keys) {
-      if ((node as any)[key]) {
-        const size = getRasterSize((node as any)[key]);
-        if (size.rows && size.cols) return size;
-      }
-    }
+  if ('op' in ast && 'operand' in ast) {
+    return getRasterSizeFromInput((ast as any).operand);
   }
-  return { rows: 0, cols: 0 };
+  if ((ast as any).type === 'function') {
+    return getRasterSizeFromInput((ast as any).args[0]);
+  }
+  throw new Error('Cannot determine raster size from AST');
 }
 
-function extractMetadata(node: ASTNode): GeoTiffMetadata | null {
-  if (node.type === 'layer' && (node as any).source?.metadata) {
-    return (node as any).source.metadata;
-  }
-  if ('args' in node) for (const arg of node.args) {
-    const meta = extractMetadata(arg);
-    if (meta) return meta;
-  }
-  if ('op' in node) {
-    const keys = ['expr', 'left', 'right', 'condition', 'trueExpr', 'falseExpr', 'layer', 'low', 'high'];
-    for (const key of keys) {
-      const child = (node as any)[key];
-      if (child) {
-        const meta = extractMetadata(child);
-        if (meta) return meta;
-      }
+function extractMetadata(ast: ASTNode): GeoTiffMetadata {
+  if ((ast as any).type === 'layer') {
+    const layer = ast as any;
+    if (!layer.source.metadata) {
+      throw new Error(`Layer "${layer.name}" missing metadata`);
     }
+    return layer.source.metadata;
   }
-  return null;
+  if ('op' in ast && 'left' in ast && 'right' in ast) {
+    return extractMetadata((ast as any).left);
+  }
+  if ('op' in ast && 'operand' in ast) {
+    return extractMetadata((ast as any).operand);
+  }
+  if ((ast as any).type === 'function') {
+    const src = (ast as any).args.find((a: any) => a.type === 'layer');
+    if (!src) {
+      throw new Error(`No metadata source in function "${(ast as any).name}"`);
+    }
+    return extractMetadata(src);
+  }
+  throw new Error(`Unsupported AST node for metadata: ${(ast as any).op ?? (ast as any).type}`);
 }

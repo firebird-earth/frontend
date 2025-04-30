@@ -2,14 +2,12 @@ import React from 'react';
 import { useAppSelector } from '../../hooks/useAppSelector';
 
 interface FeatureLegendProps {
-  url: string;
   categoryId: string;
   layerId: number;
   units?: string;
 }
 
 const FeatureLegend: React.FC<FeatureLegendProps> = React.memo(({ 
-  url, 
   categoryId, 
   layerId,
   units = 'units'

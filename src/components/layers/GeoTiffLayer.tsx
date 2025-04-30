@@ -2,22 +2,24 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { AlertTriangle, Loader2 } from 'lucide-react';
-import { useAppDispatch } from '../../../hooks/useAppDispatch';
-import { useAppSelector } from '../../../hooks/useAppSelector';
-import { setLayerBounds, initializeLayerValueRange, setLayerMetadata, setLayerLoading } from '../../../store/slices/layers';
-import { defaultColorScheme } from '../../../constants/colors';
-import { leafletLayerMap } from '../../../store/slices/layers/state';
-import { layerDataCache } from '../../../cache/cache';
-import { getColorScheme } from '../../../utils/colors';
-import { colorizeRasterImage } from '../../../utils/colorizeRaster';
-
-import { LayerType } from '../../../types/map';
+import { useAppDispatch } from '../../hooks/useAppDispatch';
+import { useAppSelector } from '../../hooks/useAppSelector';
+import { useLayer } from '../../hooks/useLayer';
+import { useLayerOpacity } from '../../hooks/useLayerOpacity';
+import { useLayerValueRange } from '../../hooks/useLayerValueRange';
+import { setLayerBounds, initializeLayerValueRange, setLayerMetadata, setLayerLoading } from '../../store/slices/layers';
+import { defaultColorScheme } from '../../constants/colors';
+import { leafletLayerMap } from '../../store/slices/layers/state';
+import { layerDataCache } from '../../cache/cache';
+import { getColorScheme } from '../../utils/colors';
+import { colorizeRasterImage } from '../../utils/colorizeRaster';
+import { LayerType } from '../../types/map';
 
 interface LayerConfig {
   name: string;
   description: string;
-  source: string;
   type: LayerType;
+  source: string;
   colorScheme: string;
   units: string;
 }
@@ -35,7 +37,6 @@ export function createGeoTiffLayer(categoryId: string, config: LayerConfig) {
 
   GeoTiffLayerInstance.Legend = () => (
     <GeoTiffLegend
-      url={config.source}
       categoryId={categoryId}
       colorScheme={config.colorScheme}
       units={config.units}
@@ -78,29 +79,9 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
 
   const currentAOI = useAppSelector(state => state.home.aoi.current);
   const isCreatingAOI = useAppSelector(state => state.ui.isCreatingAOI);
-
-  const opacity = useAppSelector(state => {
-    if (!categoryId || !layerId) return 1;
-    const category = state.layers.categories[categoryId];
-    if (!category) return 1;
-    const layer = category.layers.find(l => l.id === layerId);
-    return layer?.opacity ?? 1;
-  });
-
-  const valueRange = useAppSelector(state => {
-    if (!categoryId || !layerId) return null;
-    const category = state.layers.categories[categoryId];
-    if (!category) return null;
-    const layer = category.layers.find(l => l.id === layerId);
-    return layer?.valueRange;
-  });
-
-  const layer = useAppSelector(state => {
-    if (!categoryId || !layerId) return null;
-    const category = state.layers.categories[categoryId];
-    if (!category) return null;
-    return category.layers.find(l => l.id === layerId);
-  });
+  const layer = useLayer(categoryId, layerId);
+  const opacity = useLayerOpacity(categoryId, layerId);
+  const valueRange = useLayerValueRange(categoryId, layerId);
 
   const cleanupLayer = () => {
     if (layerRef.current) {

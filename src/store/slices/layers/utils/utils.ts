@@ -20,13 +20,13 @@ export function createInitialCategory(
       // Determine pane based on layer type
       let pane = MapPane.LayersPane; // Default pane
       
-      if (layer.type === LayerType.ArcGISFeatureService) {
-        pane = MapPane.OverlayPane;      
-      } else if (layer.type === LayerType.GeoTiff) {
+      if (layer.type === LayerType.Raster || layer.type === LayerType.GeoTiff) {
         pane = MapPane.FiremetricsPane;
       } else if (layer.type === LayerType.ArcGISImageService) {
         pane = MapPane.LayersPane;
-      } else if (layer.type === LayerType.TileLayer) {
+      } else if (layer.type === LayerType.ArcGISFeatureService) {
+        pane = MapPane.OverlayPane;      
+       } else if (layer.type === LayerType.TileLayer) {
         pane = MapPane.TilePane;
       }
       

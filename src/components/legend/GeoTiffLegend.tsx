@@ -2,17 +2,22 @@ import React from 'react';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { getColorScheme, getGradientForScheme } from '../../utils/colors';
 
+const DEBUG = true;
+function log(...args: any[]) {
+  if (DEBUG) {
+    console.log('[GeoTiffLegend]', ...args);
+  }
+}
+
 interface GeoTiffLegendProps {
-  url: string;
   categoryId: string;
   layerId: number;
 }
 
-const GeoTiffLegend: React.FC<GeoTiffLegendProps> = React.memo(({ 
-  url, 
-  categoryId, 
-  layerId
-}) => {
+const GeoTiffLegend: React.FC<GeoTiffLegendProps> = React.memo(({categoryId, layerId}) => {
+
+  log('lookup layer', {categoryId: categoryId, layerId: layerId})
+  
   // Get layer from Redux store
   const layer = useAppSelector(state => {
     const category = state.layers.categories[categoryId];
@@ -20,8 +25,11 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = React.memo(({
     return category.layers.find(l => l.id === layerId);
   });
 
+  log('---------layer:', {layer: layer})
+  
   // Loading state
   if (!layer?.metadata?.stats || !layer.colorScheme) {
+    log('layer not found, display placeholder legend')
     return (
       <div className="space-y-2">
         <div className="space-y-1">
@@ -34,9 +42,9 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = React.memo(({
   }
 
   const valueRange = layer.valueRange;
-  const colorScheme = getColorScheme(layer.colorScheme);
   const { min, max } = layer.metadata.stats;
-
+  const colorScheme = getColorScheme(layer.colorScheme);
+  
   if (!colorScheme) {
     console.warn('No color scheme found for layer:', layer.name);
     return null;

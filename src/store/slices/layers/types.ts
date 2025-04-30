@@ -38,13 +38,6 @@ export interface SetLayerValueRangePayload {
   max: number;
 }
 
-export interface InitializeLayerValueRangePayload {
-  categoryId: string;
-  layerId: number;
-  min: number;
-  max: number;
-}
-
 export interface SetShowMapValuesPayload {
   categoryId: string;
   layerId: number;
@@ -73,4 +66,11 @@ export interface SetLayerOrderPayload {
   categoryId: string;
   layerId: number;
   order: number;
+}
+
+export interface SetLayerLegendInfoPayload {
+  categoryId: string;
+  layerId: number;
+  colorScheme: string;
+  units: string;
 }

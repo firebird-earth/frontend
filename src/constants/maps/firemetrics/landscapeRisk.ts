@@ -49,7 +49,7 @@ export const LANDSCAPE_RISK = {
     description: 'Explosive Fire Risk',
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/explosive_fire_risk.tif`,
-    units: 'index',
+    units: 'burned acres in two hours',
     colorScheme: colorSchemes.greenYellowRed.name,
     domain: [0, 100] // Transmission index range
   },

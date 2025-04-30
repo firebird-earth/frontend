@@ -15,20 +15,19 @@ import {
   ElevationLayer,
   GeoTiffLayer,
 } from '../layers/maps';
-import QueryLayer from '../layers/home/QueryLayer';
+import QueryLayer from '../layers/QueryLayer';
 import AOIBoundaryLayer from '../layers/home/AOIBoundaryLayer';
-import { getOrderedGeoTiffLayers } from '../../store/slices/layers';
+import { getOrderedLayers } from '../../store/slices/layers';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { leafletLayerMap } from '../../store/slices/layers/state';
+import { LayerType } from '../../types/map';
+import { hashString } from '../../utils/utils';
 
-function hashString(input: string): string {
-  let hash = 0;
-  for (let i = 0; i < input.length; i++) {
-    const chr = input.charCodeAt(i);
-    hash = (hash << 5) - hash + chr;
-    hash |= 0;
+const DEBUG = false;
+function log(...args: any[]) {
+  if (DEBUG) {
+    console.log('[MapLayers]', ...args);
   }
-  return Math.abs(hash).toString(36);
 }
 
 const MapLayers: React.FC = () => {
@@ -47,7 +46,7 @@ const MapLayers: React.FC = () => {
   const {
     activeBasemap,
     activeLayers,
-    scenarioLayers,
+    activeScenarioLayers,
     activeGeoTiffLayers,
   } = useMemo(() => {
     const activeBasemap = basemaps?.layers.find(l => l.active);
@@ -67,15 +66,16 @@ const MapLayers: React.FC = () => {
       contour: elevation?.layers.find(l => l.name === 'Contour' && l.active),
     };
 
-    const scenarioLayers = scenarioCategory?.layers || [];
+    const activeGeoTiffLayers = getOrderedLayers(categories, LayerType.GeoTiff)
+      .filter(({ layer }) => layer.active);
 
-    const activeGeoTiffLayers = getOrderedGeoTiffLayers(categories)
+    const activeScenarioLayers = getOrderedLayers({ scenarios: categories.scenarios }, LayerType.Raster)
       .filter(({ layer }) => layer.active);
 
     return {
       activeBasemap,
       activeLayers,
-      scenarioLayers,
+      activeScenarioLayers,
       activeGeoTiffLayers,
     };
   }, [basemaps, wildfire, jurisdictions, elevation, scenarioCategory, categories]);
@@ -113,32 +113,6 @@ const MapLayers: React.FC = () => {
         minZoom={4}
       />
 
-      {/* Scenario Layers */}
-      {scenarioLayers.map(layer => {
-        const scenarioKey = `scenario-${layer.name}-${hashString(layer.expression || '')}`;
-        
-        // Only render QueryLayer if:
-        // 1. Layer is active and not in leafletLayerMap, OR
-        // 2. Layer is inactive and IS in leafletLayerMap (needs cleanup)
-       // if (!layer.active && !leafletLayerMap.has(scenarioKey)) {
-       //   console.log('dont render QueryLayer', layer.name)
-       //   return null;
-       // }
-
-        console.log('[MapLayers] render QueryLayer', layer.name)
-        return (
-          <QueryLayer
-            key={layer.name}
-            active={layer.active}
-            scenario={{
-              name: layer.name,
-              description: layer.description || '',
-              expression: layer.expression || ''
-            }}
-          />
-        );
-      })}
-
       {/* Jurisdiction Layers */}
       {activeLayers.states && <StatesLayer active={true} />}
       {activeLayers.counties && <CountiesLayer active={true} />}
@@ -170,10 +144,22 @@ const MapLayers: React.FC = () => {
       {/* GeoTIFF Layers */}
       {activeGeoTiffLayers.map(({ layer, categoryId }) => (
         <GeoTiffLayer
+          key={`${categoryId}-${layer.id}-${layer.name}-${layer.active}-${layer.order}`}
           categoryId={categoryId}
           layerId={layer.id}
-          key={`${categoryId}-${layer.id}-${layer.name}-${layer.active}-${layer.order}`}
           url={layer.source}
+          active={true}
+          zIndex={layer.order || 0}
+        />
+      ))}
+
+      {/* Scenario Layers */}
+      {activeScenarioLayers.map(({ layer, categoryId }) => (
+        <QueryLayer
+          key={`${categoryId}-${layer.id}-${layer.name}-${layer.active}-${layer.order}`}
+          categoryId={categoryId}
+          layerId={layer.id}
+          expression={layer.expression}
           active={true}
           zIndex={layer.order || 0}
         />

@@ -49,7 +49,7 @@ const HomeTab: React.FC = () => {
       setShowDialog(true);
       return;
     }
-    console.log('[HomeTab dispatch toggleSingleLayer')
+    console.log('[HomeTab] dispatch toggleSingleLayer')
     //const layerId = hashString(`${layer.name}-${layer.expression}`);
     dispatch(toggleSingleLayer({ categoryId: 'scenarios', layerId: layer.id }));
   };
@@ -100,7 +100,7 @@ const HomeTab: React.FC = () => {
 
       <div>
         <SectionHeader 
-          title="Mitigation Scenarios" 
+          title="Treatment Scenarios" 
           isOpen={sections.scenarios} 
           onToggle={() => dispatch(toggleSection('scenarios'))}
           showAdd
@@ -110,12 +110,17 @@ const HomeTab: React.FC = () => {
             {scenarioLayers.map(layer => (
             <button
               key={layer.id}
-              onClick={() => handleScenarioClick(layer)}
-              className={`w-full flex items-center space-x-2 p-1 text-sm text-gray-700 dark:text-gray-300 rounded-lg ${layer.active ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium' : 'hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-              title={layer.expression}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleScenarioClick(layer);
+              }}
+              className={`w-full flex items-center space-x-2 p-1 text-sm ${layer.active ? 'bg-blue-50 dark:bg-blue-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-700'} rounded-lg`}
+              title={layer.expression?.replace(/"/g, '')}
             >
               <Zap className="h-4 w-4 text-gray-500 dark:text-gray-400" />
-              <span>{layer.name}</span>
+              <span className={`text-sm ${layer.active ? 'text-blue-700 dark:text-blue-300 font-medium' : 'text-gray-700 dark:text-gray-300'}`}>
+                {layer.name}
+              </span>
             </button>
           ))}
           </div>

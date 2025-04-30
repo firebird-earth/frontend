@@ -2,31 +2,21 @@
 import { parseExpression } from './parser';
 import { bindLayers } from './binder';
 import { layerDataCache } from '../cache/cache';
-import { evaluateAST } from './evaluator';
+import { evaluateAST, EvaluateResult } from './evaluator';
 import { store } from '../store';
 import { LayerType, MapPane } from '../types/map';
 import { toggleLayer } from '../store/slices/layers';
-import { addLayer } from '../store/slices/layers/actions';
+import { RasterData } from '../types/geotiff';
+import { defaultColorScheme, defaultColorSchemeBinary } from '../constants/colors';
 
-export const execExpression = async (expression: string) => {
+export interface ExecResult {
+  data: RasterData;
+  metadata: any; // GeoTiffMetadata, imported above if needed
+  isMask: boolean;
+}
+
+export const execExpression = async (expression: string): Promise<ExecResult | void> => {
   try {
-    // First check if we already have a layer for this expression
-    const state = store.getState();
-
-    console.log('getState():', state)
-    
-    const existingLayer = state.layers.categories.scenarios?.layers.find(
-      l => l.metadata?.expression === expression
-    );
-
-    if (existingLayer) {
-      // Just toggle the existing layer
-      store.dispatch(toggleLayer({ 
-        categoryId: 'scenarios',
-        layerId: existingLayer.id 
-      }));
-      return;
-    }
 
     console.log('parseExpression:', expression);
     
@@ -42,16 +32,24 @@ export const execExpression = async (expression: string) => {
     });
     console.log('Bound AST:', boundAst);
 
-    // Evaluate the bound AST
-    const result = await evaluateAST(boundAst) satisfies RasterData;
+    console.log('Calling evaluateAST with boundAst:', JSON.stringify(boundAst, (key, value) => {
+      if (key === 'rasterArray' && ArrayBuffer.isView(value)) {
+        return `Int16Array(${value.length})`; // just show array type + size
+      }
+      return value;
+    }, 2));
+        
+    // Evaluate the *bound* AST
+    const { data, metadata }: EvaluateResult = await evaluateAST(boundAst);
+ 
     console.log('Evaluation result:', {
-      rasterArray: result.rasterArray,
-      width: result.width,
-      height: result.height,
-      metadata: result.metadata
+      rasterArray: data.rasterArray,
+      width: data.width,
+      height: data.height,
+      metadata
     });
 
-    return result;
+    return { data, metadata };
 
   } catch (error) {
     console.error('Failed to execute expression:', error);

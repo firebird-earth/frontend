@@ -95,16 +95,18 @@ const LayersTab: React.FC = () => {
             {layer.name}
           </span>
         </div>
-        <button 
-          onClick={(e) => handleEyeClick(e, categoryId, layer.id)}
-          className={`${
-            layer.active 
-              ? 'text-blue-500 dark:text-blue-400' 
-              : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
-          }`}
-        >
-          {layer.active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-        </button>
+        {categoryId !== 'basemaps' && (
+          <button 
+            onClick={(e) => handleEyeClick(e, categoryId, layer.id)}
+            className={`${
+              layer.active 
+                ? 'text-blue-500 dark:text-blue-400' 
+                : 'text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300'
+            }`}
+          >
+            {layer.active ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+          </button>
+        )}
       </div>
     );
   };

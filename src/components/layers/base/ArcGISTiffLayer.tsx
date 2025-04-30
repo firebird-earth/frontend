@@ -10,7 +10,7 @@ import { colorizeRasterImage } from '../../../utils/colorizeRaster';
 import { MapServiceConfig } from '../../../services/maps/types';
 import { layerDataCache } from '../../../cache/cache';
 import { leafletLayerMap } from '../../../store/slices/layers/state';
-import { useLayerFromCategory } from '../../../hooks/useLayerFromCategory';
+import { useLayerFromCategory } from '../../../hooks/useLayer';
 import { getColorScheme, getGradientForScheme } from '../../../utils/colors';
 import { defaultColorScheme } from '../../../constants/colors';
 import { ELEVATION_SERVICE } from '../../../constants/maps/layers/elevation';

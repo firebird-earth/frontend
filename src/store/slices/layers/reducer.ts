@@ -13,49 +13,60 @@ function handleToggleExclusive(state: LayersState, categoryId: string, layerId: 
   const layer = findLayer(state, categoryId, layerId);
   if (!layer) return;
 
-  // Handle basemaps first - they're always exclusive
-  if (categoryId === 'basemaps') {
-    state.categories.basemaps.layers.forEach(l => {
-      l.active = l.id === layerId;
+  const exclusiveCategories = ['basemaps', 'scenarios'];
+
+  if (exclusiveCategories.includes(categoryId)) {
+    const category = state.categories[categoryId];
+    if (!category) return;
+
+    const clickedAlreadyActive = category.layers.find(l => l.id === layerId)?.active;
+
+    category.layers.forEach(l => {
+      if (clickedAlreadyActive) {
+        // If clicked layer was already active, turn it OFF
+        l.active = false;
+      } else {
+        // Otherwise, only the clicked layer is active
+        l.active = (l.id === layerId);
+      }
     });
+
     return;
   }
 
-  // For Layers tab:
-  // Only turn off other layers within the Layers tab categories
   if (isLayersTab(categoryId)) {
+    const clickedAlreadyActive = state.categories[categoryId]?.layers.find(l => l.id === layerId)?.active;
+
     Object.entries(state.categories).forEach(([catId, cat]) => {
       if (isLayersTab(catId)) {
         cat.layers.forEach(l => {
-          if (catId === categoryId && l.id === layerId) {
-            // Toggle the clicked layer
-            l.active = !l.active;
-          } else {
-            // Turn off other layers only in Layers tab categories
+          if (clickedAlreadyActive) {
             l.active = false;
+          } else {
+            l.active = (catId === categoryId && l.id === layerId);
           }
         });
       }
     });
+
     return;
   }
 
-  // For FireMetrics tab:
-  // Only turn off other layers within the FireMetrics tab categories
   if (isFiremetricsTab(categoryId)) {
+    const clickedAlreadyActive = state.categories[categoryId]?.layers.find(l => l.id === layerId)?.active;
+
     Object.entries(state.categories).forEach(([catId, cat]) => {
       if (isFiremetricsTab(catId)) {
         cat.layers.forEach(l => {
-          if (catId === categoryId && l.id === layerId) {
-            // Toggle the clicked layer
-            l.active = !l.active;
-          } else {
-            // Turn off other layers only in FireMetrics tab categories
+          if (clickedAlreadyActive) {
             l.active = false;
+          } else {
+            l.active = (catId === categoryId && l.id === layerId);
           }
         });
       }
     });
+
     return;
   }
 }
@@ -87,11 +98,11 @@ export const layersReducer = createReducer(initialState, (builder) => {
         const layer = category.layers.find(l => l.id === layerId);
         if (!layer) return;
 
+        console.log("---> toggleLayer:",{layer:layer.name, id:layer.id, pane:layer.pane, order:layer.order}) 
+
         if (!layer.active && !layer.order) {
           layer.order = ++paneCounters[layer.pane];
-          console.log("---> toggle layer:",{layer:layer.name, id:layer.id, pane:layer.pane, order:layer.order}) 
-        }
-        
+        }        
         layer.active = !layer.active;
       }
     })
@@ -104,9 +115,10 @@ export const layersReducer = createReducer(initialState, (builder) => {
       const layer = category.layers.find(l => l.id === layerId);
       if (!layer) return;
 
+      console.log("---> toggleSingleLayer:",{name:layer.name, layer:layer.id, pane:layer.pane, order: layer.order})
+
       if (!layer.active && !layer.order) {
         layer.order = ++paneCounters[layer.pane];
-        console.log("---> activate layer:",{name:layer.name, layer:layer.id, pane:layer.pane, order: layer.order})
       }
       handleToggleExclusive(state, categoryId, layerId);
     })
@@ -213,7 +225,14 @@ export const layersReducer = createReducer(initialState, (builder) => {
         layer.order = order;
       }
     })
-    .addCase(actions.addLayer, (state, action) => {
+    .addCase(actions.setLayerLegendInfo, (state, action) => {
+      const { categoryId, layerId, colorScheme, units } = action.payload;
+      const layer = findLayer(state, categoryId, layerId);
+      if (layer) {
+        layer.colorScheme = colorScheme;
+        layer.units = units;
+      }
+    })    .addCase(actions.addLayer, (state, action) => {
       const { categoryId, layer } = action.payload;
       const category = state.categories[categoryId];
       if (!category) return;

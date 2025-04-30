@@ -51,12 +51,12 @@ const MapComponent: React.FC = () => {
     const map = mapRef.current;
 
     // Create panes with specific z-index values that sit below the default feature pane
-    map.createPane('scenariosPane');
+    //map.createPane('scenariosPane');
     map.createPane('firemetricsPane');
     map.createPane('layersPane');
 
     // Set z-index for each pane (default feature pane is 400)
-    map.getPane('scenariosPane')!.style.zIndex = PaneZIndex[MapPane.ScenariosPane].toString();
+    //map.getPane('scenariosPane')!.style.zIndex = PaneZIndex[MapPane.ScenariosPane].toString();
     map.getPane('firemetricsPane')!.style.zIndex = PaneZIndex[MapPane.FiremetricsPane].toString();
     map.getPane('layersPane')!.style.zIndex = PaneZIndex[MapPane.LayersPane].toString();
 

@@ -1,8 +1,8 @@
 import { createTiffLayer } from '../base/ArcGISTiffLayer';
 import { createFeatureLayer } from '../base/ArcGISFeatureLayer';
 import { createTileLayer } from '../base/TileLayer';
-import { createGeoTiffLayer } from '../base/GeoTiffLayer';
-import { createQueryLayer } from '../home/QueryLayer';
+import { createGeoTiffLayer } from '../GeoTiffLayer';
+import { createQueryLayer } from '../QueryLayer';
 import { ELEVATION, ELEVATION_CATEGORY } from '../../../constants/maps/layers/elevation';
 import { JURISDICTIONS, JURISDICTIONS_CATEGORY } from '../../../constants/maps/layers/jurisdictions';
 import { WILDFIRE, WILDFIRE_CATEGORY } from '../../../constants/maps/layers/wildfire';
@@ -37,12 +37,12 @@ export const ScenarioLayers = scenarios.map(scenario =>
 );
 
 // Export base components
-export { default as GeoTiffLayer } from '../base/GeoTiffLayer';
+export { default as GeoTiffLayer } from '../GeoTiffLayer';
 export { default as GeoTiffLegend } from '../../legend/GeoTiffLegend';
 
 // Export factory functions
-export { createGeoTiffLayer } from '../base/GeoTiffLayer';
+export { createGeoTiffLayer } from '../GeoTiffLayer';
 export { createTiffLayer } from '../base/ArcGISTiffLayer';
 export { createFeatureLayer } from '../base/ArcGISFeatureLayer';
 export { createTileLayer } from '../base/TileLayer';
-export { createQueryLayer } from '../home/QueryLayer';
+export { createQueryLayer } from '../QueryLayer';

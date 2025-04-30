@@ -1,30 +1,26 @@
 import { LayerType, MapLayer } from '../../../../types/map';
 import { PaneZIndex } from '../../../../types/map'
 
-// Debug configuration
-const OrderingGetConfig = {
-  debug: false
-} as const;
-
-export function setOrderingGetDebug(enabled: boolean) {
-  (OrderingGetConfig as any).debug = enabled;
+const DEBUG = false;
+function log(...args: any[]) {
+  if (DEBUG) {
+    console.log('[orderingGet]', ...args);
+  }
 }
 
 /**
- * Returns GeoTIFF layers in order
+ * Returns layers in order
  * @param categories The layer categories from the Redux store
- * @returns An array of GeoTIFF layers with their category IDs
+ * @returns An array of layers with their category IDs
  */
-export function getOrderedGeoTiffLayers(categories: any): { layer: MapLayer; categoryId: string }[] {
-  if (OrderingGetConfig.debug) {
-    console.log('Getting ordered GeoTIFF layers...');
-  }
+export function getOrderedLayers(categories: any, layerType: LayerType): { layer: MapLayer; categoryId: string }[] {
+  log('Getting ordered layers...', { layerType });
 
-  // Get all ACTIVE GeoTIFF layers from all categories
+  // Get all ACTIVE layers of specified type from all categories
   const layersWithCategories = Object.entries(categories)
     .flatMap(([categoryId, category]) => {
       const activeLayers = category.layers.filter(
-        (l: MapLayer) => l.active && l.type === LayerType.GeoTiff
+        (l: MapLayer) => l.active && l.type === layerType
       );
       return activeLayers.map(layer => ({
         layer,
@@ -32,23 +28,21 @@ export function getOrderedGeoTiffLayers(categories: any): { layer: MapLayer; cat
       }));
     });
 
-  if (OrderingGetConfig.debug) {
-    console.log('Found GeoTIFF layers:', layersWithCategories.map(({ layer, categoryId }) => ({
-      name: layer.name,
-      categoryId,
-      order: layer.order
-    })));
-  }
+  log('Found layers:', layersWithCategories.map(({ layer, categoryId }) => ({
+    name: layer.name,
+    categoryId,
+    type: layer.type,
+    order: layer.order
+  })));
 
   // Sort by order property
   const sortedLayers = layersWithCategories.sort((a, b) => (b.layer.order || 0) - (a.layer.order || 0));
 
-  if (OrderingGetConfig.debug) {
-    console.log('Sorted GeoTIFF layers:', sortedLayers.map(({ layer }) => ({
-      name: layer.name,
-      order: layer.order
-    })));
-  }
+  log('Sorted layers:', sortedLayers.map(({ layer }) => ({
+    name: layer.name,
+    type: layer.type,
+    order: layer.order
+  })));
 
   return sortedLayers;
 }
@@ -59,9 +53,7 @@ export function getOrderedGeoTiffLayers(categories: any): { layer: MapLayer; cat
  * @returns An array of layers sorted by pane z-index (highest to lowest) and order within each pane
  */
 export function getOrderedLayersByPane(categories: any): { layer: MapLayer; categoryId: string }[] {
-  if (OrderingGetConfig.debug) {
-    console.log('\n=== Starting Layer Ordering ===');
-  }
+  log('\n=== Starting Layer Ordering ===');
 
   // Get all active layers except basemaps
   const layers = Object.entries(categories)
@@ -75,19 +67,15 @@ export function getOrderedLayersByPane(categories: any): { layer: MapLayer; cate
       }));
     });
 
-  if (OrderingGetConfig.debug) {
-    console.log('\nActive Layers:', layers.map(({ layer, categoryId }) => ({
-      name: layer.name,
-      categoryId,
-      type: layer.type,
-      pane: layer.pane || 'overlayPane',
-      order: layer.order
-    })));
-  }
+  log('\nActive Layers:', layers.map(({ layer, categoryId }) => ({
+    name: layer.name,
+    categoryId,
+    type: layer.type,
+    pane: layer.pane || 'overlayPane',
+    order: layer.order
+  })));
 
-  if (OrderingGetConfig.debug) {
-    console.log('\nPane Z-Index Values:', PaneZIndex);
-  }
+  log('\nPane Z-Index Values:', PaneZIndex);
 
   // Group layers by pane
   const paneGroups = new Map<string, { layer: MapLayer; categoryId: string }[]>();
@@ -100,15 +88,13 @@ export function getOrderedLayersByPane(categories: any): { layer: MapLayer; cate
     paneGroups.get(pane)!.push(item);
   });
 
-  if (OrderingGetConfig.debug) {
-    console.log('\nLayers Grouped by Pane:');
-    paneGroups.forEach((paneLayers, pane) => {
-      console.log(`\n${pane} (z-index: ${PaneZIndex[pane]}):`);
-      paneLayers.forEach(({ layer }) => {
-        console.log(`  - ${layer.name} (order: ${layer.order})`);
-      });
+  log('\nLayers Grouped by Pane:');
+  paneGroups.forEach((paneLayers, pane) => {
+    log(`\n${pane} (z-index: ${PaneZIndex[pane]}):`);
+    paneLayers.forEach(({ layer }) => {
+      log(`  - ${layer.name} (order: ${layer.order})`);
     });
-  }
+  });
 
   // Sort layers within each pane by order
   paneGroups.forEach(paneLayers => {
@@ -120,20 +106,16 @@ export function getOrderedLayersByPane(categories: any): { layer: MapLayer; cate
     .sort(([, aZIndex], [, bZIndex]) => bZIndex - aZIndex)
     .map(([pane]) => pane);
 
-  if (OrderingGetConfig.debug) {
-    console.log('\nSorted Pane Order:', sortedPanes);
-  }
+  log('\nSorted Pane Order:', sortedPanes);
 
   // Combine all layers in correct z-index order
   const result = sortedPanes.flatMap(pane => paneGroups.get(pane) || []);
 
-  if (OrderingGetConfig.debug) {
-    console.log('\nFinal Layer Order:');
-    result.forEach(({ layer, categoryId }) => {
-      console.log(`  - ${layer.name} (${categoryId}, pane: ${layer.pane || 'overlayPane'}, order: ${layer.order})`);
-    });
-    console.log('\n=== Layer Ordering Complete ===\n');
-  }
+  log('\nFinal Layer Order:');
+  result.forEach(({ layer, categoryId }) => {
+    log(`  - ${layer.name} (${categoryId}, pane: ${layer.pane || 'overlayPane'}, order: ${layer.order})`);
+  });
+  log('\n=== Layer Ordering Complete ===\n');
 
   return result;
 }

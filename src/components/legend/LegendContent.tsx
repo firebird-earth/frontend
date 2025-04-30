@@ -10,6 +10,13 @@ import { ELEVATION } from '../../constants/maps/layers/elevation';
 import { FIRE_METRICS } from '../../constants/maps';
 import { selectOrderedLayers } from '../../store/slices/layers/selectors';
 
+const DEBUG = true;
+function log(...args: any[]) {
+  if (DEBUG) {
+    console.log('[LegendContent]', ...args);
+  }
+}
+
 interface LegendContentProps {
   onShowAbout: (categoryId: string, layerId: number) => void;
   onShowFeatureAbout: (categoryId: string, layerId: number) => void;
@@ -29,6 +36,14 @@ const LegendContent: React.FC<LegendContentProps> = ({
 
   if (activeLayers.length === 0) return null;
 
+  log('activeLayers:', activeLayers.map(({ layer, categoryId }) => ({
+    name: layer.name,
+    type: layer.type,
+    categoryId,
+    active: layer.active,
+    metadata: layer.metadata
+  })));
+
   return (
     <div className="p-4 space-y-6 bg-white">
       {activeLayers.map(({ categoryId, layer }) => {
@@ -37,6 +52,7 @@ const LegendContent: React.FC<LegendContentProps> = ({
           (layer.type === LayerType.Vector && layer.source?.includes('/FeatureServer/'));
         const isArcGISImageService = layer.type === LayerType.ArcGISImageService;
         const isTileLayer = layer.type === LayerType.TileLayer;
+        const isRasterLayer = layer.type === LayerType.Raster;
 
         // Determine units
         let units = layer.units || 'units';
@@ -77,7 +93,7 @@ const LegendContent: React.FC<LegendContentProps> = ({
                         )
                       }
                       onAboutClick={
-                        layer.type === LayerType.GeoTiff || isArcGISImageService
+                        (layer.type === LayerType.GeoTiff || isArcGISImageService || isRasterLayer)
                           ? () => onShowAbout(categoryId, layer.id)
                           : undefined
                       }
@@ -97,7 +113,23 @@ const LegendContent: React.FC<LegendContentProps> = ({
 
             {/* GeoTIFF Legend */}
             {layer.type === LayerType.GeoTiff && (
-              <GeoTiffLegend url={layer.source} categoryId={categoryId} layerId={layer.id} />
+              <GeoTiffLegend categoryId={categoryId} layerId={layer.id} />
+            )}
+
+            {/* Raster Legend */}
+            {layer.type === LayerType.Raster && (
+              layer.metadata?.isBinary ? (
+                <FeatureLegend
+                  categoryId={categoryId}
+                  layerId={layer.id}
+                  units={units}
+                />
+              ) : (
+                <GeoTiffLegend
+                  categoryId={categoryId}
+                  layerId={layer.id}
+                />
+              )
             )}
 
             {/* ArcGIS Image Service Legend */}
@@ -113,7 +145,6 @@ const LegendContent: React.FC<LegendContentProps> = ({
             {/* Feature Layer or TileLayer Legend */}
             {(isFeatureLayer || layer.type === LayerType.Vector || isTileLayer) && layer.legend && (
               <FeatureLegend
-                url={layer.source}
                 categoryId={categoryId}
                 layerId={layer.id}
                 units={units}

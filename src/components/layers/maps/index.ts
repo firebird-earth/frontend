@@ -42,7 +42,7 @@ export { default as GeoTiffLegend } from '../../legend/GeoTiffLegend';
 
 // Export factory functions
 export { createGeoTiffLayer } from '../GeoTiffLayer';
-export { createTiffLayer } from '../base/ArcGISTiffLayer';
-export { createFeatureLayer } from '../base/ArcGISFeatureLayer';
-export { createTileLayer } from '../base/TileLayer';
+export { createTiffLayer } from '../ArcGISTiffLayer';
+export { createFeatureLayer } from '../ArcGISFeatureLayer';
+export { createTileLayer } from '../TileLayer';
 export { createQueryLayer } from '../QueryLayer';

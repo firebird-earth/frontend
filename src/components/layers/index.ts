@@ -3,13 +3,13 @@ import { createFeatureLayer } from './ArcGISFeatureLayer';
 import { createTileLayer } from './TileLayer';
 import { createGeoTiffLayer } from './GeoTiffLayer';
 import { createQueryLayer } from './QueryLayer';
-import { ELEVATION, ELEVATION_CATEGORY } from '../../constants/maps/layers/elevation';
-import { JURISDICTIONS, JURISDICTIONS_CATEGORY } from '../../constants/maps/layers/jurisdictions';
-import { WILDFIRE, WILDFIRE_CATEGORY } from '../../constants/maps/layers/wildfire';
+import { ELEVATION, ELEVATION_CATEGORY } from '../../constants/maps/elevation';
+import { JURISDICTIONS, JURISDICTIONS_CATEGORY } from '../../constants/maps/jurisdictions';
+import { WILDFIRE, WILDFIRE_CATEGORY } from '../../constants/maps/wildfire';
 import { FIRE_METRICS } from '../../constants/maps';
 import { LANDSCAPE_RISK_CATEGORY } from '../../constants/maps/landscapeRisk';
 import { FUELS_CATEGORY } from '../../constants/maps/fuels';
-import { scenarios } from '../../constants/maps/layers/scenarios';
+import { scenarios } from '../../constants/maps/scenarios';
 
 // ---------------- LAYERS TAB ----------------
 

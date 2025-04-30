@@ -9,7 +9,7 @@ import { leafletLayerMap } from '../../store/slices/layers/state';
 import { colorizeRasterImage } from '../../utils/colorizeRaster';
 import { getColorScheme } from '../../utils/colors';
 import { defaultColorScheme, defaultColorSchemeBinary } from '../../constants/colors';
-import { scenarioLegendBinary } from '../../constants/maps/layers/scenarios';
+import { scenarioLegendBinary } from '../../constants/maps/scenarios';
 import { execExpression } from '../../query/exec';
 import { layerDataCache } from '../../cache/cache';
 import { hashString } from '../../utils/utils';

@@ -1,7 +1,7 @@
-import { LayerType } from '../../../types/map';
-import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
-import { STATES_LAYER, COUNTIES_LAYER, FEDERAL_LANDS_LAYER, USFS_LANDS_LAYER, USFWS_LANDS_LAYER } from '../../../constants/urls';
+import { LayerType } from '../../types/map';
+import { LayerCategory } from '../../store/slices/layers/types';
+import { createInitialCategory } from '../../store/slices/layers/utils/utils';
+import { STATES_LAYER, COUNTIES_LAYER, FEDERAL_LANDS_LAYER, USFS_LANDS_LAYER, USFWS_LANDS_LAYER } from '../urls';
 
 export const JURISDICTIONS = {
   STATES: {

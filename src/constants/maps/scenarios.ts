@@ -1,8 +1,8 @@
-import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
-import { QueryExpression } from '../../../types/map'
-import { MapPane } from '../../../types/map';
-import { LayerType, MapLayer } from '../../../types/map';
+import { LayerCategory } from '../../store/slices/layers/types';
+import { createInitialCategory } from '../../store/slices/layers/utils/utils';
+import { QueryExpression } from '../../types/map'
+import { MapPane } from '../../types/map';
+import { LayerType, MapLayer } from '../../types/map';
 
 export const scenarios: QueryExpression[] = [
     {

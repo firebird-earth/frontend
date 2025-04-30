@@ -1,7 +1,7 @@
-import { LayerType } from '../../../types/map';
-import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
-import { BASEMAP_LAYERS } from '../../urls';
+import { LayerType } from '../../types/map';
+import { LayerCategory } from '../../store/slices/layers/types';
+import { createInitialCategory } from '../../store/slices/layers/utils/utils';
+import { BASEMAP_LAYERS } from '../urls';
 
 export const BASEMAPS = {
   STREET: {

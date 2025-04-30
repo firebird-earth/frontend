@@ -1,8 +1,8 @@
-import { LayerType } from '../../../types/map';
-import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
-import { MapServiceConfig } from '../../../services/maps/types';
-import { colorSchemes } from '../../../constants/colors';
+import { LayerType } from '../../types/map';
+import { LayerCategory } from '../../store/slices/layers/types';
+import { createInitialCategory } from '../../store/slices/layers/utils/utils';
+import { MapServiceConfig } from '../../services/maps/types';
+import { colorSchemes } from '../colors';
 
 // Define rendering rules for each layer type
 const ELEVATION_RULE = {

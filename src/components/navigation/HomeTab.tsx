@@ -8,7 +8,7 @@ import { setCurrentAOI } from '../../store/slices/home/actions';
 import { navigateToLocation } from '../../utils/map';
 import { useAOI } from '../../hooks/useAOI';
 import locations from '../../constants/places/locations';
-import { scenarios } from '../../constants/maps/layers/scenarios';
+import { scenarios } from '../../constants/maps/scenarios';
 import { store } from '../../store';
 import { execExpression } from '../../query/exec';
 import { showDialog } from '../../store/slices/uiSlice';

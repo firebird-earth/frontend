@@ -1,6 +1,6 @@
-import { LayerType } from '../../../types/map';
-import { LayerCategory } from '../../../store/slices/layers/types';
-import { createInitialCategory } from '../../../store/slices/layers/utils/utils';
+import { LayerType } from '../../types/map';
+import { LayerCategory } from '../../store/slices/layers/types';
+import { createInitialCategory } from '../../store/slices/layers/utils/utils';
 
 export const INFRASTRUCTURE = {
   BUILDINGS: {

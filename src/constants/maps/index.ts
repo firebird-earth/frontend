@@ -1,8 +1,40 @@
-import { MAP_LAYERS } from './layers';
-
 import { LANDSCAPE_RISK } from './landscapeRisk';
 import { VALUE_AT_RISK } from './valueAtRisk';
 import { FUELS } from './fuels';
+
+import { BASEMAPS } from './basemaps';
+import { WILDFIRE } from './wildfire';
+import { JURISDICTIONS } from './jurisdictions';
+import { TRANSPORTATION } from './transportation';
+import { WATER } from './water';
+import { INFRASTRUCTURE } from './infrastructure';
+import { RESTORATION_CLASS } from './restorationClass';
+import { HABITAT } from './habitat';
+import { LANDSCAPE } from './landscape';
+
+export const MAP_LAYERS = {
+  BASEMAPS,
+  WILDFIRE,
+  JURISDICTIONS,
+  TRANSPORTATION,
+  WATER,
+  INFRASTRUCTURE,
+  RESTORATION_CLASS,
+  HABITAT,
+  LANDSCAPE
+} as const;
+
+export {
+  BASEMAPS,
+  WILDFIRE,
+  JURISDICTIONS,
+  TRANSPORTATION,
+  WATER,
+  INFRASTRUCTURE,
+  RESTORATION_CLASS,
+  HABITAT,
+  LANDSCAPE
+};
 
 export const FIRE_METRICS = {
   LANDSCAPE_RISK,
@@ -43,5 +75,3 @@ export const CATEGORY_TAB_MAPPING = {
 export const isHomeTab = (categoryId: string): boolean => CATEGORY_TAB_MAPPING[categoryId] === Tab.HOME;
 export const isLayersTab = (categoryId: string): boolean => categoryId !== 'basemaps' && CATEGORY_TAB_MAPPING[categoryId] === Tab.LAYERS;
 export const isFiremetricsTab = (categoryId: string): boolean => CATEGORY_TAB_MAPPING[categoryId] === Tab.FIREMETRICS;
-
-export { MAP_LAYERS };

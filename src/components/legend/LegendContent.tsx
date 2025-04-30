@@ -6,7 +6,7 @@ import LayerMenu from './LayerMenu';
 import GeoTiffLegend from './GeoTiffLegend';
 import ArcGISLegend from './ArcGISLegend';
 import FeatureLegend from './FeatureLegend';
-import { ELEVATION } from '../../constants/maps/layers/elevation';
+import { ELEVATION } from '../../constants/maps/elevation';
 import { FIRE_METRICS } from '../../constants/maps';
 import { selectOrderedLayers } from '../../store/slices/layers/selectors';
 

@@ -14,7 +14,7 @@ import {
   WUILayer,
   ElevationLayer,
   GeoTiffLayer,
-} from '../layers/maps';
+} from '../layers';
 import QueryLayer from '../layers/QueryLayer';
 import AOIBoundaryLayer from '../layers/AOIBoundaryLayer';
 import { getOrderedLayers } from '../../store/slices/layers';

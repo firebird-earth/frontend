@@ -36,13 +36,13 @@ export const ScenarioLayers = scenarios.map(scenario =>
   createQueryLayer('scenarios', scenario)
 );
 
-// Export base components
-export { default as GeoTiffLayer } from '../GeoTiffLayer';
-export { default as GeoTiffLegend } from '../../legend/GeoTiffLegend';
+// Export layer components
+export { default as GeoTiffLayer } from './GeoTiffLayer';
+export { default as GeoTiffLegend } from '../legend/GeoTiffLegend';
 
 // Export factory functions
-export { createGeoTiffLayer } from '../GeoTiffLayer';
-export { createTiffLayer } from '../ArcGISTiffLayer';
-export { createFeatureLayer } from '../ArcGISFeatureLayer';
-export { createTileLayer } from '../TileLayer';
-export { createQueryLayer } from '../QueryLayer';
+export { createGeoTiffLayer } from './GeoTiffLayer';
+export { createTiffLayer } from './ArcGISTiffLayer';
+export { createFeatureLayer } from './ArcGISFeatureLayer';
+export { createTileLayer } from './TileLayer';
+export { createQueryLayer } from './QueryLayer';

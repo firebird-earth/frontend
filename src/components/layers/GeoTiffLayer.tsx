@@ -10,10 +10,12 @@ import { useLayerValueRange } from '../../hooks/useLayerValueRange';
 import { setLayerBounds, initLayerValueRange, setLayerMetadata, setLayerLoading } from '../../store/slices/layersSlice';
 import { defaultColorScheme } from '../../constants/colors';
 import { leafletLayerMap } from '../../store/slices/layersSlice/state';
+import { LayerType } from '../../types/map';
 import { layerDataCache } from '../../cache/cache';
 import { getColorScheme } from '../../utils/colors';
+import { fillNoDataFocalMean } from '../../utils/fillNoData';
 import { colorizeRasterImage } from '../../utils/colorizeRaster';
-import { LayerType } from '../../types/map';
+import { superscaleCanvas } from '../../utils/superScaleRaster';
 
 interface LayerConfig {
   name: string;
@@ -50,6 +52,7 @@ export function createGeoTiffLayer(categoryId: string, config: LayerConfig) {
 interface GeoTiffLayerProps {
   url: string;
   active: boolean;
+  zIndex?: number;
   categoryId?: string;
   layerId?: number;
   onError?: (error: Error) => void;
@@ -86,9 +89,9 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
   const cleanupLayer = () => {
     if (layerRef.current) {
       if (layer) {
-        const existingLeafletLayer = leafletLayerMap.get(layerId);
+        const existingLeafletLayer = leafletLayerMap.get(layerId!);
         if (existingLeafletLayer) {
-          leafletLayerMap.delete(layerId);
+          leafletLayerMap.delete(layerId!);
         }
       }
       map.removeLayer(layerRef.current);
@@ -135,36 +138,27 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
     const { rasterArray, width, height, noDataValue } = rasterData;
 
     const domain = layer.domain || [valueRange.defaultMin, valueRange.defaultMax];
-    const schemeObj = getColorScheme(layer.colorScheme || defaultColorScheme);
+    const colorScheme = getColorScheme(layer.colorScheme.name || defaultColorScheme.name);
 
+    const windowRadius = 2;
+    const filled = fillNoDataFocalMean(rasterArray, width, height, noDataValue, windowRadius);
+    
+    // Colorize the raster into ImageData
     const imageData = colorizeRasterImage(
-      rasterArray,
+      filled,
       width,
       height,
       noDataValue,
-      schemeObj.colors,
+      colorScheme.colors,
       domain,
       valueRange
     );
 
-    const baseCanvas = document.createElement('canvas');
-    baseCanvas.width = width;
-    baseCanvas.height = height;
-    const baseCtx = baseCanvas.getContext('2d');
-    if (!baseCtx) return;
-    baseCtx.putImageData(imageData, 0, 0);
-
-    const scaledCanvas = document.createElement('canvas');
-    scaledCanvas.width = width * scale;
-    scaledCanvas.height = height * scale;
-    const scaledCtx = scaledCanvas.getContext('2d');
-    if (!scaledCtx) return;
-    scaledCtx.imageSmoothingEnabled = SUPERSAMPLE;
-    scaledCtx.drawImage(baseCanvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+    // Use shared superscale function to create the scaled canvas off-screen
+    const scaledCanvas = superscaleCanvas(imageData, width, height, scale, SUPERSAMPLE);
 
     canvasRef.current = scaledCanvas;
     const dataUrl = scaledCanvas.toDataURL();
-    imageDataRef.current = dataUrl;
 
     const imageOverlay = L.imageOverlay(dataUrl, boundsRef.current, {
       opacity: opacity,
@@ -176,7 +170,7 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
 
     imageOverlay.addTo(map);
     layerRef.current = imageOverlay;
-    leafletLayerMap.set(layerId, imageOverlay);
+    leafletLayerMap.set(layerId!, imageOverlay);
   };
 
   useEffect(() => {

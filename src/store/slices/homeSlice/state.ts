@@ -17,7 +17,7 @@ export const initialState: HomeState = {
   },
   grid: {
     show: false,
-    size: 100,
+    size: 10,
     unit: 'acres'
   }
 };

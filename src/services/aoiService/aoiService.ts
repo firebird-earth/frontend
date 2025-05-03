@@ -4,7 +4,7 @@ import { store } from '../../store';
 import { setActiveLocation } from '../../store/slices/mapSlice';
 import { setCurrentAOI } from '../../store/slices/homeSlice/actions';
 import { showAOIPanel, toggleLegend } from '../../store/slices/uiSlice';
-import { navigateToLocation } from '../../utils/map';
+import { navigateToLocation } from '../../utils/navigate';
 import { clearActiveLayers } from '../../store/slices/layersSlice';
 import { calculateBufferCircle } from '../../utils/geometry';
 import locations from '../../constants/places/locations';

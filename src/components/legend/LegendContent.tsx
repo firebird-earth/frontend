@@ -1,5 +1,5 @@
 import React from 'react';
-import { MoreVertical } from 'lucide-react';
+import { MoreVertical, Info } from 'lucide-react';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { LayerType } from '../../types/map';
 import LayerMenu from './LayerMenu';
@@ -47,31 +47,31 @@ const LegendContent: React.FC<LegendContentProps> = ({
   return (
     <div className="p-4 space-y-6 bg-white">
       {activeLayers.map(({ categoryId, layer }) => {
-        const isFeatureLayer =
-          layer.type === LayerType.ArcGISFeatureService ||
-          (layer.type === LayerType.Vector && layer.source?.includes('/FeatureServer/'));
-        const isArcGISImageService = layer.type === LayerType.ArcGISImageService;
-        const isTileLayer = layer.type === LayerType.TileLayer;
+        const isGeoTiffLayer = layer.type === LayerType.GeoTiff;
         const isRasterLayer = layer.type === LayerType.Raster;
-
-        // Determine units
-        let units = layer.units || 'units';
-        if (categoryId === 'elevation') {
-          const elevationLayer = Object.values(ELEVATION).find(l => l.name === layer.name);
-          if (elevationLayer) units = elevationLayer.units;
-        } else if (categoryId === 'landscapeRisk') {
-          const riskLayer = Object.values(FIRE_METRICS.LANDSCAPE_RISK).find(l => l.name === layer.name);
-          if (riskLayer) units = riskLayer.units;
-        } else if (categoryId === 'fuels') {
-          const fuelsLayer = Object.values(FIRE_METRICS.FUELS).find(l => l.name === layer.name);
-          if (fuelsLayer) units = fuelsLayer.units;
-        }
+        const isArcGISImageServiceLayer = layer.type === LayerType.ArcGISImageService;
+        const isFeatureLayer = layer.type === LayerType.ArcGISFeatureService || layer.type === LayerType.Vector;
+        const isTileLayer = layer.type === LayerType.TileLayer;
+        const isIgnitionsLayer = layer.type === LayerType.Ingnitions;
+        const units = layer.units || 'units';
 
         return (
           <div key={`${categoryId}-${layer.id}`} className="space-y-2">
             <div className="flex items-center justify-between mb-2">
-              <h4 className="text-sm font-semibold text-gray-800">{layer.name}</h4>
-              <div className="relative">
+              <div className="flex items-center">
+                <h4 className="text-sm font-semibold text-gray-800">{layer.name}</h4>
+              </div>
+              <div className="flex items-center relative">
+                <Info 
+                  className="h-4 w-4 text-gray-400 mr-2 cursor-pointer hover:text-gray-600" 
+                  onClick={() => {
+                    if (isFeatureLayer) {
+                      onShowFeatureAbout(categoryId, layer.id);
+                    } else if (isGeoTiffLayer || isArcGISImageServiceLayer || isRasterLayer) {
+                      onShowAbout(categoryId, layer.id);
+                    }
+                  }}
+                />
                 <button
                   onClick={(e) => onMenuClick(e, categoryId, layer.id)}
                   className="p-1 hover:bg-gray-100 rounded-lg text-gray-600"
@@ -93,7 +93,7 @@ const LegendContent: React.FC<LegendContentProps> = ({
                         )
                       }
                       onAboutClick={
-                        (layer.type === LayerType.GeoTiff || isArcGISImageService || isRasterLayer)
+                        (layer.type === LayerType.GeoTiff || isArcGISImageServiceLayer || isRasterLayer)
                           ? () => onShowAbout(categoryId, layer.id)
                           : undefined
                       }
@@ -102,14 +102,16 @@ const LegendContent: React.FC<LegendContentProps> = ({
                           ? () => onShowFeatureAbout(categoryId, layer.id)
                           : undefined
                       }
-                      isGeoTiff={layer.type === LayerType.GeoTiff}
-                      isFeatureLayer={isFeatureLayer}
-                      isArcGISImageService={isArcGISImageService}
                       categories={categories}
                     />
                   )}
               </div>
             </div>
+
+            {/* Ignitions Legend */}
+            {layer.type === LayerType.Ignitions && (
+              <FeatureLegend categoryId={categoryId} layerId={layer.id} units={units} />
+            )}
 
             {/* GeoTIFF Legend */}
             {layer.type === LayerType.GeoTiff && (
@@ -119,21 +121,14 @@ const LegendContent: React.FC<LegendContentProps> = ({
             {/* Raster Legend */}
             {layer.type === LayerType.Raster && (
               layer.metadata?.isBinary ? (
-                <FeatureLegend
-                  categoryId={categoryId}
-                  layerId={layer.id}
-                  units={units}
-                />
+                <FeatureLegend categoryId={categoryId} layerId={layer.id} units={units} />
               ) : (
-                <GeoTiffLegend
-                  categoryId={categoryId}
-                  layerId={layer.id}
-                />
+                <GeoTiffLegend categoryId={categoryId}  layerId={layer.id} />
               )
             )}
 
             {/* ArcGIS Image Service Legend */}
-            {isArcGISImageService && layer.colorScheme && (
+            {isArcGISImageServiceLayer && layer.colorScheme && (
               <ArcGISLegend
                 url={layer.source}
                 categoryId={categoryId}

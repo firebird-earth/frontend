@@ -7,7 +7,7 @@
  * Output:
  *   - RasterData: raster array resulting from evaluating the expression
  *   - GeoTiffMetadata: metadata for the output raster, derived from source layers
- *     (augmented with an `isBinary` flag if the result is purely binary)
+ *     (augmented with an `isBinary` flag if the result is purely binary and optional `maskLayerName` when a mask() was applied)
  *
  * Notes:
  *   - Assumes all input rasters are aligned (same grid, same resolution).
@@ -18,6 +18,13 @@
 import { ASTNode } from './parser';
 import { GeoTiffMetadata } from '../types/geotiff';
 
+const DEBUG = true;
+function log(...args: any[]) {
+  if (DEBUG) {
+    console.log('[EvalExpression]', ...args);
+  }
+}
+
 export interface RasterData {
   rasterArray: Int16Array | Float32Array | Uint8Array | number[];
   width: number;
@@ -27,14 +34,14 @@ export interface RasterData {
 
 export interface EvaluateResult {
   data: RasterData;
-  metadata: GeoTiffMetadata & { isBinary: boolean };
+  metadata: GeoTiffMetadata & { isBinary: boolean; maskLayerName?: string };
 }
 
 export async function evaluateAST(
   ast: ASTNode,
   outputNoDataValue: number = NaN
 ): Promise<EvaluateResult> {
-  console.log('Calling evaluateAST with boundAst:', ast);
+  log('Calling evaluateAST with boundAst:', ast);
 
   // Prepare raster dimensions
   const { rows, cols } = getRasterSizeFromInput(ast);
@@ -61,7 +68,7 @@ export async function evaluateAST(
     }
   }
 
-  console.log('Evaluation result (first 10 pixels):', rasterArray.slice(0, 10));
+  log('Evaluation result (first 10 pixels):', rasterArray.slice(0, 10));
 
   // Detect if output is binary (only 1 values present, aside from NoData)
   const unique = new Set<number>();
@@ -73,11 +80,21 @@ export async function evaluateAST(
   }
   const isBinary = unique.size === 1 && [...unique][0] === 1;
 
+  // Detect mask operator to include mask layer name (first parameter)
+  let maskLayerName: string | undefined;
+  if ((ast as any).type === 'function' && (ast as any).name === 'mask') {
+    const img = (ast as any).args[0];
+    if (img.type === 'layer') {
+      maskLayerName = (img as any).name;
+    }
+  }
+
   // Extract and augment metadata
   const baseMetadata = extractMetadata(ast);
-  const metadata: GeoTiffMetadata & { isBinary: boolean } = {
+  const metadata: GeoTiffMetadata & { isBinary: boolean; maskLayerName?: string } = {
     ...baseMetadata,
-    isBinary
+    isBinary,
+    ...(maskLayerName !== undefined ? { maskLayerName } : {})
   };
 
   return {

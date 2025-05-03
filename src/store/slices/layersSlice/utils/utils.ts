@@ -20,7 +20,7 @@ export function createInitialCategory(
       // Determine pane based on layer type
       let pane = MapPane.LayersPane; // Default pane
       
-      if (layer.type === LayerType.Raster || layer.type === LayerType.GeoTiff) {
+      if (layer.type === LayerType.GeoTiff || layer.type === LayerType.Ignitions || layer.type === LayerType.Raster) {
         pane = MapPane.FiremetricsPane;
       } else if (layer.type === LayerType.ArcGISImageService) {
         pane = MapPane.LayersPane;

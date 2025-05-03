@@ -14,7 +14,7 @@ export const FUELS = {
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/cbd.tif`,
     units: 'kg/m³',
-    colorScheme: colorSchemes.greenYellowRed.name
+    colorScheme: colorSchemes.greenYellowRed
   },
   CANOPY_COVER: {
     name: 'Canopy Cover',
@@ -22,7 +22,7 @@ export const FUELS = {
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/canopy_cover.tif`,
     units: 'percent',
-    colorScheme: colorSchemes.canopyCover.name,
+    colorScheme: colorSchemes.canopyCover,
     domain: [0, 100], // Canopy cover percentage range
     legend: {
       items: [
@@ -40,7 +40,7 @@ export const FUELS = {
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/canopy_height.tif`,
     units: 'meters',
-    colorScheme: colorSchemes.greenYellowRed.name,
+    colorScheme: colorSchemes.greenYellowRed,
     domain: [0, 50], // Canopy height range in meters
     legend: {
       items: [
@@ -58,7 +58,7 @@ export const FUELS = {
     type: LayerType.GeoTiff,
     source: 'USFS Forest Health Technology Enterprise Team',
     units: 'percent',
-    colorScheme: colorSchemes.greenYellowRed.name,
+    colorScheme: colorSchemes.greenYellowRed,
     domain: [0, 100], // Mortality percentage range
     legend: {
       items: [

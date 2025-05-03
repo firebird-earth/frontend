@@ -10,262 +10,150 @@ interface GridControlProps {
 
 const GridControl: React.FC<GridControlProps> = ({ position = 'bottomright' }) => {
   const map = useMap();
-  const gridLayerRef = useRef<L.LayerGroup | null>(null);
+  const gridLayerRef = useRef<L.GridLayer | null>(null);
   const controlRef = useRef<L.Control | null>(null);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const previousShowRef = useRef<boolean>(false);
-  
-  const { grid } = useAppSelector(state => state.settings.settings?.preferences.map || {
-    grid: {
-      show: false,
-      size: 30,
-      unit: 'meters'
-    }
-  });
-  
+
+  const { grid } = useAppSelector(state =>
+    state.settings.settings?.preferences.map || { grid: { show: false, size: 30, unit: 'meters' } }
+  );
   const zoomThreshold = calculateGridZoomThreshold(grid.size, grid.unit);
 
-  // Function to calculate grid cell width in pixels
-  const calculateCellWidth = () => {
-    const zoom = map.getZoom();
-    const center = map.getCenter();
-    
-    // Calculate cell size in meters
-    const cellSizeInMeters = grid.unit === 'acres' 
-      ? Math.sqrt(grid.size * 4046.86) 
-      : grid.size;
-
-    // Calculate cell size in degrees at this latitude
-    const metersPerDegLat = 111319.9; // meters per degree latitude
-    const metersPerDegLng = metersPerDegLat * Math.cos(center.lat * Math.PI/180);
-    const cellSizeLng = cellSizeInMeters / metersPerDegLng;
-
-    // Convert to pixels using the map's projection
-    const point1 = map.latLngToContainerPoint([center.lat, center.lng]);
-    const point2 = map.latLngToContainerPoint([center.lat, center.lng + cellSizeLng]);
-    
-    return Math.abs(point2.x - point1.x);
-  };
-
-  // Function to update control width
-  const updateControlWidth = () => {
-    if (!containerRef.current) return;
-    
-    if (!grid.show || map.getZoom() < zoomThreshold) {
-      // Reset to default width when grid is hidden or below threshold
-      containerRef.current.style.width = 'auto';
-      return;
-    }
-
-    const cellWidth = calculateCellWidth();
-    containerRef.current.style.width = `${Math.max(cellWidth, 20)}px`; // Changed to 20px minimum
-  };
-
   useEffect(() => {
-    // Check if grid was just turned on
-    if (grid.show && !previousShowRef.current) {
+    if (grid.show && !gridLayerRef.current) {
       zoomToGridThreshold(map, grid.size, grid.unit);
-    }
-    previousShowRef.current = grid.show;
 
-    // Update control width immediately when grid visibility changes
-    updateControlWidth();
+      const PixelLayer = L.GridLayer.extend({
+        createTile: function(coords: L.Coords) {
+          const tile = document.createElement('canvas');
+          const ctx = tile.getContext('2d');
+          const size = this.getTileSize();
+          tile.width = size.x;
+          tile.height = size.y;
 
-    if (!grid.show) {
-      if (gridLayerRef.current) {
-        map.removeLayer(gridLayerRef.current);
-        gridLayerRef.current = null;
-      }
-      if (controlRef.current) {
-        map.removeControl(controlRef.current);
-        controlRef.current = null;
-      }
-      return;
-    }
+          const zoom = coords.z;
+          if (!ctx || zoom < zoomThreshold) return tile;
 
-    // Create layer group for grid lines if it doesn't exist
-    if (!gridLayerRef.current) {
-      gridLayerRef.current = L.layerGroup().addTo(map);
-    }
+          const cellMeters = grid.unit === 'acres'
+            ? Math.sqrt(grid.size * 4046.86)
+            : grid.size;
+          const earthCirc = 40075016.686;
+          const scale = 256 * Math.pow(2, zoom);
+          const cellPx = (cellMeters * scale) / earthCirc;
 
-    // Function to draw grid lines
-    const drawGrid = () => {
-      if (!gridLayerRef.current) return;
+          const originX = coords.x * size.x;
+          const originY = coords.y * size.y;
 
-      // Clear existing lines
-      gridLayerRef.current.clearLayers();
+          ctx.strokeStyle = '#3b82f6';
+          ctx.lineWidth = 1;
+          ctx.globalAlpha = 0.5;
 
-      // Get current zoom level
-      const zoom = map.getZoom();
-      if (zoom < zoomThreshold) {
-        updateControlWidth(); // Update width when below threshold
-        return;
-      }
-
-      // Get bounds with buffer
-      const bounds = map.getBounds().pad(0.1);
-      const centerLat = bounds.getCenter().lat;
-
-      // Calculate cell size in meters
-      const cellSizeInMeters = grid.unit === 'acres' 
-        ? Math.sqrt(grid.size * 4046.86) 
-        : grid.size;
-
-      // Calculate cell size in degrees at this latitude
-      const metersPerDegLat = 111319.9; // meters per degree latitude
-      const metersPerDegLng = metersPerDegLat * Math.cos(centerLat * Math.PI/180);
-      
-      const cellSizeLat = cellSizeInMeters / metersPerDegLat;
-      const cellSizeLng = cellSizeInMeters / metersPerDegLng;
-
-      // Calculate global grid alignment
-      const latCells = Math.floor(bounds.getSouth() / cellSizeLat);
-      const lngCells = Math.floor(bounds.getWest() / cellSizeLng);
-
-      // Calculate the actual starting positions
-      const startLat = latCells * cellSizeLat;
-      const startLng = lngCells * cellSizeLng;
-
-      // Draw vertical lines
-      for (let lng = startLng; lng <= bounds.getEast(); lng += cellSizeLng) {
-        // Handle date line crossing
-        const adjustedLng = ((lng + 180) % 360) - 180;
-        
-        L.polyline([
-          [bounds.getSouth(), adjustedLng],
-          [bounds.getNorth(), adjustedLng]
-        ], {
-          color: '#3b82f6',
-          weight: 1,
-          opacity: 0.5,
-          interactive: false,
-          smoothFactor: 1
-        }).addTo(gridLayerRef.current);
-      }
-
-      // Draw horizontal lines
-      for (let lat = startLat; lat <= bounds.getNorth(); lat += cellSizeLat) {
-        // Clamp latitude to valid range
-        const adjustedLat = Math.max(-85, Math.min(85, lat));
-        
-        L.polyline([
-          [adjustedLat, bounds.getWest()],
-          [adjustedLat, bounds.getEast()]
-        ], {
-          color: '#3b82f6',
-          weight: 1,
-          opacity: 0.5,
-          interactive: false,
-          smoothFactor: 1
-        }).addTo(gridLayerRef.current);
-      }
-
-      // Update control width after drawing grid
-      updateControlWidth();
-    };
-
-    // Create grid control
-    const GridControl = L.Control.extend({
-      options: {
-        position
-      },
-      onAdd: () => {
-        const container = L.DomUtil.create('div', 'leaflet-control leaflet-control-grid');
-        containerRef.current = container;
-        
-        container.style.background = 'rgba(255, 255, 255, 0.8)';
-        container.style.padding = '4px 8px';
-        container.style.borderRadius = '4px';
-        container.style.border = '1px solid #374151';
-        container.style.color = '#374151';
-        container.style.fontSize = '11px';
-        container.style.lineHeight = '1.2';
-        container.style.display = 'flex';
-        container.style.alignItems = 'center';
-        container.style.justifyContent = 'center';
-        container.style.gap = '4px';
-        container.style.whiteSpace = 'nowrap';
-        container.style.cursor = 'pointer';
-        container.style.marginBottom = '0';
-        container.style.transition = 'all 0.2s ease-in-out';
-        container.style.minWidth = '15px'; // minimum size of grid
-        
-        const text = document.createElement('span');
-        text.textContent = `${grid.size} ${grid.unit === 'meters' ? 'm' : 'ac'}`;
-        text.style.flexGrow = '1';
-        text.style.textAlign = 'center';
-        
-        container.appendChild(text);
-
-        const updateBackground = () => {
-          const currentZoom = map.getZoom();
-          
-          if (currentZoom >= zoomThreshold) {
-            container.style.backgroundColor = 'rgba(219, 234, 254, 0.9)';
-            container.style.borderColor = '#3b82f6';
-          } else {
-            container.style.backgroundColor = 'rgba(255, 255, 255, 0.8)';
-            container.style.borderColor = '#374151';
+          const startX = Math.floor(originX / cellPx);
+          for (let i = startX; ; i++) {
+            const x = i * cellPx - originX + 0.5;
+            if (x < 0) continue;
+            if (x > size.x) break;
+            ctx.beginPath();
+            ctx.moveTo(x, 0);
+            ctx.lineTo(x, size.y);
+            ctx.stroke();
           }
-        };
-        
-        updateBackground();
-        map.on('zoomend', updateBackground);
-        
-        container.addEventListener('mouseenter', () => {
-          container.style.opacity = '1';
-        });
-        
-        container.addEventListener('mouseleave', () => {
-          container.style.opacity = '0.9';
-        });
-        
-        // Prevent double-click from triggering map zoom
-        container.addEventListener('dblclick', (e) => {
-          e.stopPropagation();
-        });
-        
-        // Handle single click for zoom to threshold
-        container.addEventListener('click', (e) => {
-          e.stopPropagation();
-          zoomToGridThreshold(map, grid.size, grid.unit);
-        });
-        
-        // Disable map dragging when interacting with the control
-        L.DomEvent.disableClickPropagation(container);
-        L.DomEvent.disableScrollPropagation(container);
-        
-        return container;
-      }
-    });
 
-    // Add control if it doesn't exist
-    if (!controlRef.current) {
-      const gridControl = new GridControl();
-      map.addControl(gridControl);
-      controlRef.current = gridControl;
+          const startY = Math.floor(originY / cellPx);
+          for (let j = startY; ; j++) {
+            const y = j * cellPx - originY + 0.5;
+            if (y < 0) continue;
+            if (y > size.y) break;
+            ctx.beginPath();
+            ctx.moveTo(0, y);
+            ctx.lineTo(size.x, y);
+            ctx.stroke();
+          }
+
+          return tile;
+        }
+      });
+
+      const pixelLayer = new PixelLayer({
+        tileSize: 256,
+        minZoom: zoomThreshold,
+        maxNativeZoom: 22,
+        noWrap: true,
+        keepBuffer: 2
+      });
+
+      map.addLayer(pixelLayer);
+      gridLayerRef.current = pixelLayer;
     }
 
-    // Draw initial grid
-    drawGrid();
-
-    // Add event listeners
-    map.on('moveend', drawGrid);
-    map.on('zoomend', drawGrid);
+    if (!grid.show && gridLayerRef.current) {
+      map.removeLayer(gridLayerRef.current);
+      gridLayerRef.current = null;
+    }
 
     return () => {
       if (gridLayerRef.current) {
         map.removeLayer(gridLayerRef.current);
         gridLayerRef.current = null;
       }
+    };
+  }, [map, grid.show, grid.size, grid.unit, zoomThreshold]);
+
+  useEffect(() => {
+    let updateWidth: () => void;
+
+    if (grid.show) {
+      if (!controlRef.current) {
+        const Ctrl = L.Control.extend({
+          options: { position },
+          onAdd: () => {
+            const c = L.DomUtil.create('div', 'leaflet-control-grid');
+            Object.assign(c.style, {
+              boxSizing: 'border-box',          // include padding/border in width
+              background: 'rgba(255,255,255,0.8)',
+              padding: '4px 8px',
+              border: '1px solid #374151',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              color: '#374151',
+              fontSize: '11px'
+            });
+            c.textContent = `${grid.size}${grid.unit === 'meters' ? 'm' : 'ac'}`;
+            L.DomEvent.disableClickPropagation(c);
+            c.addEventListener('click', () => zoomToGridThreshold(map, grid.size, grid.unit));
+            return c;
+          }
+        });
+        controlRef.current = new (Ctrl as any)();
+        map.addControl(controlRef.current);
+
+        const container = (controlRef.current as any)._container as HTMLDivElement;
+        updateWidth = () => {
+          const zoom = map.getZoom();
+          const cellMeters = grid.unit === 'acres'
+            ? Math.sqrt(grid.size * 4046.86)
+            : grid.size;
+          const earthCirc = 40075016.686;
+          const scale = 256 * Math.pow(2, zoom);
+          const cellPx = (cellMeters * scale) / earthCirc;
+          const width = Math.max(cellPx, 25);    // allow down to 25px
+          container.style.width = `${width}px`;
+        };
+        updateWidth();
+        map.on('zoomend', updateWidth);
+      }
+    } else if (controlRef.current) {
+      map.removeControl(controlRef.current);
+      controlRef.current = null;
+    }
+
+    return () => {
+      if (updateWidth) map.off('zoomend', updateWidth);
       if (controlRef.current) {
         map.removeControl(controlRef.current);
         controlRef.current = null;
       }
-      map.off('moveend', drawGrid);
-      map.off('zoomend', drawGrid);
     };
-  }, [map, grid.show, grid.size, grid.unit, zoomThreshold, position]);
+  }, [map, grid.show, grid.size, grid.unit, position]);
 
   return null;
 };

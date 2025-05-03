@@ -8,21 +8,40 @@ import { STORAGE } from '../urls';
 export const LANDSCAPE_RISK = {
   name: 'landscapeRisk',
   label: 'Landscape Risk',
+  
+  IGNITIONS: {
+    name: 'Ignitions',
+    description: 'Potential ignition points',
+    type: LayerType.Ignitions,
+    units: 'points',
+    colorScheme: colorSchemes.binaryRed,
+    legend: {
+      items: [
+        {
+          color: '#ef4444',
+          weight: 1,
+          fillColor: '#ef4444', 
+          fillOpacity: 1,
+          label: 'Fire Ignitions (1.7 million)'
+        }
+      ]
+    }
+  },
   BURN_PROBABILITY: {
     name: 'Burn Probability',
     description: 'Annual burn probability',
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/burn_probability.tif`,
-    units: 'probability',
-    colorScheme: colorSchemes.burnProbability.name
+    units: 'Probability',
+    colorScheme: colorSchemes.burnProbability
   },
   FLAME_LENGTH: {
     name: 'Flame Length',
     description: 'Conditional flame length',
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/flame_length.tif`,
-    units: 'feet',
-    colorScheme: colorSchemes.fireIntensity.name,
+    units: 'Feet',
+    colorScheme: colorSchemes.fireIntensity,
     domain: [0, 100] // Flame length range in feet
   },
   FIRE_INTENSITY: {
@@ -39,7 +58,7 @@ export const LANDSCAPE_RISK = {
     description: 'Difficulty of fire suppression',
     type: LayerType.Vector,
     source: 'USFS Fire Modeling Institute',
-    units: 'index',
+    units: 'Index Value',
     colorScheme: 'none',
     domain: [0, 5] // Suppression difficulty index
   },
@@ -48,8 +67,8 @@ export const LANDSCAPE_RISK = {
     description: 'Explosive Fire Risk',
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/explosive_fire_risk.tif`,
-    units: 'burned acres in two hours',
-    colorScheme: colorSchemes.greenYellowRed.name,
+    units: 'Acres burned in 2 hours',
+    colorScheme: colorSchemes.greenYellowRed,
     domain: [0, 100] // Transmission index range
   },
   TRANSMISSION_INFLUENCE: {
@@ -65,10 +84,11 @@ export const LANDSCAPE_RISK = {
 
 // Layer category constant
 export const LANDSCAPE_RISK_CATEGORY: LayerCategory = createInitialCategory('landscapeRisk', 'Landscape Risk', [
+  LANDSCAPE_RISK.IGNITIONS,
+  LANDSCAPE_RISK.SUPPRESSION_DIFFICULTY,
   LANDSCAPE_RISK.BURN_PROBABILITY,
   LANDSCAPE_RISK.FLAME_LENGTH,
   LANDSCAPE_RISK.FIRE_INTENSITY,
   LANDSCAPE_RISK.TRANSMISSION_INDEX,
   LANDSCAPE_RISK.TRANSMISSION_INFLUENCE,
-  LANDSCAPE_RISK.SUPPRESSION_DIFFICULTY
 ]);

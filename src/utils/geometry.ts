@@ -1,26 +1,37 @@
-import { GeoJSON } from 'geojson';
+import L from 'leaflet';import { GeoJSON } from 'geojson';
 import proj4 from 'proj4';
-import { BoundingBox } from '../type/map.ts';
+import { BoundingBox } from '../type/map';
+import { leafletMap } from '../globals';
 
 // Register projection
 proj4.defs('EPSG:26913', '+proj=utm +zone=13 +datum=NAD83 +units=m +no_defs');
 
+const DEBUG = true;
+function log(...args: any[]) {
+  if (DEBUG) {
+    console.log('[geometry]', ...args);
+  }
+}
+
 interface BufferCircleResult {
   center: [number, number];          // [lat, lng]
-  bufferedRadius: number;            // meters
   boundaryRadius?: number;           // meters
+  bufferedRadius: number;            // meters
   bufferedBounds: BoundingBox;       // lat/lng bounds of buffered circle
 }
 
 export function calculateBufferCircle(
   center: [number, number],
   boundary: GeoJSON.FeatureCollection | null,
-  defaultMiles: number = 8
+  defaultBufferRadiusMiles: number = 8
 ): BufferCircleResult {
-  const defaultRadius = defaultMiles * 1609.34;
+  const defaultRadius = defaultBufferRadiusMiles * 1609.34;
   const bufferMeters = defaultRadius;
 
+  log('boundary:', boundary)
+  
   if (!boundary || !boundary.features || boundary.features.length === 0) {
+    log('no boundary provided, use location center')
     const bufferedBounds = approximateBoundingBox(center, defaultRadius);
     return { center, bufferedRadius: defaultRadius, bufferedBounds };
   }
@@ -70,8 +81,8 @@ export function calculateBufferCircle(
 
     return {
       center: boundaryCenter,
-      bufferedRadius,
       boundaryRadius: maxDistance,
+      bufferedRadius,
       bufferedBounds
     };
   } catch {
@@ -108,4 +119,16 @@ function approximateBoundingBox(center: [number, number], radiusMeters: number):
     minLng: lng - deltaLng,
     maxLng: lng + deltaLng
   };
+}
+
+export function addBufferCircleToMap(bufferCircle: {
+  center: [number, number],
+  bufferedRadius: number
+}) {
+  const map = window.leafletMap;
+  L.circle(bufferCircle.center, {
+    radius: bufferCircle.bufferedRadius,
+    color: 'blue',
+    fillOpacity: 0.2
+  }).addTo(map);
 }

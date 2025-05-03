@@ -76,7 +76,7 @@ const ValueRangeControl: React.FC<ValueRangeControlProps> = ({
           )}
           {showValue && (
             <span className={`text-sm text-gray-500 ${compact ? 'text-xs' : ''}`}>
-              {range.min.toFixed(2)} - {range.max.toFixed(2)}
+              {range.min.toFixed(1)} - {range.max.toFixed(1)}
             </span>
           )}
         </div>

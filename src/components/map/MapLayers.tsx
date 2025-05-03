@@ -17,13 +17,14 @@ import {
 } from '../layers';
 import QueryLayer from '../layers/QueryLayer';
 import AOIBoundaryLayer from '../layers/AOIBoundaryLayer';
+import IgnitionsLayer from '../layers/IgnitionsLayer';
 import { getOrderedLayers } from '../../store/slices/layersSlice';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { leafletLayerMap } from '../../store/slices/layersSlice/state';
 import { LayerType } from '../../types/map';
 import { hashString } from '../../utils/utils';
 
-const DEBUG = false;
+const DEBUG = true;
 function log(...args: any[]) {
   if (DEBUG) {
     console.log('[MapLayers]', ...args);
@@ -41,6 +42,7 @@ const MapLayers: React.FC = () => {
     jurisdictions,
     elevation,
     scenarios: scenarioCategory,
+    landscapeRisk
   } = categories;
 
   const {
@@ -49,6 +51,7 @@ const MapLayers: React.FC = () => {
     activeScenarioLayers,
     activeGeoTiffLayers,
   } = useMemo(() => {
+    
     const activeBasemap = basemaps?.layers.find(l => l.active);
 
     const activeLayers = {
@@ -64,6 +67,7 @@ const MapLayers: React.FC = () => {
       aspect: elevation?.layers.find(l => l.name === 'Aspect' && l.active),
       slope: elevation?.layers.find(l => l.name === 'Slope Steepness' && l.active),
       contour: elevation?.layers.find(l => l.name === 'Contour' && l.active),
+      ignitions: landscapeRisk?.layers.find(l => l.name === 'Ignitions' && l.active),
     };
 
     const activeGeoTiffLayers = getOrderedLayers(categories, LayerType.GeoTiff)
@@ -130,6 +134,15 @@ const MapLayers: React.FC = () => {
       {/* Wildfire Layers */}
       {activeLayers.wui && <WUILayer active={true} />}
       {activeLayers.crisis && <CrisisAreasLayer active={true} />}
+
+      {/* Ignitions Layer */}
+      {activeLayers.ignitions && 
+        <IgnitionsLayer 
+          locationId={currentAOI ? (typeof currentAOI.id === 'string' ? parseInt(currentAOI.id) : currentAOI.id) : 0}
+          active={true}
+          geojson={boundary}
+          center={displayCoords}
+        />}
 
       {/* AOI Boundary */}
       {displayCoords && (

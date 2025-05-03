@@ -45,10 +45,18 @@ export enum LayerType {
   ArcGISImageService = 'ArcGIS_imageService',
   ArcGISFeatureService = 'ArcGIS_featureService',
   TileLayer = 'tileLayer',
+  Ignitions = 'ignitionsLayer',
   WMS = 'wms',
   Vector = 'vector',
   Raster = 'raster',
 }
+
+export const isGeoTiffLayer = (layer: { type: LayerType }) => layer.type === LayerType.GeoTiff;
+export const isRasterLayer = (layer: { type: LayerType }) => layer.type === LayerType.Raster;
+export const isArcGISImageService = (layer: { type: LayerType }) => layer.type === LayerType.ArcGISImageService;
+export const isFeatureLayer = (layer: { type: LayerType }) =>
+  layer.type === LayerType.ArcGISFeatureService || layer.type === LayerType.Vector;
+export const isTileLayer = (layer: { type: LayerType }) => layer.type === LayerType.TileLayer;
 
 export interface MapLayer {
   id: number;

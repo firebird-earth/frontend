@@ -1,6 +1,7 @@
 import { LayerType } from '../../types/map';
 import { LayerCategory } from '../../store/slices/layersSlice/types';
 import { createInitialCategory } from '../../store/slices/layersSlice/utils/utils';
+import { colorSchemes } from '../colors';
 
 export const LANDSCAPE = {
   SLOPE: {
@@ -9,7 +10,7 @@ export const LANDSCAPE = {
     source: 'USFS Landscape',
     description: 'Terrain slope steepness in degrees',
     units: 'degrees',
-    colorScheme: 'slopeGradient',
+    colorScheme: colorSchemes.slopeGradient,
     legend: {
       items: [
         {

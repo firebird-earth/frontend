@@ -44,7 +44,8 @@ const ValueTooltipControl: React.FC<ValueTooltipProps> = React.memo(({ categoryI
     }
 
     const { rasterArray, width, height, noDataValue } = layerData.data;
-    const scheme = getColorScheme(layer.colorScheme || defaultColorScheme);
+    //const scheme = getColorScheme(layer.colorScheme || defaultColorScheme);
+    const scheme = layer.colorScheme || defaultColorScheme;
     const domain = layer.domain || [valueRange.defaultMin, valueRange.defaultMax];
     const [domainMin, domainMax] = domain;
     const fullRange = domainMax - domainMin;
@@ -90,7 +91,7 @@ const ValueTooltipControl: React.FC<ValueTooltipProps> = React.memo(({ categoryI
         value < valueRange.min || value > valueRange.max;
 
       if (isInvalid) {
-        label = 'No data';
+        label = 'No value';
         swatchColor = 'rgba(0,0,0,0)';
       } else {
         const formattedValue =

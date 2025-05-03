@@ -14,13 +14,25 @@ export const GeoTiffNoDataColor = {
 export const colorSchemes: Record<string, ColorScheme> = {
   
   // Binary scheme (0 = transparent, 1 = color)
+  binaryRed: {
+    name: 'binaryRed',
+    displayName: 'Binary',
+    description: 'Transparent (0) to red (1) for binary/boolean operations',
+    buckets: 1,
+    colors: [
+      '#d73027'   // Darkest red
+    ],
+    type: 'sequential'
+  },
+  
+    // Binary scheme (0 = transparent, 1 = color)
   binaryGreen: {
     name: 'binaryGreen',
     displayName: 'Binary',
     description: 'Transparent (0) to green (1) for binary/boolean operations',
     buckets: 1,
     colors: [
-      '#d73027'   // Darkest red
+      '#66bd63'   // green
     ],
     type: 'sequential'
   },
@@ -214,5 +226,5 @@ export const colorSchemes: Record<string, ColorScheme> = {
   }
 };
 
-export const defaultColorScheme = colorSchemes.greenYellowRed.name;
-export const defaultColorSchemeBinary = colorSchemes.binaryGreen.name;
+export const defaultColorScheme = colorSchemes.greenYellowRed;
+export const defaultColorSchemeBinary = colorSchemes.binaryGreen;

@@ -74,7 +74,7 @@ export const ELEVATION = {
     renderingRule: JSON.stringify(ELEVATION_RULE),
     description: 'USGS 3DEP Elevation',
     units: 'meters',
-    colorScheme: colorSchemes.greenYellowRed.name,
+    colorScheme: colorSchemes.greenYellowRed,
     domain: [0, 4000], // Elevation range in meters
   },
   SLOPE: {
@@ -84,7 +84,7 @@ export const ELEVATION = {
     renderingRule: JSON.stringify(SLOPE_RULE),
     description: 'USGS 3DEP Elevation',
     units: 'degrees',
-    colorScheme: colorSchemes.slopeGradient.name,
+    colorScheme: colorSchemes.slopeGradient,
     domain: [0, 45], // Slope range in degrees
   },
   HILLSHADE: {
@@ -104,7 +104,7 @@ export const ELEVATION = {
     renderingRule: JSON.stringify(ASPECT_RULE),
     description: 'USGS 3DEP Elevation',
     units: 'degrees',
-    colorScheme: colorSchemes.redBlue.name,
+    colorScheme: colorSchemes.redBlue,
     domain: [0, 360], // Aspect range in degrees
   },
   CONTOUR: {

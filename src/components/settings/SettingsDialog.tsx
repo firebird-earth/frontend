@@ -120,7 +120,7 @@ const SettingsDialog: React.FC = () => {
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Settings</h2>
           <button
             onClick={() => dispatch(toggleSettings())}
-            className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
+            className="text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300"
           >
             <X className="h-5 w-5" />
           </button>
@@ -158,30 +158,87 @@ const SettingsDialog: React.FC = () => {
             </div>
           </div>
 
+          {/* Grid Settings */}
+          <div className="pt-4 border-t dark:border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Grid className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                <span className="text-sm text-gray-700 dark:text-gray-300">Show Grid</span>
+              </div>
+              <button
+                onClick={handleGridToggle}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  settings.preferences.map.grid.show ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'
+                }`}
+              >
+                <span className="sr-only">Toggle grid</span>
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                    settings.preferences.map.grid.show ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <div className="flex space-x-2">
+                <input
+                  type="number"
+                  min="1"
+                  value={settings.preferences.map.grid.size}
+                  onChange={(e) => handleGridSizeChange(parseInt(e.target.value))}
+                  className="w-24 px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-300"
+                />
+                <select
+                  value={settings.preferences.map.grid.unit}
+                  onChange={(e) => handleGridUnitChange(e.target.value as 'acres' | 'meters')}
+                  className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-300"
+                >
+                  <option value="meters">meters</option>
+                  <option value="acres">acres</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          {/* Coordinates Settings */}
+          <div className="pt-4 border-t dark:border-gray-700">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <MousePointer className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                <span className="text-sm text-gray-700 dark:text-gray-300">Show Coordinates</span>
+              </div>
+              <button
+                onClick={handleCoordinatesToggle}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                  settings.preferences.map.coordinates.show ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'
+                }`}
+              >
+                <span className="sr-only">Toggle coordinates</span>
+                <span
+                  className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                    settings.preferences.map.coordinates.show ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
+              </button>
+            </div>
+
+            <div className="space-y-2">
+              <select
+                value={settings.preferences.map.coordinates.format}
+                onChange={(e) => handleCoordinateFormatChange(e.target.value as 'latlon-dd' | 'latlon-dms' | 'utm')}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-300"
+              >
+                <option value="latlon-dd">Latitude/Longitude (Decimal Degrees)</option>
+                <option value="latlon-dms">Latitude/Longitude (Degrees Minutes Seconds)</option>
+                <option value="utm">UTM</option>
+              </select>
+            </div>
+          </div>
+
           {/* Map Settings */}
           <div>
-            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-4">Map</h3>
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <Scale className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                  <span className="text-sm text-gray-700 dark:text-gray-300">Show Scale</span>
-                </div>
-                <button
-                  onClick={() => handleMapControlToggle('showScale')}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                    settings.preferences.map.controls.showScale ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'
-                  }`}
-                >
-                  <span className="sr-only">Toggle scale</span>
-                  <span
-                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                      settings.preferences.map.controls.showScale ? 'translate-x-6' : 'translate-x-1'
-                    }`}
-                  />
-                </button>
-              </div>
-
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
                   <Compass className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -197,6 +254,26 @@ const SettingsDialog: React.FC = () => {
                   <span
                     className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
                       settings.preferences.map.controls.showNorthArrow ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <Scale className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+                  <span className="text-sm text-gray-700 dark:text-gray-300">Show Scale</span>
+                </div>
+                <button
+                  onClick={() => handleMapControlToggle('showScale')}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                    settings.preferences.map.controls.showScale ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'
+                  }`}
+                >
+                  <span className="sr-only">Toggle scale</span>
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                      settings.preferences.map.controls.showScale ? 'translate-x-6' : 'translate-x-1'
                     }`}
                   />
                 </button>
@@ -221,98 +298,14 @@ const SettingsDialog: React.FC = () => {
                   />
                 </button>
               </div>
-
-              {/* Coordinates Settings */}
-              <div className="pt-4 border-t dark:border-gray-700">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-2">
-                    <MousePointer className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">Show Coordinates</span>
-                  </div>
-                  <button
-                    onClick={handleCoordinatesToggle}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      settings.preferences.map.coordinates.show ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
-                  >
-                    <span className="sr-only">Toggle coordinates</span>
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                        settings.preferences.map.coordinates.show ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Coordinate Format
-                  </label>
-                  <select
-                    value={settings.preferences.map.coordinates.format}
-                    onChange={(e) => handleCoordinateFormatChange(e.target.value as 'latlon-dd' | 'latlon-dms' | 'utm')}
-                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-300"
-                  >
-                    <option value="latlon-dd">Latitude/Longitude (Decimal Degrees)</option>
-                    <option value="latlon-dms">Latitude/Longitude (Degrees Minutes Seconds)</option>
-                    <option value="utm">UTM</option>
-                  </select>
-                </div>
-              </div>
-
-              {/* Grid Settings */}
-              <div className="pt-4 border-t dark:border-gray-700">
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center space-x-2">
-                    <Grid className="h-5 w-5 text-gray-600 dark:text-gray-400" />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">Show Grid</span>
-                  </div>
-                  <button
-                    onClick={handleGridToggle}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                      settings.preferences.map.grid.show ? 'bg-blue-500' : 'bg-gray-200 dark:bg-gray-700'
-                    }`}
-                  >
-                    <span className="sr-only">Toggle grid</span>
-                    <span
-                      className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                        settings.preferences.map.grid.show ? 'translate-x-6' : 'translate-x-1'
-                      }`}
-                    />
-                  </button>
-                </div>
-
-                <div className="space-y-2">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Grid Size
-                  </label>
-                  <div className="flex space-x-2">
-                    <input
-                      type="number"
-                      min="1"
-                      value={settings.preferences.map.grid.size}
-                      onChange={(e) => handleGridSizeChange(parseInt(e.target.value))}
-                      className="w-24 px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-300"
-                    />
-                    <select
-                      value={settings.preferences.map.grid.unit}
-                      onChange={(e) => handleGridUnitChange(e.target.value as 'acres' | 'meters')}
-                      className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded-md dark:bg-gray-700 dark:text-gray-300"
-                    >
-                      <option value="meters">meters</option>
-                      <option value="acres">acres</option>
-                    </select>
-                  </div>
-                </div>
-              </div>
             </div>
           </div>
         </div>
-
+        
         <div className="flex justify-end p-4 border-t dark:border-gray-700">
           <button
             onClick={() => dispatch(toggleSettings())}
-            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors"
+            className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium transition-colors"
           >
             Close
           </button>

@@ -155,7 +155,7 @@ const AboutFeatureDialog: React.FC<AboutFeatureDialogProps> = ({
             <>
               {/* Layer Name with Link */}
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-2">Layer Name</h4>
+                <h4 className="text-sm font-medium text-gray-700 mb-2">Name</h4>
                 <a 
                   href={arcgisOnlineUrl || `${serviceUrl}?f=html`}
                   target="_blank"

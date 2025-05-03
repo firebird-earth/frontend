@@ -5,7 +5,7 @@ import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { setCurrentAOI } from '../../store/slices/homeSlice/actions';
 import { startCreatingAOI } from '../../store/slices/uiSlice';
 import { useAOI } from '../../hooks/useAOI';
-import { navigateToLocation } from '../../utils/map';
+import { navigateToLocation } from '../../utils/navigate';
 import locations from '../../constants/places/locations';
 
 interface AOISelectorProps {
@@ -75,28 +75,6 @@ const AOISelector: React.FC<AOISelectorProps> = ({ onClose }) => {
       className="absolute top-full left-0 mt-1 w-64 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
     >
       <div className="p-2">
-        <div className="mb-2 px-2 py-1.5 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase">
-          Default Locations
-        </div>
-        
-        {locations.map(location => (
-          <button
-            key={location.id}
-            onClick={() => handleSelectLocation(location)}
-            className={`
-              w-full flex items-center justify-between px-3 py-2 rounded-md text-left
-              ${isActive(location.id)
-                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
-                : 'hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300'}
-            `}
-          >
-            <div className="flex items-center space-x-2">
-              <MapPin className={`h-4 w-4 ${isActive(location.id) ? 'text-blue-500 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'}`} />
-              <span className="text-sm">{location.name}</span>
-            </div>
-         </button>
-        ))}
-
         {aois.map(aoi => (
           <div
             key={aoi.id}

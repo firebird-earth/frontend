@@ -41,42 +41,42 @@ const LayerOrderControl: React.FC<LayerOrderControlProps> = ({
     >
       <div className="space-y-1">
         <button
-          className="w-full flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
+          className="w-full flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
           onClick={() => handleOrderChange(() => 
             dispatch(bringLayerToFront({ categoryId, layerId }))
           )}
         >
-          <ChevronsUp className="h-4 w-4 text-gray-500" />
+          <ChevronsUp className="h-4 w-4 text-gray-500 mr-2" />
           <span>Bring to Front</span>
         </button>
         
         <button
-          className="w-full flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
+          className="w-full flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
           onClick={() => handleOrderChange(() => 
             dispatch(bringLayerForward({ categoryId, layerId }))
           )}
         >
-          <ArrowUp className="h-4 w-4 text-gray-500" />
+          <ArrowUp className="h-4 w-4 text-gray-500 mr-2" />
           <span>Bring Forward</span>
         </button>
         
         <button
-          className="w-full flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
+          className="w-full flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
           onClick={() => handleOrderChange(() => 
             dispatch(sendLayerBackward({ categoryId, layerId }))
           )}
         >
-          <ArrowDown className="h-4 w-4 text-gray-500" />
+          <ArrowDown className="h-4 w-4 text-gray-500 mr-2" />
           <span>Send Backward</span>
         </button>
         
         <button
-          className="w-full flex items-center space-x-2 px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
+          className="w-full flex items-center px-2 py-1.5 text-sm text-gray-700 hover:bg-gray-100 rounded-lg"
           onClick={() => handleOrderChange(() => 
             dispatch(sendLayerToBack({ categoryId, layerId }))
           )}
         >
-          <ChevronsDown className="h-4 w-4 text-gray-500" />
+          <ChevronsDown className="h-4 w-4 text-gray-500 mr-2" />
           <span>Send to Back</span>
         </button>
       </div>

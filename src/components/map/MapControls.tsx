@@ -1,9 +1,9 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { useMap } from 'react-leaflet';
 import { ZoomControl, ScaleControl } from 'react-leaflet';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import NorthArrow from '../controls/NorthArrow';
-import NavigateControl from '../controls/NavigateControl';
+import NavigationButtonsControl from '../controls/NavigationButtonsControl';
 import GridControl from '../controls/GridControl';
 import CoordinateControl from '../controls/CoordinateControl';
 import ValueTooltipControl from '../controls/ValueTooltipControl';
@@ -15,7 +15,7 @@ const MapControls: React.FC = () => {
   const isCancellingTooltip = useAppSelector(state => state.ui.isCancellingTooltip);
 
   // Find any layer with showValues enabled
-  const layerWithValues = useMemo(() => {
+  const layerWithValues = React.useMemo(() => {
     for (const [categoryId, category] of Object.entries(categories)) {
       const layer = category.layers.find(layer => layer.showValues && layer.active);
       if (layer) {
@@ -26,7 +26,7 @@ const MapControls: React.FC = () => {
   }, [categories]);
 
   // Check if any elevation layer is loading
-  const isElevationLoading = useMemo(() => {
+  const isElevationLoading = React.useMemo(() => {
     const elevationCategory = categories.elevation;
     if (!elevationCategory) return false;
     return elevationCategory.layers.some(layer => layer.active && layer.loading);
@@ -34,7 +34,7 @@ const MapControls: React.FC = () => {
 
   return (
     <>
-      <NavigateControl />
+      <NavigationButtonsControl />
       <ZoomControl position="topright" />
       <ScaleControl position="bottomright" imperial={true} metric={true} />
       <GridControl position="bottomright" />

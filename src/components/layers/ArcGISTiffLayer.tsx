@@ -157,9 +157,9 @@ const ArcGISTiffLayer: React.FC<ArcGISTiffLayerProps> = ({
     ctx.imageSmoothingEnabled = false;
 
     const domain = layer.domain || [valueRange.defaultMin, valueRange.defaultMax];
-    const schemeObj = getColorScheme(layer.colorScheme || colorScheme);
+    const schemeObj = getColorScheme(layer.colorScheme.name);
     if (!schemeObj || !Array.isArray(schemeObj.colors)) {
-      console.error('Invalid color scheme:', colorScheme, schemeObj);
+      console.error('Invalid color scheme:', layer.colorScheme.name, schemeObj);
       return;
     }
 

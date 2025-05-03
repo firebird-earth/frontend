@@ -27,6 +27,12 @@ export interface BoundLayerNode extends LayerNode {
 export interface LayerDataCache {
   get(name: string): Promise<any>;
 }
+const DEBUG = true;
+function log(...args: any[]) {
+  if (DEBUG) {
+    console.log('[BindExpression]', ...args);
+  }
+}
 
 const rasterizationFunctions = ['mask', 'label', 'category', 'distance_to', 'edge', 'within'];
 
@@ -67,7 +73,7 @@ export async function bindLayers(
       try {
         const layer = await cache.get(name, 'aoiBufferBounds'); 
 
-        console.log('---------->[binder] layer', layer);
+        log('---------->[binder] layer', layer);
 
         const resolved =
           layer &&

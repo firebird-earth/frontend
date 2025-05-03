@@ -5,7 +5,7 @@ import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { toggleSection, startCreatingAOI } from '../../store/slices/uiSlice';
 import { setCurrentAOI } from '../../store/slices/homeSlice/actions';
-import { navigateToLocation } from '../../utils/map';
+import { navigateToLocation } from '../../utils/navigate';
 import { useAOI } from '../../hooks/useAOI';
 import locations from '../../constants/places/locations';
 import { scenarios } from '../../constants/maps/scenarios';
@@ -35,7 +35,8 @@ const HomeTab: React.FC = () => {
     navigateToLocation({
       id: parseInt(aoi.id),
       name: aoi.name,
-      coordinates: aoi.location.center
+      coordinates: aoi.location.center,
+      boundary: aoi.boundary
     });
   };
 
@@ -127,6 +128,7 @@ const HomeTab: React.FC = () => {
         )}
       </div>
 
+{/*
       <div>
         <SectionHeader 
           title="Treatments" 
@@ -143,7 +145,7 @@ const HomeTab: React.FC = () => {
           </div>
         )}
       </div>
-
+*/}
       {/* SelectAOI Dialog */}
       {showDialog && (
         <SelectAOIDialog onClose={() => setShowDialog(false)} />

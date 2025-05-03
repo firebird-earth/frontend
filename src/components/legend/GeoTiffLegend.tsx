@@ -43,7 +43,7 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = React.memo(({categoryId, lay
 
   const valueRange = layer.valueRange;
   const { min, max } = layer.metadata.stats;
-  const colorScheme = getColorScheme(layer.colorScheme);
+  const colorScheme = getColorScheme(layer.colorScheme.name);
   
   if (!colorScheme) {
     console.warn('No color scheme found for layer:', layer.name);
@@ -58,8 +58,8 @@ const GeoTiffLegend: React.FC<GeoTiffLegendProps> = React.memo(({categoryId, lay
           style={{ background: getGradientForScheme(colorScheme) }}
         />
         <div className="flex justify-between text-xs text-gray-600">
-          <span>{valueRange ? valueRange.min.toFixed(3) : min.toFixed(3)}</span>
-          <span>{valueRange ? valueRange.max.toFixed(3) : max.toFixed(3)}</span>
+          <span>{valueRange ? valueRange.min.toFixed(1) : min.toFixed(1)}</span>
+          <span>{valueRange ? valueRange.max.toFixed(1) : max.toFixed(1)}</span>
         </div>
         <div className="text-xs text-gray-600 text-center">
           {layer.units || 'units'}

@@ -11,10 +11,9 @@ interface AOIBoundaryLayerProps {
   showBufferBounds?: boolean;
 }
 
-const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({ 
-  locationId, 
-  active, 
-  geojson, 
+const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({
+  active,
+  geojson,
   center,
   showBufferBounds = false
 }) => {
@@ -23,123 +22,46 @@ const AOIBoundaryLayer: React.FC<AOIBoundaryLayerProps> = ({
   const bufferCircleRef = useRef<L.Circle | null>(null);
   const bufferBoundsRef = useRef<L.Rectangle | null>(null);
   const opacityRef = useRef<number>(1.0);
-  
+
   const opacity = 1.0;
 
-  // Create or remove layers based on active state and center
+  // draw boundary & buffer
   useEffect(() => {
-    if (!active || !center) {
-      [boundaryRef, bufferCircleRef, bufferBoundsRef].forEach(ref => {
-        if (ref.current) {
-          map.removeLayer(ref.current);
-          ref.current = null;
-        }
-      });
-      return;
-    }
-
-    // Clean up existing layers
-    [boundaryRef, bufferCircleRef, bufferBoundsRef].forEach(ref => {
+    if (!active || !center) return;
+    [boundaryRef, bufferCircleRef, bufferBoundsRef].forEach((ref) => {
       if (ref.current) {
         map.removeLayer(ref.current);
         ref.current = null;
       }
     });
 
-    // Create boundary layer if geojson exists
     if (geojson) {
-      try {
-        const boundaryLayer = L.geoJSON(geojson, {
-          interactive: false,
-          style: {
-            color: '#2563eb',
-            weight: 2,
-            fillColor: '#2563eb',
-            fillOpacity: 0,
-            opacity: opacity
-          }
-        });
-        boundaryLayer.addTo(map);
-        boundaryRef.current = boundaryLayer;
-      } catch (error) {
-        console.warn('Failed to create boundary layer:', error);
-      }
+      boundaryRef.current = L.geoJSON(geojson, {
+        interactive: false,
+        style: { color: '#2563eb', weight: 2, fillOpacity: 0, opacity }
+      }).addTo(map);
     }
 
-    // Calculate and create buffer circle
-    const circleResult = calculateBufferCircle(center, geojson, 8);
-    
-    const bufferCircle = L.circle(circleResult.center, {
+    const circle = calculateBufferCircle(center, geojson!, 8);
+    bufferCircleRef.current = L.circle(circle.center, {
       interactive: false,
-      radius: circleResult.bufferedRadius,
+      radius: circle.bufferedRadius,
       color: '#2563eb',
       weight: 2,
-      fillColor: '#2563eb',
       fillOpacity: 0,
-      opacity: opacity
-    });
+      opacity
+    }).addTo(map);
 
-    bufferCircle.addTo(map);
-    bufferCircleRef.current = bufferCircle;
-
-    // Create buffer bounds rectangle if enabled
     if (showBufferBounds) {
-      const bounds = circleResult.bufferedBounds;
-      const bufferBounds = L.rectangle(
-        [[bounds.minLat, bounds.minLng], [bounds.maxLat, bounds.maxLng]],
-        {
-          interactive: false,
-          color: '#2563eb',
-          weight: 1,
-          fillColor: '#2563eb',
-          fillOpacity: 0.05,
-          opacity: opacity * 0.5,
-          dashArray: '5,5'
-        }
-      );
-      bufferBounds.addTo(map);
-      bufferBoundsRef.current = bufferBounds;
+      const b = circle.bufferedBounds;
+      bufferBoundsRef.current = L.rectangle(
+        [[b.minLat, b.minLng], [b.maxLat, b.maxLng]],
+        { interactive: false, color: '#2563eb', weight: 1, fillOpacity: 0.05, opacity: 0.5, dashArray: '5,5' }
+      ).addTo(map);
     }
 
     opacityRef.current = opacity;
-
-    return () => {
-      [boundaryRef, bufferCircleRef, bufferBoundsRef].forEach(ref => {
-        if (ref.current) {
-          map.removeLayer(ref.current);
-          ref.current = null;
-        }
-      });
-    };
   }, [active, geojson, center, map, opacity, showBufferBounds]);
-
-  // Handle opacity changes
-  useEffect(() => {
-    if (opacityRef.current !== opacity) {
-      if (boundaryRef.current) {
-        boundaryRef.current.setStyle({
-          opacity: opacity,
-          fillOpacity: 0
-        });
-      }
-      
-      if (bufferCircleRef.current) {
-        bufferCircleRef.current.setStyle({
-          opacity: opacity,
-          fillOpacity: 0
-        });
-      }
-
-      if (bufferBoundsRef.current) {
-        bufferBoundsRef.current.setStyle({
-          opacity: opacity * 0.5,
-          fillOpacity: 0.05
-        });
-      }
-      
-      opacityRef.current = opacity;
-    }
-  }, [opacity]);
 
   return null;
 };

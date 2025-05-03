@@ -6,7 +6,7 @@ import { colorSchemes } from '../colors';
 
 export const VALUE_AT_RISK = {
   name: 'valueAtRisk',
-  label: 'Value at Risk',
+  label: 'Structure Risk',
   FIRESHEDS: {
     name: '24 Hour Fireshed',
     description: 'Fireshed boundaries',
@@ -20,8 +20,8 @@ export const VALUE_AT_RISK = {
     description: 'Structure burn risk levels',
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/structure_burn_risk.tif`,
-    units: '% of Structures Burned',
-    colorScheme: colorSchemes.greenYellowRed.name,
+    units: '% of structures burned',
+    colorScheme: colorSchemes.greenYellowRed,
   },
   STRUCTURE_BURN_INFLUENCE: {
     name: 'Structure Burn Influence',
@@ -37,7 +37,7 @@ export const VALUE_AT_RISK = {
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/structure_burn_exposure.tif`,
     units: '% of fires that burn structures',
-    colorScheme: colorSchemes.greenYellowRed.name,
+    colorScheme: colorSchemes.greenYellowRed,
   },
 } as const;
 
@@ -45,6 +45,6 @@ export const VALUE_AT_RISK = {
 export const VALUE_AT_RISK_CATEGORY: LayerCategory = createInitialCategory('valueAtRisk', 'Value At Risk', [
   VALUE_AT_RISK.FIRESHEDS,
   VALUE_AT_RISK.STRUCTURE_BURN_HAZARD,
-  VALUE_AT_RISK.STRUCTURE_BURN_INFLUENCE,
   VALUE_AT_RISK.STRUCTURE_BURN_FREQUENCY,
+  VALUE_AT_RISK.STRUCTURE_BURN_INFLUENCE,
 ]);

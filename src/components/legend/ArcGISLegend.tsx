@@ -72,7 +72,7 @@ const ArcGISLegend: React.FC<ArcGISLegendProps> = React.memo(({
   }
 
   const valueRange = layer.valueRange;
-  const colorScheme = getColorScheme(layer.colorScheme);
+  const colorScheme = getColorScheme(layer.colorScheme.name);
   const { min, max } = layer.metadata.stats;
 
   if (!colorScheme) {

@@ -70,15 +70,25 @@ export async function evaluateAST(
 
   log('Evaluation result (first 10 pixels):', rasterArray.slice(0, 10));
 
-  // Detect if output is binary (only 1 values present, aside from NoData)
+  // Recompute stats from masked raster
+  let actualMin = Infinity;
+  let actualMax = -Infinity;
+  for (let i = 0; i < rasterArray.length; i++) {
+    const v = rasterArray[i];
+    if (v === outputNoDataValue || isNaN(v)) continue;
+    if (v < actualMin) actualMin = v;
+    if (v > actualMax) actualMax = v;
+  }
+
+  // Detect if output is binary (only 0 or 1 values present, aside from NoData)
   const unique = new Set<number>();
   for (let i = 0; i < rasterArray.length; i++) {
     const v = rasterArray[i];
     if (v === outputNoDataValue || isNaN(v)) continue;
     unique.add(v);
-    if (unique.size > 1) break;
+    if (unique.size > 2) break;
   }
-  const isBinary = unique.size === 1 && [...unique][0] === 1;
+  const isBinary = [...unique].every(v => v === 0 || v === 1);
 
   // Detect mask operator to include mask layer name (first parameter)
   let maskLayerName: string | undefined;
@@ -91,8 +101,14 @@ export async function evaluateAST(
 
   // Extract and augment metadata
   const baseMetadata = extractMetadata(ast);
+  // Clone stats if masked raster had data
+  let finalStats = baseMetadata.stats;
+  if (actualMin !== Infinity) {
+    finalStats = { ...baseMetadata.stats, min: actualMin, max: actualMax };
+  }
   const metadata: GeoTiffMetadata & { isBinary: boolean; maskLayerName?: string } = {
     ...baseMetadata,
+    stats: finalStats,
     isBinary,
     ...(maskLayerName !== undefined ? { maskLayerName } : {})
   };

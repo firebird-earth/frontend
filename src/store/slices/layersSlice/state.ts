@@ -7,7 +7,7 @@ import { BASEMAPS, BASEMAPS_CATEGORY } from '../../../constants/maps/basemaps';
 import { WILDFIRE, WILDFIRE_CATEGORY } from '../../../constants/maps/wildfire';
 import { ELEVATION, ELEVATION_CATEGORY } from '../../../constants/maps/elevation';
 import { FIRE_METRICS } from '../../../constants/maps/firemetrics';
-import { VALUE_AT_RISK, VALUE_AT_RISK_CATEGORY } from '../../../constants/maps/valueAtRisk';
+import { VALUE_AT_RISK, VALUE_AT_RISK_CATEGORY } from '../../../constants/maps/structureRisk';
 import { LANDSCAPE_RISK, LANDSCAPE_RISK_CATEGORY } from '../../../constants/maps/landscapeRisk';
 import { FUELS, FUELS_CATEGORY } from '../../../constants/maps/fuels';
 import { HABITAT, HABITAT_CATEGORY } from '../../../constants/maps/habitat';
@@ -33,7 +33,7 @@ export const initialState: LayersState = {
     
     scenarios: SCENARIOS_CATEGORY,
     landscapeRisk: LANDSCAPE_RISK_CATEGORY,
-    valueAtRisk: VALUE_AT_RISK_CATEGORY,
+    structureRisk: VALUE_AT_RISK_CATEGORY,
     fuels: FUELS_CATEGORY,
       
     basemaps: BASEMAPS_CATEGORY,

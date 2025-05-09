@@ -1,5 +1,5 @@
 import { LANDSCAPE_RISK } from './landscapeRisk';
-import { VALUE_AT_RISK } from './valueAtRisk';
+import { VALUE_AT_RISK } from './structureRisk';
 import { FUELS } from './fuels';
 
 import { BASEMAPS } from './basemaps';
@@ -67,7 +67,7 @@ export const CATEGORY_TAB_MAPPING = {
   infrastructure: Tab.LAYERS,
   restorationClass: Tab.LAYERS,
   habitat: Tab.LAYERS,
-  valueAtRisk: Tab.FIREMETRICS,
+  structureRisk: Tab.FIREMETRICS,
   landscapeRisk: Tab.FIREMETRICS,
   fuels: Tab.FIREMETRICS
 } as const;

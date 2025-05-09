@@ -6,13 +6,17 @@ import { useAppSelector } from '../../hooks/useAppSelector';
 import { setShowMapValues } from '../../store/slices/layersSlice';
 import { setIsCancellingTooltip } from '../../store/slices/uiSlice';
 import { layerDataCache } from '../../cache/cache';
-import { getColorScheme, getColorFromScheme } from '../../utils/colors';
+import { getColorFromScheme } from '../../utils/colors';
 import { defaultColorScheme } from '../../constants/colors';
 import { leafletLayerMap } from '../../store/slices/layersSlice/state';
+import { clampValueToDomain, resolveDomain } from '../../utils/rasterDomain';
 
-const ValueTooltipConfig = {
-  debug: false,
-};
+const DEBUG = true;
+function log(...args: any[]) {
+  if (DEBUG) {
+    console.log('[ValueTooltipControl]', ...args);
+  }
+}
 
 interface ValueTooltipProps {
   categoryId: string;
@@ -39,15 +43,31 @@ const ValueTooltipControl: React.FC<ValueTooltipProps> = React.memo(({ categoryI
   useEffect(() => {
     const layerData = layerDataCache.getSync(`${categoryId}-${layerId}`);
     if (!layerData?.data || !layerData.metadata || !valueRange || !layer) {
-      if (ValueTooltipConfig.debug) console.log('Missing tooltip inputs');
+      log('Missing tooltip inputs');
       return;
     }
 
-    const { rasterArray, width, height, noDataValue } = layerData.data;
-    //const scheme = getColorScheme(layer.colorScheme || defaultColorScheme);
+    // Prefer the processed array (clamped + filled) if available
+    const { rasterArray, processedRaster, width, height, noDataValue } = layerData.data as {
+      rasterArray: Float32Array;
+      processedRaster?: Float32Array;
+      width: number;
+      height: number;
+      noDataValue: number;
+    };
+    const dataArray = processedRaster ?? rasterArray;
+    log(`Using ${processedRaster ? 'processedRaster' : 'rasterArray'} for layer ${categoryId}-${layerId}`);
+
     const scheme = layer.colorScheme || defaultColorScheme;
-    const domain = layer.domain || [valueRange.defaultMin, valueRange.defaultMax];
-    const [domainMin, domainMax] = domain;
+
+    // Resolve domain replacing nodata with actual stats
+    const rawDomain = layer.domain || [valueRange.defaultMin, valueRange.defaultMax];
+    const [domainMin, domainMax] = resolveDomain(
+      rawDomain,
+      layerData.metadata.stats.min,
+      layerData.metadata.stats.max,
+      noDataValue
+    );
     const fullRange = domainMax - domainMin;
 
     const tooltip = L.tooltip({
@@ -55,7 +75,8 @@ const ValueTooltipControl: React.FC<ValueTooltipProps> = React.memo(({ categoryI
       direction: 'top',
       className: 'value-tooltip',
       offset: [0, -20],
-    }).setContent('Move mouse over the map')
+    })
+      .setContent('Move mouse over the map')
       .setLatLng(map.getCenter())
       .addTo(map);
     tooltipRef.current = tooltip;
@@ -66,58 +87,48 @@ const ValueTooltipControl: React.FC<ValueTooltipProps> = React.memo(({ categoryI
       if (!img) return;
 
       const bounds = img.getBoundingClientRect();
-      const mouse = map.mouseEventToContainerPoint(e.originalEvent);
-      const mapContainer = map.getContainer().getBoundingClientRect();
 
-      const offsetX = mouse.x - (bounds.left - mapContainer.left);
-      const offsetY = mouse.y - (bounds.top - mapContainer.top);
+      // ← CHANGED: use clientX/Y directly against bounds
+      const ev = e.originalEvent as MouseEvent;
+      const offsetX = ev.clientX - bounds.left;
+      const offsetY = ev.clientY - bounds.top;
 
       const relX = offsetX / bounds.width;
       const relY = offsetY / bounds.height;
 
       const pixelX = Math.floor(relX * width);
       const pixelY = Math.floor(relY * height);
-
       const index = pixelY * width + pixelX;
-      const value = rasterArray[index];
 
-      let label = '';
-      let swatchColor = '';
+      const raw = dataArray[index];
+      const value = clampValueToDomain(raw, domainMin, domainMax, noDataValue);
+      const isNoData = Math.abs(raw - noDataValue) < 1e-10;
 
-      const isInvalid =
-        index < 0 || index >= rasterArray.length ||
-        value === undefined || isNaN(value) || !isFinite(value) ||
-        (noDataValue !== null && Math.abs(value - noDataValue) < 1e-10) ||
-        value < valueRange.min || value > valueRange.max;
+      let label: string;
+      let swatchColor: string;
 
-      if (isInvalid) {
+      if (index < 0 || index >= dataArray.length || isNaN(value) || isNoData) {
         label = 'No value';
         swatchColor = 'rgba(0,0,0,0)';
       } else {
+        // Format display value
         const formattedValue =
           Math.abs(value) < 0.01
             ? value.toExponential(2)
             : Math.abs(value) > 1000
             ? value.toFixed(0)
             : value.toFixed(1);
-
         const unit = layerName.includes('Slope') || layerName.includes('Aspect') ? '°' : '';
         const normalizedValue = (value - domainMin) / fullRange;
         swatchColor = getColorFromScheme(scheme, normalizedValue);
         label = `${formattedValue}${unit}`;
       }
 
-      tooltipRef.current?.setContent(renderSwatchContent(`${layerName}: ${label}`, swatchColor));
-      tooltipRef.current?.setLatLng(e.latlng);
+      tooltipRef.current
+        ?.setContent(renderSwatchContent(`${layerName}: ${label}`, swatchColor))
+        .setLatLng(e.latlng);
 
-      if (ValueTooltipConfig.debug) {
-        console.log({
-          latlng: e.latlng,
-          pixelX, pixelY, index, value,
-          swatchColor, width, height,
-          bounds: { width: bounds.width, height: bounds.height }
-        });
-      }
+      //log({latlng: e.latlng, pixelX, pixelY, index, raw, value, swatchColor});
     };
 
     map.on('mousemove', updateTooltip);
@@ -159,7 +170,7 @@ function renderSwatchContent(label: string, color: string) {
   return `
     <div style="display:flex;align-items:center;gap:6px">
       <div style="width:12px;height:12px;background:${color};border-radius:2px;border:1px solid #aaa;"></div>
-      <div>${label}</div>
+      <div style="font-weight: bold; font-size: 12px;">${label}</div>
     </div>
   `;
 }

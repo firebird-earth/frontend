@@ -55,3 +55,30 @@ export function zoomToGridThreshold(map: L.Map, size: number, unit: 'acres' | 'm
     });
   }
 }
+
+/**
+ * Computes raster grid parameters from geographic bounds at a given resolution.
+ * @param bounds      Leaflet LatLngBounds in EPSG:4326
+ * @param resolution  Desired pixel size in meters
+ * @returns Grid parameters: width, height, originX, originY, pixelWidth, pixelHeight
+ */
+export function computeGridMetadata(
+  bounds: L.LatLngBounds,
+  resolution: number
+): { width: number; height: number; originX: number; originY: number; pixelWidth: number; pixelHeight: number } {
+  // Project bounds to Web Mercator (meters)
+  const sw = L.CRS.EPSG3857.project(bounds.getSouthWest());
+  const ne = L.CRS.EPSG3857.project(bounds.getNorthEast());
+  const dx = ne.x - sw.x;
+  const dy = ne.y - sw.y;
+
+  // Compute width/height at given resolution
+  const width = Math.ceil(dx / resolution);
+  const height = Math.ceil(dy / resolution);
+  const originX = sw.x;
+  const originY = ne.y;
+  const pixelWidth = resolution;
+  const pixelHeight = -resolution;
+
+  return { width, height, originX, originY, pixelWidth, pixelHeight };
+}

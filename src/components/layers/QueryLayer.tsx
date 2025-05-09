@@ -13,7 +13,6 @@ import {
 } from '../../store/slices/layersSlice';
 import { MapPane, QueryExpression } from '../../types/map';
 import { leafletLayerMap } from '../../store/slices/layersSlice/state';
-import { colorizeRasterImage } from '../../utils/colorizeRaster';
 import { getColorScheme } from '../../utils/colors';
 import { defaultColorScheme } from '../../constants/colors';
 import { execExpression } from '../../query/exec';
@@ -23,13 +22,14 @@ import GeoTiffLegend from '../legend/GeoTiffLegend';
 import { useLayerOpacity } from '../../hooks/useLayerOpacity';
 import { useLayerValueRange } from '../../hooks/useLayerValueRange';
 import { findLayerByName } from '../../store/slices/layersSlice/utils/utils';
+import { resolveDomain } from '../../utils/rasterDomain';
+import { runRasterPipeline } from '../../utils/rasterPipeline';
 
 const DEBUG = true;
 function log(...args: any[]) {
   if (DEBUG) console.log('[QueryLayer]', ...args);
 }
 
-// Factory to create a QueryLayer component
 export function createQueryLayer(
   categoryId: string,
   config: QueryExpression
@@ -41,9 +41,7 @@ export function createQueryLayer(
       active={active}
       expression={config.expression}
       categoryId={config.categoryId}
-      layerId={
-        config.name ? hashString(config.name + config.expression) : undefined
-      }
+      layerId={config.name ? hashString(config.name + config.expression) : undefined}
     />
   );
 
@@ -75,14 +73,13 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
 
   const lastRasterRef = useRef<any>(null);
   const lastMetaRef = useRef<any>(null);
-  const lastSchemeRef = useRef<string>(defaultColorScheme);
+  const lastSchemeRef = useRef<string>(defaultColorScheme.name);
 
   const layer = useAppSelector((state) => {
     if (!categoryId || layerId == null) return;
     const cat = state.layers.categories[categoryId];
     return cat?.layers.find((l) => l.id === layerId);
   });
-
   const layerOrder = layer?.order ?? 0;
 
   const cleanup = () => {
@@ -99,33 +96,29 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
   ) => {
     const { rasterArray, width, height, noDataValue } = rasterData;
     const schemeObj = getColorScheme(colorSchemeName)!;
-    // always use full data range
-    const domain: [number, number] = [
-      metadata.stats.min,
-      metadata.stats.max,
-    ];
-    const imageData = colorizeRasterImage(
+    // full domain
+    const rawDomain: [number, number] = [metadata.stats.min, metadata.stats.max];
+
+    const canvas = runRasterPipeline(
+      categoryId!,
+      layerId!,
       rasterArray,
       width,
       height,
       noDataValue,
-      schemeObj.colors,
-      domain,
-      valueRange
+      rawDomain,
+      metadata.stats,
+      valueRange!,
+      schemeObj
     );
-    const canvas = document.createElement('canvas');
-    canvas.width = width;
-    canvas.height = height;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) throw new Error('Failed to get canvas context');
-    ctx.putImageData(imageData, 0, 0);
-    const dataUrl = canvas.toDataURL();
+
     const bounds = L.latLngBounds(
       L.latLng(metadata.leafletBounds[0][0], metadata.leafletBounds[0][1]),
       L.latLng(metadata.leafletBounds[1][0], metadata.leafletBounds[1][1])
     );
+
     cleanup();
-    const overlay = L.imageOverlay(dataUrl, bounds, {
+    const overlay = L.imageOverlay(canvas.toDataURL(), bounds, {
       opacity,
       pane: MapPane.FiremetricsPane,
       className: `${categoryId}-layer`,
@@ -136,7 +129,7 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
     layerRef.current = overlay;
   };
 
-  // redraw on slider change, using same full-domain colors
+  // redraw on slider change
   useEffect(() => {
     if (
       valueRange &&
@@ -165,8 +158,8 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
     if (cached?.data && cached?.metadata) {
       lastRasterRef.current = cached.data;
       lastMetaRef.current = cached.metadata;
-      lastSchemeRef.current = layer.colorScheme.name;
-      renderOverlay(cached.data, cached.metadata, layer.colorScheme.name);
+      lastSchemeRef.current = layer?.colorScheme.name!;
+      renderOverlay(cached.data, cached.metadata, layer!.colorScheme.name!);
       return cleanup;
     }
 
@@ -180,10 +173,10 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
         if (!rasterData || !metadata)
           throw new Error('Invalid rasterData or metadata');
 
-        let colorSchemeName = defaultColorScheme;
+        let colorSchemeName = defaultColorScheme.name;
         if (metadata.isBinary) {
           metadata.stats = { ...metadata.stats, min: 0, max: 1 };
-          colorSchemeName = layer.colorScheme.name!;
+          colorSchemeName = layer!.colorScheme.name!;
         } else if (metadata.maskLayerName) {
           const state = store.getState();
           const maskLayer = findLayerByName(
@@ -253,7 +246,17 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
       mountedRef.current = false;
       cleanup();
     };
-  }, [map, active, expression, currentAOI, dispatch, categoryId, layerId, onError, layerOrder]);
+  }, [
+    map,
+    active,
+    expression,
+    currentAOI,
+    dispatch,
+    categoryId,
+    layerId,
+    onError,
+    layerOrder,
+  ]);
 
   useEffect(() => {
     if (layerRef.current) layerRef.current.setOpacity(opacity);

@@ -13,8 +13,11 @@ export const FUELS = {
     description: 'Forest canopy bulk density',
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/cbd.tif`,
-    units: 'kg/m³',
-    colorScheme: colorSchemes.greenYellowRed
+    units: 'kg/m³ x 100',
+    valueFormatMin: "{value:.0f}",
+    valueFormatMax: "> {value:.0f}",
+    domain: [1, 14],
+    colorScheme: colorSchemes.brewerGreenToRed6
   },
   CANOPY_COVER: {
     name: 'Canopy Cover',

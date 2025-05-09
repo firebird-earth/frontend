@@ -12,6 +12,8 @@ export const GeoTiffNoDataColor = {
  * Collection of color schemes
  */
 export const colorSchemes: Record<string, ColorScheme> = {
+
+// Binary --------------------------------------------------
   
   // Binary scheme (0 = transparent, 1 = color)
   binaryRed: {
@@ -25,7 +27,7 @@ export const colorSchemes: Record<string, ColorScheme> = {
     type: 'sequential'
   },
   
-    // Binary scheme (0 = transparent, 1 = color)
+  // Binary scheme (0 = transparent, 1 = color)
   binaryGreen: {
     name: 'binaryGreen',
     displayName: 'Binary',
@@ -36,6 +38,86 @@ export const colorSchemes: Record<string, ColorScheme> = {
     ],
     type: 'sequential'
   },
+
+// Brewer Divergent --------------------------------------------------
+  
+  brewerGreenToRed3: {
+    name: 'brewerGreenToRed3',
+    displayName: 'Brewer Green to Red 3',
+    description: 'Green (low) to Red (high)',
+    type: 'divergent',
+    buckets: 3,
+    colors: ['#91cf60','#ffffbf','#fc8d59'],
+  },
+
+  brewerGreenToRed4: {
+    name: 'brewerGreenToRed4',
+    displayName: 'Brewer Green to Red 4',
+    description: 'Green (low) to Red (high)',
+    type: 'divergent',
+    buckets: 4,
+    colors: ['#1a9641','#a6d96a','#fdae61','#d7191c'],
+  },
+
+  brewerGreenToRed5: {
+    name: 'brewerGreenToRed5',
+    displayName: 'Brewer Green to Red 5',
+    description: 'Green (low) to Red (high)',
+    type: 'divergent',
+    buckets: 5,
+    colors: ['#1a9641','#a6d96a','#ffffbf','#fdae61','#d7191c'],
+  },
+
+  brewerGreenToRed6: {
+    name: 'brewerGreenToRed6',
+    displayName: 'Brewer Green to Red 6',
+    description: 'Green (low) to Red (high)',
+    type: 'divergent',
+    buckets: 6,
+    colors: ['#1a9850','#91cf60','#d9ef8b','#ffffbf','#fee08b','#fc8d59','#d73027'],
+  },
+
+  brewerGreenToRed7: {
+    name: 'brewerGreenToRed7',
+    displayName: 'Brewer Green to Red 7',
+    description: 'Green (low) to Red (high)',
+    type: 'divergent',
+    buckets: 7,
+    colors: ['#1a9850','#91cf60','#d9ef8b','#ffffbf','#fee08b','#fc8d59','#d73027'],
+  },
+
+// Brewer Sequential  --------------------------------------------------
+
+  brewerYellowToRed4: {
+    name: 'brewerYellowToRed4',
+    displayName: 'Brewer Yellow to Red 4',
+    description: 'Yellow (low) to Red (high)',
+    type: 'sequential',
+    buckets: 4,
+    colors: ['#ffffb2','#fecc5c','#fd8d3c','#e31a1c'],
+  },
+
+  brewerYellowToRed5: {
+    name: 'brewerYellowToRed5',
+    displayName: 'Brewer Yellow to Red 5',
+    description: 'Yellow (low) to Red (high)',
+    type: 'sequential',
+    buckets: 5,
+    colors: ['#ffffb2','#fecc5c','#fd8d3c','#f03b20','#bd0026'],
+  },
+
+// Brewer Quantitative --------------------------------------------------
+  
+  brewerQuant5: {
+    name: 'brewerQuant5',
+    displayName: 'Brewer Quantative 5',
+    description: '',
+    type: 'quantitative',
+    buckets: 5,
+    colors: ['#8dd3c7','#ffffb3','#bebada','#fb8072','#80b1d3'],
+  },
+
+// Others --------------------------------------------------
   
   // Sequential schemes (low to high)
   redYellowGreen: {

@@ -13,7 +13,7 @@ const FireMetricsTab: React.FC = () => {
   const dispatch = useAppDispatch();
   const sections = useAppSelector(state => state.ui.sections);
   const fuelLayers = useAppSelector(state => state.layers.categories.fuels?.layers || []);
-  const valueAtRiskLayers = useAppSelector(state => state.layers.categories.valueAtRisk?.layers || []);
+  const valueAtRiskLayers = useAppSelector(state => state.layers.categories.structureRisk?.layers || []);
   const landscapeRiskLayers = useAppSelector(state => state.layers.categories.landscapeRisk?.layers || []);
   const currentAOI = useAppSelector(state => state.home.aoi.current);
   const [showDialog, setShowDialog] = useState(false);
@@ -30,7 +30,7 @@ const FireMetricsTab: React.FC = () => {
     if (name === FIRE_METRICS.LANDSCAPE_RISK.FLAME_LENGTH.name) return Ruler;
     if (name === FIRE_METRICS.LANDSCAPE_RISK.FIRE_INTENSITY.name) return ThermometerSun;
     if (name === FIRE_METRICS.LANDSCAPE_RISK.SUPPRESSION_DIFFICULTY.name) return Shield;
-    if (name === FIRE_METRICS.LANDSCAPE_RISK.TRANSMISSION_INDEX.name) return AlertTriangle;
+    if (name === FIRE_METRICS.LANDSCAPE_RISK.EXPLOSIVE_FIRE_RISK.name) return AlertTriangle;
     if (name === FIRE_METRICS.LANDSCAPE_RISK.TRANSMISSION_INFLUENCE.name) return Share2;
 
     // Fuels icons
@@ -132,10 +132,10 @@ const FireMetricsTab: React.FC = () => {
       <div>
         <SectionHeader 
           title={FIRE_METRICS.VALUE_AT_RISK.label}
-          isOpen={sections.valueAtRisk} 
+          isOpen={sections.structureRisk} 
           onToggle={() => dispatch(toggleSection(FIRE_METRICS.VALUE_AT_RISK.name))}
         />
-        {sections.valueAtRisk && (
+        {sections.structureRisk && (
           <div className="space-y-1">
             {valueAtRiskLayers.map(layer => renderLayerItem(layer, FIRE_METRICS.VALUE_AT_RISK.name))}
           </div>

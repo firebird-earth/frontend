@@ -14,11 +14,7 @@ export const scenarios: QueryExpression[] = [
       legend: {
         items: [
           {
-            label: 'High Canopy Bulk Density',
-            color: '#66bd63',
-            weight: 1,
-            fillColor: '#66bd63',
-            fillOpacity: 1.0, 
+            label: 'High Canopy Bulk Density'
           }
         ] 
       }
@@ -26,21 +22,17 @@ export const scenarios: QueryExpression[] = [
     {
       name: 'High CBD',
       description: 'Areas with high canopy bulk density',
-      expression: `mask("Canopy Bulk Density", "Canopy Bulk Density" > 10)`,
+      expression: `mask("Canopy Bulk Density", "Canopy Bulk Density" >= 10)`,
      },
     {
       name: 'Scenario C',
       description: 'High risk areas',
-      expression: `"Canopy Bulk Density" > 10 AND "Burn Probability" > 6`,
+      expression: `"Canopy Bulk Density" >= 10 AND "Burn Probability" > 6`,
       colorScheme: colorSchemes.binaryGreen,
       legend: {
         items: [
           {
-            label: 'High CBD and Burn Probability',
-            color: '#66bd63',
-            weight: 1,
-            fillColor: '#66bd63',
-            fillOpacity: 1.0, 
+            label: 'High CBD and Burn Probability'
           }
         ] 
       }
@@ -54,10 +46,19 @@ export const scenarios: QueryExpression[] = [
         items: [
           {
             label: 'Rx Burn Feasible',
-            color: '#66bd63',
-            weight: 1,
-            fillColor: '#66bd63',
-            fillOpacity: 1.0, 
+          }
+        ] 
+      }
+    },
+    {
+      name: 'County Boundries',
+      description: 'Counties',
+      expression: `edge(Counties)`,
+      colorScheme: colorSchemes.binaryGreen,
+      legend: {
+        items: [
+          {
+            label: 'County Boundary'
           }
         ] 
       }
@@ -70,11 +71,7 @@ export const scenarios: QueryExpression[] = [
       legend: {
         items: [
           {
-            label: 'High Canopy Bulk Density',
-            color: '#66bd63',
-            weight: 1,
-            fillColor: '#66bd63',
-            fillOpacity: 1.0, 
+            label: 'High Canopy Bulk Density'
           }
         ] 
       }

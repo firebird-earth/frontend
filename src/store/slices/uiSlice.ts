@@ -29,7 +29,7 @@ const initialState: UIState = {
     jurisdictions: false,
     wildfire: false,
     elevation: false,
-    valueAtRisk: true,
+    structureRisk: true,
     landscapeRisk: true,
     fuels: true,
     landscape: false,

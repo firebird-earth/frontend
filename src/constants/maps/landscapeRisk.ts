@@ -32,8 +32,10 @@ export const LANDSCAPE_RISK = {
     description: 'Annual burn probability',
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/burn_probability.tif`,
-    units: 'Probability',
-    colorScheme: colorSchemes.burnProbability
+    units: 'Multiple of average',
+    valueFormat: "{value:.0f} x",
+    domain: [1, 0], // 1, noDataValue
+    colorScheme: colorSchemes.brewerGreenToRed7,
   },
   FLAME_LENGTH: {
     name: 'Flame Length',
@@ -41,8 +43,10 @@ export const LANDSCAPE_RISK = {
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/flame_length.tif`,
     units: 'Feet',
-    colorScheme: colorSchemes.fireIntensity,
-    domain: [0, 100] // Flame length range in feet
+    valueFormatMin: "{value:.0f} feet",
+    valueFormatMax: "> {value:.0f} feet",
+    domain: [1, 12], // Flame length range in feet
+    colorScheme: colorSchemes.brewerGreenToRed4,
   },
   FIRE_INTENSITY: {
     name: 'Fire Intensity',
@@ -51,25 +55,26 @@ export const LANDSCAPE_RISK = {
     source: 'USFS Fire Modeling Institute',
     units: 'level',
     colorScheme: 'none',
-    domain: [0, 6] // Fire intensity levels
   },
   SUPPRESSION_DIFFICULTY: {
     name: 'Suppression Difficulty',
     description: 'Difficulty of fire suppression',
-    type: LayerType.Vector,
-    source: 'USFS Fire Modeling Institute',
-    units: 'Index Value',
-    colorScheme: 'none',
-    domain: [0, 5] // Suppression difficulty index
+    type: LayerType.GeoTiff,
+    source: `${STORAGE}/{aoi}/suppression_difficulty.tif`,
+    units: 'Supression Difficulty Index',
+    valueFormat: "{value:.0f}",
+    colorScheme: colorSchemes.brewerGreenToRed6,
   },
-  TRANSMISSION_INDEX: {
+  EXPLOSIVE_FIRE_RISK: {
     name: 'Explosive Fire Risk',
     description: 'Explosive Fire Risk',
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/explosive_fire_risk.tif`,
     units: 'Acres burned in 2 hours',
-    colorScheme: colorSchemes.greenYellowRed,
-    domain: [0, 100] // Transmission index range
+    valueFormatMin: "{value:.0f} acres",   
+    valueFormatMax: "> {value:.0f} acres",
+    domain: [1, 250], 
+    colorScheme: colorSchemes.brewerGreenToRed7,
   },
   TRANSMISSION_INFLUENCE: {
     name: 'Transmission Influence',
@@ -78,7 +83,6 @@ export const LANDSCAPE_RISK = {
     source: 'USFS Fire Modeling Institute',
     units: 'index',
     colorScheme: 'none',
-    domain: [0, 100] // Transmission influence range
   }
 } as const;
 
@@ -89,6 +93,6 @@ export const LANDSCAPE_RISK_CATEGORY: LayerCategory = createInitialCategory('lan
   LANDSCAPE_RISK.BURN_PROBABILITY,
   LANDSCAPE_RISK.FLAME_LENGTH,
   LANDSCAPE_RISK.FIRE_INTENSITY,
-  LANDSCAPE_RISK.TRANSMISSION_INDEX,
+  LANDSCAPE_RISK.EXPLOSIVE_FIRE_RISK,
   LANDSCAPE_RISK.TRANSMISSION_INFLUENCE,
 ]);

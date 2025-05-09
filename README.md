@@ -15,34 +15,6 @@ Leaflet maintains a strict layer ordering system using panes with predefined z-i
 | Tooltip Pane  | 650     | Layer tooltips            |
 | Popup Pane    | 700     | Popups                    |
 
-### Layer Type Rendering
-
-Different layer types are automatically assigned to specific panes:
-
-- **Feature Services** (e.g., Counties layer)
-  - Rendered in Overlay Pane (z-index: 400)
-  - Always appears above raster layers
-  
-- **Image Services** (e.g., Elevation layer)
-  - Rendered in Tile Pane (z-index: 200)
-  - Always appears below vector layers
-
-- **GeoTIFF Layers**
-  - Rendered as image overlays in Tile Pane
-  - Support custom ordering within their pane
-
-This explains why vector layers like Counties always appear above raster layers like Elevation, regardless of the order they're activated.
-
-## Features
-
-- Multiple layer types support (GeoTIFF, ArcGIS Services, Vector)
-- Dynamic layer ordering within compatible types
-- Interactive map controls
-- Coordinate display system
-- Grid overlay system
-- Dark/light theme support
-- Responsive design
-
 ## Tech Stack
 
 - React 18

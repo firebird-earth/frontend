@@ -3,24 +3,15 @@
 import { store } from '../store';
 import { MapLayer } from '../types/map';
 import { findLayer, findLayerByName } from '../store/slices/layersSlice/utils/utils';
-import { fetchGeoTiffLayer } from './fetchGeoTiffLayer';
-import { fetchArcGISTiffLayer } from './fetchArcGISTiffLayer';
+import { fetchGeoTiffLayer } from './fetchGeotiffLayer';
+import { fetchArcGISTiffLayer } from './fetchTiffLayer';
+import { fetchArcGISFeatureLayer } from './fetchFeatureLayer';
 import { LayerType } from '../types/map';
+import * as L from 'leaflet';
 
 const DEBUG = true;
 function log(...args: any[]) {
-  if (DEBUG) {
-    console.log('[LayerDataCache]', ...args);
-  }
-}
-
-// Debug configuration
-const LayerDataCacheConfig = {
-  debug: true
-} as const;
-
-export function setLayerDataCacheDebug(enabled: boolean) {
-  (LayerDataCacheConfig as any).debug = enabled;
+  if (DEBUG) { console.log('[LayerDataCache]', ...args); }
 }
 
 interface CacheEntry<T> {
@@ -59,7 +50,7 @@ class LayerDataCache {
     let layer: MapLayer | undefined;
     if (key.includes('-')) {
       const [categoryId, layerId] = key.split('-');
-      layer = findLayer(state.layers, categoryId, parseInt(layerId));
+      layer = findLayer(state.layers, categoryId, parseInt(layerId, 10));
     } else {
       layer = findLayerByName(state.layers, key);
     }
@@ -68,25 +59,19 @@ class LayerDataCache {
     }
     log('Found layer key:', key, layer);
 
-    const map = window.leafletMap;
+    const map = window.leafletMap!;
     const mapBounds = map.getBounds();
     log('map bounds:', mapBounds);
 
     // Access the current aoi from the Redux store
-    const currentaoi = store.getState().home.aoi.current;
+    const currentaoi = store.getState().home.aoi.current!;
     const aoiBounds = L.latLngBounds(
       L.latLng(currentaoi.bufferedBounds.minLat, currentaoi.bufferedBounds.minLng),
       L.latLng(currentaoi.bufferedBounds.maxLat, currentaoi.bufferedBounds.maxLng)
     );
-    log('aoi bounds:', aoiBounds);
 
     // choose bounds for fetch
-    let fetchBounds;
-    if (boundsOption === 'aoiBufferBounds') {
-      fetchBounds = aoiBounds;
-    } else {
-      fetchBounds = mapBounds;
-    }
+    const fetchBounds = boundsOption === 'aoiBufferBounds' ? aoiBounds : mapBounds;
     log('fetch bounds:', fetchBounds);
 
     // Create fetch promise based on layer type
@@ -94,15 +79,22 @@ class LayerDataCache {
     switch (layer.type) {
       case LayerType.GeoTiff:
         fetchPromise = (async () => {
-          const [data, metadata] = await fetchGeoTiffLayer(layer!, fetchBounds);
+          const [data, metadata] = await fetchGeoTiffLayer(layer, fetchBounds);
           return { data, metadata };
         })();
         break;
 
       case LayerType.ArcGISImageService:
         fetchPromise = (async () => {
-          const [data, metadata] = await fetchArcGISTiffLayer(layer!, fetchBounds);
+          const [data, metadata] = await fetchArcGISTiffLayer(layer, fetchBounds);
           return { data, metadata };
+        })();
+        break;
+
+      case LayerType.ArcGISFeatureService:
+        fetchPromise = (async () => {
+          const [features, metadata] = await fetchArcGISFeatureLayer(layer, fetchBounds);
+          return { features, metadata };
         })();
         break;
 
@@ -113,14 +105,10 @@ class LayerDataCache {
     this.fetchPromises.set(key, fetchPromise);
 
     try {
-      let result = await fetchPromise;
-
-      // Store in cache
+      const result = await fetchPromise;
       this.cache.set(key, result);
       this.fetchPromises.delete(key);
-
       log('Cached result for key:', key, result);
-
       return result;
     } catch (error) {
       this.fetchPromises.delete(key);
@@ -129,8 +117,7 @@ class LayerDataCache {
   }
 
   public getSync<T>(key: string): { data: T; metadata: any } {
-    const cached = this.cache.get(key);
-    return cached;
+    return this.cache.get(key)!;
   }
 
   public set<T>(key: string, data: T, metadata: any): void {

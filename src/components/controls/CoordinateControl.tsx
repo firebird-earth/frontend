@@ -5,9 +5,9 @@ import proj4 from 'proj4';
 import { useAppSelector } from '../../hooks/useAppSelector';
 
 // Register UTM projections for all zones
-for (let zone = 1; zone <= 60; zone++) {
-  proj4.defs(`EPSG:326${zone}`, `+proj=utm +zone=${zone} +datum=WGS84 +units=m +no_defs`);
-}
+//for (let zone = 1; zone <= 60; zone++) {
+//  proj4.defs(`EPSG:326${zone}`, `+proj=utm +zone=${zone} +datum=WGS84 +units=m +no_defs`);
+//}
 
 interface CoordinateControlProps {
   position?: L.ControlPosition;

@@ -93,8 +93,8 @@ class LayerDataCache {
 
       case LayerType.ArcGISFeatureService:
         fetchPromise = (async () => {
-          const [features, metadata] = await fetchArcGISFeatureLayer(layer, fetchBounds);
-          return { features, metadata };
+          const [data, metadata] = await fetchArcGISFeatureLayer(layer, fetchBounds);
+          return { data, metadata };
         })();
         break;
 

@@ -34,34 +34,7 @@ export function createBoundsFromBbox(bbox: string): [[number, number], [number, 
   return [[south, west], [north, east]];
 }
 
-// Helper to register UTM CRS definitions
-export function registerUTMProjection(epsgCode: string) {
-  // Only handle UTM codes
-  if (!epsgCode.match(/^EPSG:(269|327)\d{2}$/)) {
-    return;
-  }
-
-  // Extract zone number from EPSG code
-  const zone = parseInt(epsgCode.slice(-2));
-  if (isNaN(zone) || zone < 1 || zone > 60) {
-    return;
-  }
-
-  // Determine hemisphere and datum
-  const isNAD83 = epsgCode.startsWith('EPSG:269');
-  const isNorth = epsgCode.startsWith('EPSG:269') || epsgCode.startsWith('EPSG:326');
-  const hemisphere = isNorth ? '' : '+south';
-  const datum = isNAD83 ? '+datum=NAD83' : '+datum=WGS84';
-
-  // Create proj4 definition
-  const proj4def = `+proj=utm +zone=${zone} ${hemisphere} ${datum} +units=m +no_defs`;
-
-  // Register the CRS if not already defined
-  if (!proj4.defs(epsgCode)) {
-    proj4.defs(epsgCode, proj4def);
-  }
-}
-
+/*
 // Register common CRS definitions
 export function registerCommonCRS() {
   // Web Mercator (EPSG:3857)
@@ -82,3 +55,4 @@ export function registerCommonCRS() {
 
 // Initialize common CRS definitions
 registerCommonCRS();
+*/

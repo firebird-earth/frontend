@@ -4,6 +4,7 @@ import { Provider } from 'react-redux';
 import { store } from './store';
 import App from './components/app/App';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import { registerAllCRSDefs } from './utils/crs';
 import './index.css';
 
 createRoot(document.getElementById('root')!).render(
@@ -15,3 +16,7 @@ createRoot(document.getElementById('root')!).render(
     </ErrorBoundary>
   </StrictMode>
 );
+
+registerAllCRSDefs();
+
+//console.log('main complete')

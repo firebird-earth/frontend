@@ -36,12 +36,13 @@ const LocationMarkers: React.FC = () => {
       let coords: [number, number];
       if ('location' in currentAOI) {
         // User AOI
-        coords = currentAOI.location.center;
+        coords = currentAOI.location.coordinates;
       } else {
         // Static location
         coords = currentAOI.coordinates;
       }
 
+      // Create the market at coords
       const marker = L.marker(
         [coords[1], coords[0]],
         markerOptions
@@ -62,6 +63,7 @@ const LocationMarkers: React.FC = () => {
         dispatch(showAOIPanel());
       });
 
+      // Display the pin marker
       marker.addTo(map);
       markerRef.current = marker;
     }

@@ -8,7 +8,7 @@ export const homeReducer = createReducer(initialState, (builder) => {
     .addCase(actions.setCurrentAOI, (state, action) => {
       state.aoi.current = action.payload;
       if (action.payload && 'location' in action.payload) {
-        state.aoi.coordinates = action.payload.location.center;
+        state.aoi.coordinates = action.payload.location.coordinates;
       }
     })
     .addCase(actions.setCoordinates, (state, action) => {

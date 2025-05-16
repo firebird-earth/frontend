@@ -3,6 +3,37 @@ import { RasterData } from '../types/geotiff';
 const EPSILON = 1e-6;
 
 /**
+ * Checks if two rasters are geospatially aligned.
+ * Compares CRS, pixel size, and origin (tiepoint).
+ */
+export function isGeospatiallyAligned(
+  rasterA: RasterData,
+  rasterB: RasterData
+): boolean {
+  const metaA = rasterA.metadata;
+  const metaB = rasterB.metadata;
+
+  if (!metaA || !metaB) return false;
+  if (metaA.projection?.sourceCRS !== metaB.projection?.sourceCRS) return false;
+
+  const scaleA = metaA.resolution;
+  const scaleB = metaB.resolution;
+  if (!scaleA || !scaleB) return false;
+
+  if (Math.abs(scaleA.x - scaleB.x) > EPSILON) return false;
+  if (Math.abs(scaleA.y - scaleB.y) > EPSILON) return false;
+
+  const tieA = metaA.projection?.origin;
+  const tieB = metaB.projection?.origin;
+  if (!tieA || !tieB) return false;
+
+  if (Math.abs(tieA[0] - tieB[0]) > EPSILON) return false;
+  if (Math.abs(tieA[1] - tieB[1]) > EPSILON) return false;
+
+  return true;
+}
+
+/**
  * Crops a raster to match target width and height if off by at most 1 pixel.
  * Also updates the metadata width and height.
  */
@@ -49,37 +80,6 @@ export function cropAlignRaster(
 }
 
 /**
- * Checks if two rasters are geospatially aligned.
- * Compares CRS, pixel size, and origin (tiepoint).
- */
-export function isGeospatiallyAligned(
-  rasterA: RasterData,
-  rasterB: RasterData
-): boolean {
-  const metaA = rasterA.metadata;
-  const metaB = rasterB.metadata;
-
-  if (!metaA || !metaB) return false;
-  if (metaA.projection?.sourceCRS !== metaB.projection?.sourceCRS) return false;
-
-  const scaleA = metaA.resolution;
-  const scaleB = metaB.resolution;
-  if (!scaleA || !scaleB) return false;
-
-  if (Math.abs(scaleA.x - scaleB.x) > EPSILON) return false;
-  if (Math.abs(scaleA.y - scaleB.y) > EPSILON) return false;
-
-  const tieA = metaA.projection?.origin;
-  const tieB = metaB.projection?.origin;
-  if (!tieA || !tieB) return false;
-
-  if (Math.abs(tieA[0] - tieB[0]) > EPSILON) return false;
-  if (Math.abs(tieA[1] - tieB[1]) > EPSILON) return false;
-
-  return true;
-}
-
-/**
  * Clips a larger raster to match the bounds of a smaller raster.
  * Assumes rasters are geospatially aligned.
  */
@@ -120,3 +120,4 @@ export function clipRasterToBounds(
     metadata: updatedMetadata
   };
 }
+

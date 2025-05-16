@@ -3,51 +3,48 @@ import * as EsriLeaflet from 'esri-leaflet';
 import { Feature } from '@turf/helpers';
 import { MapLayer } from '../types/map';
 import { computeGridMetadata } from '../utils/grid';
-import { RESOLUTION } from '../globals';
+import { RESOLUTION, NODATA_VALUE } from '../globals';
+import { RasterData } from '../types/geotiff';
 
 const DEBUG = true;
 function log(...args: any[]) {
-  if (DEBUG) { console.log('[FetchFeatureLayer]', ...args); }
+  if (DEBUG) console.log('[FetchFeatureLayer]', ...args);
 }
 
-export interface FeatureLayerMetadata {
-  /** Geographic envelope for rasterization: [minX, minY, maxX, maxY] in EPSG:4326 */
-  bounds: [number, number, number, number];
-  /** Raw geographic bounds (same as `bounds`, provided for downstream consistency) */
-  rawBounds: [number, number, number, number];
-  /** Number of columns in the raster grid */
+export interface FeatureMetadata {
   width: number;
-  /** Number of rows in the raster grid */
   height: number;
-  /** X coordinate (meters) of the top-left pixel origin */
-  originX: number;
-  /** Y coordinate (meters) of the top-left pixel origin */
-  originY: number;
-  /** Pixel size in X direction (meters) */
-  pixelWidth: number;
-  /** Pixel size in Y direction (meters, negative for top-down) */
-  pixelHeight: number;
-  /** Feature-specific metadata */
+  noDataValue: number | null;
+  compression: number | null;
+  bitsPerSample: number[];
+  resolution: {
+    x: number;
+    y: number;
+  };
+  projection: {
+    sourceCRS: string;
+    origin: [number, number] | null;
+  };
+  /** Geographic envelope for rasterization: [minX, minY, maxX, maxY] in lat/lng */
+  bounds: [number, number, number, number];
+  rawBounds: [number, number, number, number];
+  leafletBounds: [[number, number], [number, number]];
   featureCount: number;
-  /** Attribute fields returned */
   fields: string[];
-  /** Geometry type (e.g. "Polygon") */
   geometryType?: string;
 }
 
 /**
  * Fetches an ArcGIS FeatureLayer, applies the spatial filter 'bounds',
- * and returns features plus raster grid metadata at a fixed resolution.
+ * and returns rasterData (with features added) and its metadata.
  */
 export async function fetchArcGISFeatureLayer(
   layer: MapLayer,
   bounds: L.LatLngBounds
-): Promise<[Feature[], FeatureLayerMetadata]> {
+): Promise<[RasterData & { features: Feature[] }, FeatureMetadata]> {
   log(`Starting FeatureLayer fetch for: ${layer.name}`);
   const start = Date.now();
 
-  // Build and run the Esri-Leaflet query
-  // Default CRS is EPSG:4326 (WGS84, [longitude, latitude])
   const featureLayer = EsriLeaflet.featureLayer({ url: layer.source });
   const query = featureLayer
     .query()
@@ -57,45 +54,58 @@ export async function fetchArcGISFeatureLayer(
     .limit(2000)
     .intersects(bounds);
 
-  const result = await new Promise<[Feature[], FeatureLayerMetadata]>((resolve, reject) => {
+  const [features, metadata] = await new Promise<[Feature[], FeatureMetadata]>((resolve, reject) => {
     query.run((err, fc) => {
       if (err || !fc) return reject(err || new Error('Empty feature collection'));
-      const features = fc.features as Feature[];
-      const featureCount = features.length;
-      const fields = fc.fields
-        ? fc.fields.map((f: any) => f.name)
-        : featureCount > 0
-        ? Object.keys(features[0].properties)
-        : [];
+      const feats = fc.features as Feature[];
+      const featureCount = feats.length;
+      const fields = fc.fields ? fc.fields.map((f: any) => f.name) : [];
       const geometryType = (fc as any).geometryType;
 
-      // Compute grid metadata from bounds at fixed resolution
-      const { width, height, originX, originY, pixelWidth, pixelHeight } = computeGridMetadata(bounds, RESOLUTION);
+      // Raster grid metadata
+      const { width, height, originX, originY, pixelWidth, pixelHeight } =
+        computeGridMetadata(bounds, RESOLUTION);
 
-      // Extract geographic envelope for metadata
+      // Geographic bounds
       const minX = bounds.getWest();
       const minY = bounds.getSouth();
       const maxX = bounds.getEast();
       const maxY = bounds.getNorth();
 
-      const metadata: FeatureLayerMetadata = {
-        bounds: [minX, minY, maxX, maxY],
-        rawBounds: [minX, minY, maxX, maxY],
+      const rawBounds: [number, number, number, number] = [minX, minY, maxX, maxY];
+      const leafletBounds: [[number, number], [number, number]] = [[minY, minX], [maxY, maxX]];
+
+      const meta: FeatureMetadata = {
         width,
         height,
-        originX,
-        originY,
-        pixelWidth,
-        pixelHeight,
+        noDataValue: NODATA_VALUE,
+        compression: null,
+        bitsPerSample: [],
+        resolution: { x: pixelWidth, y: pixelHeight },
+        projection: { sourceCRS: 'EPSG:4326', origin: [originX, originY] },
+        bounds: rawBounds,
+        rawBounds,
+        leafletBounds,
         featureCount,
         fields,
-        geometryType
+        geometryType,
       };
-      resolve([features, metadata]);
+      resolve([feats, meta]);
     });
   });
 
-  log('Fetched metadata:', result[1])
-  log(`Completed FeatureLayer fetch for: ${layer.name} in ${Date.now() - start}ms`);
-  return result;
+  // Build placeholder RasterData object; rasterArray will be populated later during rasterization
+  const rasterData: RasterData & { features: Feature[] } = {
+    rasterArray: new Float32Array(metadata.width * metadata.height).fill(NODATA_VALUE),
+    width: metadata.width,
+    height: metadata.height,
+    noDataValue: NODATA_VALUE,
+    features,
+  };
+
+  log('Fetched rasterData:', rasterData);
+  log('Fetched metadata:', metadata);
+  log(`Completed fetch for: ${layer.name} in ${Date.now() - start}ms`);
+
+  return [rasterData, metadata];
 }

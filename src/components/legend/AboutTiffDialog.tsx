@@ -94,9 +94,8 @@ const AboutTiffDialog: React.FC<AboutTiffDialogProps> = ({
             </div>
           </div>
 
-          {/* Pixel Analysis */}
           <div className="space-y-1">
-            <h4 className="text-sm font-medium text-gray-700 mb-2">Pixel Analysis</h4>
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Map</h4>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Resolution</span>
               <span className="text-sm font-medium text-gray-700 text-right">
@@ -105,6 +104,18 @@ const AboutTiffDialog: React.FC<AboutTiffDialogProps> = ({
                   : 'Unknown'}
               </span>
             </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-gray-600">Size</span>
+              <span className="text-sm font-medium text-gray-700 text-right">
+                {(metadata.width * metadata.resolution.x / 1609.34).toFixed(2)} × {(metadata.height * Math.abs(metadata.resolution.y) / 1609.34).toFixed(2)} miles
+              </span>
+            </div>
+          </div>
+          
+          {/* Pixel Analysis */}
+          <div className="space-y-1">
+
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Pixel Analysis</h4>
             <div className="flex items-center justify-between">
               <span className="text-sm text-gray-600">Dimensions</span>
               <span className="text-sm font-medium text-gray-700 text-right">

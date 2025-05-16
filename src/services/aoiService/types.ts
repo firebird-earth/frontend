@@ -5,10 +5,11 @@ export interface AOI {
   name: string;
   description: string;
   location: {
-    center: [number, number]; // [longitude, latitude]
+    coordinates: [number, number];
     zoom: number;
   };
   boundary?: GeoJSON.FeatureCollection;
+  center: [number, number];
   boundaryRadius: number;
   bufferedRadius: number;
   bufferedBounds: BoundingBox;
@@ -21,7 +22,7 @@ export interface CreateAOIInput {
   name: string;
   description: string;
   location: {
-    center: [number, number];
+    coordinates: [number, number];
     zoom: number;
   };
   boundary?: GeoJSON.FeatureCollection;

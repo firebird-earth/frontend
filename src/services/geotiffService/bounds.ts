@@ -1,7 +1,7 @@
 import * as GeoTIFF from 'geotiff';
 import proj4 from 'proj4';
 import { GeoTiffBounds } from './types';
-import { registerUTMProjection } from './utils';
+import { registerUTMProjection } from '../../utils/crs';
 
 // Debug configuration
 const BoundsConfig = {

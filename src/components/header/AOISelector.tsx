@@ -50,12 +50,12 @@ const AOISelector: React.FC<AOISelectorProps> = ({ onClose }) => {
   };
 
   const handleAOIClick = (aoi: any) => {
-    if (aoi && aoi.location?.center) {
+    if (aoi && aoi.location?.coordinates) {
       dispatch(setCurrentAOI(aoi));
       navigateToLocation({
         id: parseInt(aoi.id),
         name: aoi.name,
-        coordinates: aoi.location.center
+        coordinates: aoi.location.coordinates
       });
       onClose();
     }

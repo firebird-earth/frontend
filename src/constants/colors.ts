@@ -1,13 +1,5 @@
 import { ColorScheme } from '../types/map';
 
-// GeoTIFF specific colors
-export const GeoTiffNoDataColor = { 
-  r: 0,    // Red: 0
-  g: 0,    // Green: 0 
-  b: 0,    // Blue: 0
-  a: 0     // Alpha: 0 (completely transparent)
-}; // Transparent - will show background
-
 /**
  * Collection of color schemes
  */
@@ -35,6 +27,18 @@ export const colorSchemes: Record<string, ColorScheme> = {
     buckets: 1,
     colors: [
       '#66bd63'   // green
+    ],
+    type: 'sequential'
+  },
+
+  // Binary scheme (0 = transparent, 1 = color)
+  binaryPurple: {
+    name: 'binaryPurple',
+    displayName: 'Binary',
+    description: 'Transparent (0) to green (1) for binary/boolean operations',
+    buckets: 1,
+    colors: [
+      '#6a51a3'   // purple
     ],
     type: 'sequential'
   },
@@ -106,6 +110,33 @@ export const colorSchemes: Record<string, ColorScheme> = {
     colors: ['#ffffb2','#fecc5c','#fd8d3c','#f03b20','#bd0026'],
   },
 
+  brewerWhiteToBlue3: {
+    name: 'brewerWhiteToBlue3',
+    displayName: 'Brewer White to Blue 3',
+    description: 'White (low) to Blue (high)',
+    type: 'sequential',
+    buckets: 3,
+    colors: ['#deebf7','#9ecae1','#3182bd'],
+  },
+
+  brewerWhiteToBlue4: {
+    name: 'brewerWhiteToBlue4',
+    displayName: 'Brewer White to Blue 4',
+    description: 'White (low) to Blue (high)',
+    type: 'sequential',
+    buckets: 4,
+    colors: ['#eff3ff','#bdd7e7','#6baed6','#2171b5'],
+  },
+
+  brewerWhiteToBlue9: {
+    name: 'brewerWhiteToBlue9',
+    displayName: 'Brewer White to Blue 9',
+    description: 'White (low) to Blue (high)',
+    type: 'sequential',
+    buckets: 9,
+    colors: ['#f7fbff','#deebf7','#c6dbef','#9ecae1','#6baed6','#4292c6','#2171b5','#08519c','#08306b'],
+  },
+
 // Brewer Quantitative --------------------------------------------------
   
   brewerQuant5: {
@@ -118,7 +149,16 @@ export const colorSchemes: Record<string, ColorScheme> = {
   },
 
 // Others --------------------------------------------------
-  
+
+  arcGISBlue4: {
+    name: 'arcGISBlue4',
+    displayName: 'ArcGIS to Blue 4',
+    description: 'White (low) to Blue (high)',
+    type: 'sequential',
+    buckets: 4,
+    colors: ['#BEE8FF','#00C5FF','#00A9E6','#00A9E6'],
+  },
+
   // Sequential schemes (low to high)
   redYellowGreen: {
     name: 'redYellowGreen',
@@ -308,5 +348,13 @@ export const colorSchemes: Record<string, ColorScheme> = {
   }
 };
 
+// GeoTIFF specific colors
+export const GeoTiffNoDataColor = { 
+  r: 0,    // Red: 0
+  g: 0,    // Green: 0 
+  b: 0,    // Blue: 0
+  a: 0     // Alpha: 0 (completely transparent)
+}; // Transparent - will show background
+
 export const defaultColorScheme = colorSchemes.greenYellowRed;
-export const defaultColorSchemeBinary = colorSchemes.binaryGreen;
+export const defaultColorSchemeBinary = colorSchemes.binaryPurple;

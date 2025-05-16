@@ -1,9 +1,9 @@
 import { Float32Array } from 'std';
 import { layerDataCache } from '../cache/cache';
-import { resolveDomain, clampRasterToDomain } from '../utils/rasterDomain';
-import { fillNoDataFocalMean } from '../utils/fillNoData';
-import { colorizeRasterImage } from '../utils/colorizeRaster';
-import { superscaleCanvas } from '../utils/superScaleRaster';
+import { resolveDomain, clampRasterToDomain } from './rasterDomain';
+import { fillNoDataFocalMean } from './fillNoData';
+import { colorizeRasterImage } from './colorizeRaster';
+import { superscaleCanvas } from './superScaleRaster';
 import { ColorScheme } from '../constants/colors';
 
 /**
@@ -26,8 +26,11 @@ export function runRasterPipeline(
   rawDomain: [number, number],
   stats: { min: number; max: number },
   valueRange: { defaultMin: number; defaultMax: number },
-  colorScheme: ColorScheme
+  colorScheme: ColorScheme,
+  fillNoData?: boolean = false,
+  superSample?: boolean = false
 ): HTMLCanvasElement {
+  
   // 1. Resolve domain
   const [domainMin, domainMax] = resolveDomain(
     rawDomain,
@@ -40,9 +43,12 @@ export function runRasterPipeline(
   const clamped = clampRasterToDomain(rasterArray, domainMin, domainMax, noDataValue);
 
   // 3. Fill NoData
-  const fillSize = 2;
-  const filled = fillNoDataFocalMean(clamped, width, height, noDataValue, fillSize);
-
+  let filled = clamped;
+  if (fillNoData) {
+    const fillSize = 2;
+    filled = fillNoDataFocalMean(clamped, width, height, noDataValue, fillSize);
+  } 
+  
   // 4. Expose processed raster for tooltip
   if (categoryId && layerId) {
     const cached = layerDataCache.getSync(`${categoryId}-${layerId}`);
@@ -61,7 +67,7 @@ export function runRasterPipeline(
   );
 
   // 6. Supersample into Canvas
-  const SUPERSAMPLE = true;
-  const scale = SUPERSAMPLE ? 2 : 1;
-  return superscaleCanvas(imageData, width, height, scale, SUPERSAMPLE);
+  const scale = superSample ? 2 : 1;
+  const canvas = superscaleCanvas(imageData, width, height, scale, superSample);
+  return canvas;
 }

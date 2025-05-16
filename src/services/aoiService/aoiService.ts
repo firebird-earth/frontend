@@ -8,6 +8,12 @@ import { navigateToLocation } from '../../utils/navigate';
 import { clearActiveLayers } from '../../store/slices/layersSlice';
 import { calculateBufferCircle } from '../../utils/geometry';
 import locations from '../../constants/places/locations';
+import {BUFFER_RADIUS} from '../../globals';
+
+const DEBUG = true;
+function log(...args: any[]) {
+  if (DEBUG) { console.log('[AOIService]', ...args); }
+}
 
 class AOIService {
   private static instance: AOIService;
@@ -19,24 +25,26 @@ class AOIService {
   private subscribers: Set<(state: AOIState) => void> = new Set();
 
   private constructor() {
+    
     // Initialize static locations as AOIs
     const initialAois = locations.map(location => {
+      
       const bufferCircle = calculateBufferCircle(
         [location.coordinates[1], location.coordinates[0]], // Convert to [lat, lng]
         location.boundary,
-        8
+        BUFFER_RADIUS
       );
 
       const newAOI: AOI = {
-        //id: uuidv4(),
         id: location.id,
         name: location.name,
         description: 'Default Location',
         location: {
-          center: location.coordinates,
+          coordinates: location.coordinates,
           zoom: 10
         },
         boundary: location.boundary,
+        center: bufferCircle.center,
         boundryRadius: bufferCircle.bufferedRadius,
         bufferedRadius: bufferCircle.bufferedRadius,
         bufferedBounds: bufferCircle.bufferedBounds,
@@ -80,8 +88,10 @@ class AOIService {
     try {
       this.setState({ loading: true, error: null });
 
+      log('createAOI input:', input);
+      
       const bufferCircle = calculateBufferCircle(
-        [input.location.center[1], input.location.center[0]], // Convert to [lat, lng]
+        [input.location.coordinates[1], input.location.coordinates[0]], // Convert to [lat, lng]
         input.boundary,
         8
       );
@@ -91,10 +101,11 @@ class AOIService {
         name: input.name,
         description: input.description,
         location: {
-         center: input.location.center,
+         coordinates: input.location.coordinates,
          zoom: input.location.zoom
         },
         boundary: input.boundary,
+        center: bufferCircle.center,
         boundryRadius: bufferCircle.bufferedRadius,
         bufferedRadius: bufferCircle.bufferedRadius,
         bufferedBounds: bufferCircle.bufferedBounds,
@@ -127,7 +138,7 @@ class AOIService {
       navigateToLocation({
         id: parseInt(newAOI.id),
         name: newAOI.name,
-        coordinates: newAOI.location.center
+        coordinates: newAOI.location.coordinates
       });
 
       return newAOI;

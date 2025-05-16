@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { getColorScheme } from '../../utils/colors';
-import { resolveDomain } from '../../utils/rasterDomain';
+import { resolveDomain } from '../../raster/rasterDomain';
 
 const DEBUG = true;
 function log(...args: any[]) {

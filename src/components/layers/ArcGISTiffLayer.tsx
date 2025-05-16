@@ -6,7 +6,7 @@ import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { setLayerBounds, initLayerValueRange, setLayerMetadata, setLayerLoading } from '../../store/slices/layersSlice';
 import { arcGISTiffService } from '../../services/arcGISTiffService';
-import { colorizeRasterImage } from '../../utils/colorizeRaster';
+import { colorizeRasterImage } from '../../raster/colorizeRaster';
 import { MapServiceConfig } from '../../services/maps/types';
 import { layerDataCache } from '../../cache/cache';
 import { leafletLayerMap } from '../../store/slices/layersSlice/state';

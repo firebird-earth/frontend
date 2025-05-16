@@ -41,7 +41,8 @@ export async function evaluateAST(
   ast: ASTNode,
   outputNoDataValue: number = NaN
 ): Promise<EvaluateResult> {
-  log('Calling evaluateAST with boundAst:', ast);
+  
+  log('evaluateAST() with ast:', ast);
 
   // Prepare raster dimensions
   const { rows, cols } = getRasterSizeFromInput(ast);
@@ -69,7 +70,9 @@ export async function evaluateAST(
   }
 
   log('Evaluation result (first 10 pixels):', rasterArray.slice(0, 10));
-
+  const mid = Math.floor(rasterArray.length / 2);
+  log('Evaluation result (middle 10 pixels):', rasterArray.slice(mid, mid + 10));
+  
   // Recompute stats from masked raster
   let actualMin = Infinity;
   let actualMax = -Infinity;

@@ -1,18 +1,27 @@
-import * as turf from '@turf/turf';
+// edgeRaster.ts
 
 /**
- * Compute a binary edge raster by labeling pixels with feature index
- * and detecting neighbor-differences along boundaries.
+ * Compute a binary edge raster by stroking each feature's boundary into
+ * an offscreen canvas and then reading back the pixels.
  *
- * @param features Array of turf.Feature (in WebMercator coords)
- * @param width Raster width
- * @param height Raster height
- * @param minX Left coordinate of origin
- * @param maxY Top coordinate of origin
- * @param pixelWidth Pixel width in projection units
- * @param pixelHeight Negative pixel height in projection units
- * @returns Float32Array binary edge mask (1 = edge, 0 = background)
+ * Emits debug logs via `log(...)` inside the worker.
+ *
+ * @param features      Array of turf.Feature (in WebMercator coords)
+ * @param width         Raster width
+ * @param height        Raster height
+ * @param minX          Left coordinate of origin (projected)
+ * @param maxY          Top coordinate of origin (projected)
+ * @param pixelWidth    Pixel width in projection units
+ * @param pixelHeight   Negative pixel height in projection units
+ * @returns             Float32Array binary edge mask (1 = edge, 0 = background)
  */
+import * as turf from '@turf/turf';
+
+const DEBUG = true;
+function log(...args: any[]) {
+  if (DEBUG) { console.log('[EdgeRaster]', ...args); }
+}
+
 export function computeEdgeRaster(
   features: turf.Feature[],
   width: number,
@@ -23,41 +32,73 @@ export function computeEdgeRaster(
   pixelHeight: number
 ): Float32Array {
   const total = width * height;
-  const halfX = pixelWidth / 2;
-  const halfY = Math.abs(pixelHeight) / 2;
+  const start = performance.now();
+  log(`Starting computeEdgeRaster: features=${features.length}, tile=${width}×${height}`);
 
-  // Step 1: label each pixel by feature index (1-based)
-  const labels = new Uint16Array(total);
-  for (let row = 0; row < height; row++) {
-    const y = maxY - (row * Math.abs(pixelHeight) + halfY);
-    for (let col = 0; col < width; col++) {
-      const x = minX + (col * pixelWidth + halfX);
-      const pt = turf.point([x, y]);
-      const idx = row * width + col;
-      for (let i = 0; i < features.length; i++) {
-        if (turf.booleanPointInPolygon(pt, features[i])) {
-          labels[idx] = i + 1;
-          break;
+  // 1) create or fallback to an HTMLCanvasElement
+  let canvas: OffscreenCanvas | HTMLCanvasElement;
+  if (typeof OffscreenCanvas !== 'undefined') {
+    canvas = new OffscreenCanvas(width, height);
+  } else {
+    canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+  }
+
+  const ctx = (canvas as any).getContext('2d') as CanvasRenderingContext2D;
+  ctx.clearRect(0, 0, width, height);
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 1;
+
+  // project coords → pixel
+  const absH = Math.abs(pixelHeight);
+  const toPx = ([x, y]: [number, number]): [number, number] => [
+    (x - minX) / pixelWidth,
+    (maxY - y) / absH
+  ];
+
+  // draw only the polygon boundaries
+  for (const feat of features) {
+    const geom = feat.geometry;
+
+    if (geom.type === 'Polygon' || geom.type === 'MultiPolygon') {
+      const polys = geom.type === 'Polygon'
+        ? [geom.coordinates as turf.Position[][]]
+        : (geom.coordinates as turf.Position[][][]);
+
+      for (const rings of polys) {
+        for (const ring of rings) {
+          ctx.beginPath();
+          ring.forEach(([x, y], i) => {
+            const [px, py] = toPx([x, y]);
+            if (i === 0) ctx.moveTo(px, py);
+            else        ctx.lineTo(px, py);
+          });
+          ctx.stroke();
         }
       }
     }
+    // If desired, lines/points could also be stroked here
   }
 
-  // Step 2: detect boundaries where neighbor labels differ
-  const edgeData = new Float32Array(total);
-  for (let row = 0; row < height; row++) {
-    for (let col = 0; col < width; col++) {
-      const idx = row * width + col;
-      const lbl = labels[idx];
-      if (lbl > 0) {
-        const left  = col > 0           ? labels[idx - 1]     : 0;
-        const right = col < width - 1   ? labels[idx + 1]     : 0;
-        const up    = row > 0           ? labels[idx - width] : 0;
-        const down  = row < height - 1  ? labels[idx + width] : 0;
-        edgeData[idx] = (left !== lbl || right !== lbl || up !== lbl || down !== lbl) ? 1 : 0;
-      }
-    }
+  // 2) read back the alpha channel into a mask
+  const img = ctx.getImageData(0, 0, width, height).data;
+  const mask = new Uint8Array(total);
+  let strokedCount = 0;
+  for (let i = 0, p = 3; i < total; i++, p += 4) {
+    const isEdge = img[p] > 0 ? 1 : 0;
+    mask[i] = isEdge;
+    strokedCount += isEdge;
+  }
+  log(`Stroked pixels (edge hits): ${strokedCount}/${total}`);
+
+  // 3) output directly as Float32Array (1 = edge, 0 = background)
+  const out = new Float32Array(total);
+  for (let i = 0; i < total; i++) {
+    out[i] = mask[i];
   }
 
-  return edgeData;
+  const duration = performance.now() - start;
+  log(`computeEdgeRaster completed in ${duration.toFixed(2)}ms`);
+  return out;
 }

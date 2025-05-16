@@ -9,7 +9,7 @@ import { layerDataCache } from '../../cache/cache';
 import { getColorFromScheme } from '../../utils/colors';
 import { defaultColorScheme } from '../../constants/colors';
 import { leafletLayerMap } from '../../store/slices/layersSlice/state';
-import { clampValueToDomain, resolveDomain } from '../../utils/rasterDomain';
+import { clampValueToDomain, resolveDomain } from '../../raster/rasterDomain';
 
 const DEBUG = true;
 function log(...args: any[]) {
@@ -112,12 +112,17 @@ const ValueTooltipControl: React.FC<ValueTooltipProps> = React.memo(({ categoryI
         swatchColor = 'rgba(0,0,0,0)';
       } else {
         // Format display value
-        const formattedValue =
-          Math.abs(value) < 0.01
-            ? value.toExponential(2)
-            : Math.abs(value) > 1000
-            ? value.toFixed(0)
-            : value.toFixed(1);
+        let formattedValue: string;
+        if (value === 0) {
+          formattedValue = '0.0';
+        } else if (Math.abs(value) < 0.01) {
+          formattedValue = value.toExponential(2);
+        } else if (Math.abs(value) > 1000) {
+          formattedValue = value.toFixed(0);
+        } else {
+          formattedValue = value.toFixed(1);
+        }
+
         const unit = layerName.includes('Slope') || layerName.includes('Aspect') ? '°' : '';
         const normalizedValue = (value - domainMin) / fullRange;
         swatchColor = getColorFromScheme(scheme, normalizedValue);
@@ -128,7 +133,7 @@ const ValueTooltipControl: React.FC<ValueTooltipProps> = React.memo(({ categoryI
         ?.setContent(renderSwatchContent(`${layerName}: ${label}`, swatchColor))
         .setLatLng(e.latlng);
 
-      //log({latlng: e.latlng, pixelX, pixelY, index, raw, value, swatchColor});
+      log({ latlng: e.latlng, pixelX, pixelY, index, raw, value, swatchColor });
     };
 
     map.on('mousemove', updateTooltip);

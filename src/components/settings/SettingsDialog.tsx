@@ -4,6 +4,7 @@ import { useAppDispatch } from '../../hooks/useAppDispatch';
 import { useAppSelector } from '../../hooks/useAppSelector';
 import { toggleSettings } from '../../store/slices/uiSlice';
 import { settingsService } from '../../services/settingsService';
+import { store } from '../../store';
 
 const SettingsDialog: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -111,6 +112,10 @@ const SettingsDialog: React.FC = () => {
     } catch (error) {
       console.error('Failed to update grid unit:', error);
     }
+  };
+
+  const handleDumpState = () => {
+    console.log('Current Redux State:', store.getState());
   };
 
   return (
@@ -299,6 +304,17 @@ const SettingsDialog: React.FC = () => {
                 </button>
               </div>
             </div>
+          </div>
+
+          {/* Debug Section */}
+          <div className="pt-4 border-t dark:border-gray-700">
+            <h3 className="text-sm font-medium text-gray-900 dark:text-white mb-4">Debug</h3>
+            <button
+              onClick={handleDumpState}
+              className="w-full px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors"
+            >
+              Dump State
+            </button>
           </div>
         </div>
         

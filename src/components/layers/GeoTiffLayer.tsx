@@ -11,8 +11,8 @@ import { setLayerBounds, initLayerValueRange, setLayerMetadata, setLayerLoading 
 import { leafletLayerMap } from '../../store/slices/layersSlice/state';
 import { LayerType } from '../../types/map';
 import { layerDataCache } from '../../cache/cache';
-import { resolveDomain } from '../../utils/rasterDomain';
-import { runRasterPipeline } from '../../utils/rasterPipeline';
+import { resolveDomain } from '../../raster/rasterDomain';
+import { runRasterPipeline } from '../../raster/rasterPipeline';
 
 const DEBUG = true;
 function log(...args: any[]) {
@@ -92,6 +92,8 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
     const metadata = layerData.metadata;
 
     const rawDomain: [number, number] = layer.domain || [valueRange.defaultMin, valueRange.defaultMax];
+    const fillNoData = true;
+    const superSample = true;
     const canvas = runRasterPipeline(
       categoryId!,
       layerId!,
@@ -102,7 +104,9 @@ const GeoTiffLayer: React.FC<GeoTiffLayerProps> = ({
       rawDomain,
       metadata.stats,
       valueRange,
-      layer.colorScheme
+      layer.colorScheme,
+      fillNoData,
+      superSample
     );
 
     canvasRef.current = canvas;

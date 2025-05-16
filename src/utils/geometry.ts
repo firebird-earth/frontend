@@ -1,10 +1,7 @@
 import L from 'leaflet';import { GeoJSON } from 'geojson';
 import proj4 from 'proj4';
 import { BoundingBox } from '../type/map';
-import { leafletMap } from '../globals';
-
-// Register projection
-proj4.defs('EPSG:26913', '+proj=utm +zone=13 +datum=NAD83 +units=m +no_defs');
+import { leafletMap, BUFFER_RADIU } from '../globals';
 
 const DEBUG = true;
 function log(...args: any[]) {
@@ -23,12 +20,12 @@ interface BufferCircleResult {
 export function calculateBufferCircle(
   center: [number, number],
   boundary: GeoJSON.FeatureCollection | null,
-  defaultBufferRadiusMiles: number = 8
+  defaultBufferRadiusMiles: number = BUFFER_RADIUS
 ): BufferCircleResult {
   const defaultRadius = defaultBufferRadiusMiles * 1609.34;
   const bufferMeters = defaultRadius;
 
-  log('boundary:', boundary)
+  //log('boundary:', boundary)
   
   if (!boundary || !boundary.features || boundary.features.length === 0) {
     log('no boundary provided, use location center')
@@ -131,4 +128,8 @@ export function addBufferCircleToMap(bufferCircle: {
     color: 'blue',
     fillOpacity: 0.2
   }).addTo(map);
+}
+
+export function metersToMiles(meters: number): number {
+  return meters / 1609.344;
 }

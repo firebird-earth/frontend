@@ -128,6 +128,20 @@ const LayersTab: React.FC = () => {
           )}
         </div>
 
+        {/* Elevation Section */}
+        <div>
+          <SectionHeader 
+            title="ELEVATION" 
+            isOpen={sections.elevation} 
+            onToggle={() => dispatch(toggleSection('elevation'))}
+          />
+          {sections.elevation && categories.elevation && (
+            <div className="space-y-1">
+              {categories.elevation.layers.map(layer => renderLayerItem(layer, 'elevation'))}
+            </div>
+          )}
+        </div>
+
         {/* Jurisdictions Section */}
         <div>
           <SectionHeader 
@@ -156,20 +170,6 @@ const LayersTab: React.FC = () => {
           )}
         </div>
 
-        {/* Elevation Section */}
-        <div>
-          <SectionHeader 
-            title="ELEVATION" 
-            isOpen={sections.elevation} 
-            onToggle={() => dispatch(toggleSection('elevation'))}
-          />
-          {sections.elevation && categories.elevation && (
-            <div className="space-y-1">
-              {categories.elevation.layers.map(layer => renderLayerItem(layer, 'elevation'))}
-            </div>
-          )}
-        </div>
-
         {/* Landscape Section */}
         <div>
           <SectionHeader 
@@ -184,20 +184,6 @@ const LayersTab: React.FC = () => {
           )}
         </div>
 
-        {/* Transportation Section */}
-        <div>
-          <SectionHeader 
-            title="TRANSPORTATION" 
-            isOpen={sections.transportation} 
-            onToggle={() => dispatch(toggleSection('transportation'))}
-          />
-          {sections.transportation && categories.transportation && (
-            <div className="space-y-1">
-              {categories.transportation.layers.map(layer => renderLayerItem(layer, 'transportation'))}
-            </div>
-          )}
-        </div>
-
         {/* Water Section */}
         <div>
           <SectionHeader 
@@ -208,6 +194,20 @@ const LayersTab: React.FC = () => {
           {sections.water && categories.water && (
             <div className="space-y-1">
               {categories.water.layers.map(layer => renderLayerItem(layer, 'water'))}
+            </div>
+          )}
+        </div>
+
+        {/* Transportation Section */}
+        <div>
+          <SectionHeader 
+            title="TRANSPORTATION" 
+            isOpen={sections.transportation} 
+            onToggle={() => dispatch(toggleSection('transportation'))}
+          />
+          {sections.transportation && categories.transportation && (
+            <div className="space-y-1">
+              {categories.transportation.layers.map(layer => renderLayerItem(layer, 'transportation'))}
             </div>
           )}
         </div>

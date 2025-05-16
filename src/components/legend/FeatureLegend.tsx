@@ -28,16 +28,10 @@ const FeatureLegend: React.FC<FeatureLegendProps> = React.memo(({
     return null;
   }
 
-  if (!layer.legend || !Array.isArray(layer.legend.items)) {
-    console.log('Layer has no legend items:', layer.legend);
-    return null;
-  }
-
-  const items = layer.legend.items;
-  if (items.length === 0) {
-    console.log('Layer has an empty legend:', layer.legend);
-    return null;
-  }
+  // legend items if they exist, otherwise expression or layer.name
+  const items = Array.isArray(layer.legend?.items)
+    ? layer.legend.items
+    : [{ label: (layer.expression || layer.name).replace(/"/g, '') }];
 
   // Determine color scheme from layer.colorScheme.colors or fallback
   const scheme =

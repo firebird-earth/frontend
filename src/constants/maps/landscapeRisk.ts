@@ -32,8 +32,8 @@ export const LANDSCAPE_RISK = {
     description: 'Annual burn probability',
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/burn_probability.tif`,
-    units: 'Multiple of average',
-    valueFormat: "{value:.0f} x",
+    units: 'Multiple of Average',
+    valueFormat: "{value:.0f}x",
     domain: [1, 0], // 1, noDataValue
     colorScheme: colorSchemes.brewerGreenToRed7,
   },

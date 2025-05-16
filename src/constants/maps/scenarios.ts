@@ -6,77 +6,71 @@ import { LayerType, MapLayer } from '../../types/map';
 import { colorSchemes } from '../colors';
 
 export const scenarios: QueryExpression[] = [
-    {
-      name: 'Scenario A', 
-      description: 'Areas with high burn probability',
-      expression: `"Canopy Bulk Density" > 10`,
-      colorScheme: colorSchemes.binaryGreen,
-      legend: {
-        items: [
-          {
-            label: 'High Canopy Bulk Density'
-          }
-        ] 
+{
+  name: 'Scenario A', 
+  expression: `"Canopy Bulk Density" >= 10`,
+},
+{
+  name: 'High CBD',
+  expression: `mask("Canopy Bulk Density", "Canopy Bulk Density" >= 10)`,
+ },
+{
+  name: 'Scenario B',
+  expression: `"Canopy Bulk Density" >= 10 AND "Burn Probability" > 6`,
+},
+{
+  name: 'Scenario C',
+  expression: `mask("Canopy Bulk Density", "Canopy Bulk Density" >= 10 AND "Burn Probability" > 6)`,
+},
+{
+  name: 'Rx Burn Feasible',
+  expression: `"Slope Steepness" < 5`,
+},
+{
+  name: 'Scenario D',
+  expression: `mask("Canopy Bulk Density", "Slope Steepness" < 5)`,
+},
+{
+  name: 'County Boundries',
+  expression: `edge(Counties)`,
+  colorScheme: colorSchemes.binaryGreen,
+  legend: {
+    items: [
+      {
+        label: 'County Boundary'
       }
-    },
-    {
-      name: 'High CBD',
-      description: 'Areas with high canopy bulk density',
-      expression: `mask("Canopy Bulk Density", "Canopy Bulk Density" >= 10)`,
-     },
-    {
-      name: 'Scenario C',
-      description: 'High risk areas',
-      expression: `"Canopy Bulk Density" >= 10 AND "Burn Probability" > 6`,
-      colorScheme: colorSchemes.binaryGreen,
-      legend: {
-        items: [
-          {
-            label: 'High CBD and Burn Probability'
-          }
-        ] 
+    ] 
+  }
+},
+{
+  name: 'Distance to FedLand',
+  expression: `distance_to("US Federal Lands")`,
+  units: 'meters',
+  valueFormat: "{value:.0f}",
+  colorScheme: colorSchemes.brewerWhiteToBlue9,
+},
+{
+  name: 'Close to FedLand',
+  expression: `distance_to("US Federal Lands") >= .25 miles`,
+}, 
+{
+  name: 'Thin Feasible',
+  expression: `"Slope Steepness" < 25 AND distance_to("US Federal Lands") >= 0.25 miles`,
+  //expression: `distance_to("US Federal Lands") >= 0.25 miles AND "Slope Steepness" < 25`,
+  colorScheme: colorSchemes.binaryGreen,
+  legend: {
+    items: [
+      {
+        label: 'Thin Feasible'
       }
-    },
-    {
-      name: 'Rx Burn Feasible',
-      description: 'High risk areas',
-      expression: `"Slope Steepness" < 25`,
-      colorScheme: colorSchemes.binaryGreen,
-      legend: {
-        items: [
-          {
-            label: 'Rx Burn Feasible',
-          }
-        ] 
-      }
-    },
-    {
-      name: 'County Boundries',
-      description: 'Counties',
-      expression: `edge(Counties)`,
-      colorScheme: colorSchemes.binaryGreen,
-      legend: {
-        items: [
-          {
-            label: 'County Boundary'
-          }
-        ] 
-      }
-    },
-    {
-      name: 'Scenario E',
-      description: 'High risk areas',
-      expression: `"Slope Steepness" < 45 and distance_to("Federal Lands") < 0.25 miles`,
-      colorScheme: colorSchemes.binaryGreen,
-      legend: {
-        items: [
-          {
-            label: 'High Canopy Bulk Density'
-          }
-        ] 
-      }
-    }
-  ];
+    ] 
+  }
+},
+{
+  name: 'Structure Burn Risk Reduction',
+  expression: `mask("Structure Burn Risk", "Slope Steepness" < 25)`,
+},
+];
 
 // Initialize scenario layers
 export const scenarioLayers = scenarios.map(scenario => ({

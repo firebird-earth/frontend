@@ -20,29 +20,30 @@ export const VALUE_AT_RISK = {
     description: 'Structure burn risk levels',
     type: LayerType.GeoTiff,
     source: `${STORAGE}/{aoi}/structure_burn_risk.tif`,
-    units: '% of structures burned',
+    units: '% of Structures Burned',
     valueFormat: "{value:.0f}%",
     colorScheme: colorSchemes.brewerYellowToRed5,
   },
-  STRUCTURE_BURN_INFLUENCE: {
-    name: 'Structure Burn Influence',
-    description: 'Structure burn influence zones',
-    units: 'index',
-    colorScheme: 'none',
-    type: LayerType.Vector,
-    source: 'USFS Fire Modeling Institute'
-  },
   STRUCTURE_BURN_FREQUENCY: {
     name: 'Structure Burn Exposure',
-    description: 'Frequency of structures burning',
+    description: 'Frequency of Structures Burned',
     type: LayerType.GeoTiff,
-    source: `${STORAGE}/{aoi}/structure_burn_exposure_1x1_2.tif`,
-    units: '% of fires that burn structures',
+    source: `${STORAGE}/{aoi}/structure_burn_exposure.tif`,
+    units: '% of Fires that Burn Structures',
     valueFormat: "{value:.0f}%",
     valueFormatMin: "< {value:.0f}%",   
     colorScheme: colorSchemes.brewerYellowToRed5,
     //domain: [1, 0] // 1, noDataValue
-    },
+  },
+  STRUCTURE_BURN_INFLUENCE: {
+    name: 'Structure Burn Influence',
+    description: 'Structure burn influence zones',
+    type: LayerType.GeoTiff,
+    source: `${STORAGE}/{aoi}/structure_burn_influence_3.tif`,
+    units: 'Multiple of Average',
+    valueFormat: "{value:.0f}x",
+    colorScheme: colorSchemes.arcGISBlue4,
+  },
 } as const;
 
 // Layer category constant

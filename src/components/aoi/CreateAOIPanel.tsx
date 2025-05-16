@@ -54,7 +54,7 @@ const CreateAOIPanel: React.FC = () => {
         name,
         description,
         location: {
-          center: coordinates,
+          coordinates: coordinates,
           zoom: 15
         },
         tags

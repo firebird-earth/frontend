@@ -14,7 +14,7 @@ import {
 import { MapPane, QueryExpression } from '../../types/map';
 import { leafletLayerMap } from '../../store/slices/layersSlice/state';
 import { getColorScheme } from '../../utils/colors';
-import { defaultColorScheme } from '../../constants/colors';
+import { defaultColorScheme, defaultColorSchemeBinary } from '../../constants/colors';
 import { execExpression } from '../../query/exec';
 import { layerDataCache } from '../../cache/cache';
 import { hashString } from '../../utils/utils';
@@ -23,7 +23,7 @@ import { useLayerOpacity } from '../../hooks/useLayerOpacity';
 import { useLayerValueRange } from '../../hooks/useLayerValueRange';
 import { findLayerByName } from '../../store/slices/layersSlice/utils/utils';
 import { resolveDomain } from '../../utils/rasterDomain';
-import { runRasterPipeline } from '../../utils/rasterPipeline';
+import { runRasterPipeline } from '../../raster/rasterPipeline';
 
 const DEBUG = true;
 function log(...args: any[]) {
@@ -94,11 +94,14 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
     metadata: any,
     colorSchemeName: string
   ) => {
+    log('in renderOverlay, colorSchemeName', colorSchemeName)
     const { rasterArray, width, height, noDataValue } = rasterData;
     const schemeObj = getColorScheme(colorSchemeName)!;
     // full domain
     const rawDomain: [number, number] = [metadata.stats.min, metadata.stats.max];
 
+    const fillNoData = false;
+    const superSample = false;
     const canvas = runRasterPipeline(
       categoryId!,
       layerId!,
@@ -109,7 +112,9 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
       rawDomain,
       metadata.stats,
       valueRange!,
-      schemeObj
+      schemeObj,
+      fillNoData,
+      superSample
     );
 
     const bounds = L.latLngBounds(
@@ -137,12 +142,9 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
       lastMetaRef.current &&
       lastSchemeRef.current
     ) {
-      renderOverlay(
-        lastRasterRef.current,
-        lastMetaRef.current,
-        lastSchemeRef.current
-      );
+      renderOverlay(lastRasterRef.current, lastMetaRef.current, lastSchemeRef.current);
     }
+    
   }, [valueRange]);
 
   useEffect(() => {
@@ -159,6 +161,8 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
       lastRasterRef.current = cached.data;
       lastMetaRef.current = cached.metadata;
       lastSchemeRef.current = layer?.colorScheme.name!;
+      log('cache hit renderOverlay, metadata:', cached.metadata)
+      log ('cache hit renderOverlay, layer colorScheme:', layer!.colorScheme.name)
       renderOverlay(cached.data, cached.metadata, layer!.colorScheme.name!);
       return cleanup;
     }
@@ -166,43 +170,57 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
     (async () => {
       try {
         const result = await execExpression(expression);
+        log('back from execExpression, result:', result)
+        
         if (!mountedRef.current) return;
-
+        
         const rasterData = result?.data;
         const metadata = result?.metadata;
         if (!rasterData || !metadata)
           throw new Error('Invalid rasterData or metadata');
 
-        let colorSchemeName = defaultColorScheme.name;
+        let colorSchemeName = layer!.colorScheme?.name ?? defaultColorScheme.name;
+        let units = layer!.units;
+        let legend = layer!.legend;
+        let dispatchLegendInfo = false;
+        let dispatchLegend = false;
         if (metadata.isBinary) {
+          colorSchemeName = layer!.colorScheme?.name ?? defaultColorSchemeBinary.name;
+          units = layer!.units;
+          dispatchLegendInfo = true;
           metadata.stats = { ...metadata.stats, min: 0, max: 1 };
-          colorSchemeName = layer!.colorScheme.name!;
         } else if (metadata.maskLayerName) {
           const state = store.getState();
-          const maskLayer = findLayerByName(
-            state.layers,
-            metadata.maskLayerName
-          );
+          const maskLayer = findLayerByName(state.layers, metadata.maskLayerName);
           colorSchemeName = maskLayer.colorScheme.name;
+          units = maskLayer.units;
+          legend = maskLayer.legend;
+          dispatchLegendInfo = true;
+          dispatchLegend = true;
+        } else {
+          //metadata.units = '???';
+        }
+
+        if (dispatchLegendInfo) {
+          const scheme = getColorScheme(colorSchemeName);
           dispatch(
             setLayerLegendInfo({
               categoryId: categoryId!,
               layerId: layerId!,
-              colorScheme: maskLayer.colorScheme,
-              units: maskLayer.units,
+              colorScheme: scheme,
+              units: units,
             })
-          );
+          );       
+        }
+        if (dispatchLegend) {
           dispatch(
             setLayerLegend({
               categoryId: categoryId!,
               layerId: layerId!,
-              legend: maskLayer.legend,
+              legend: legend,
             })
-          );
-        } else {
-          metadata.units = '???';
+          );  
         }
-
         dispatch(
           setLayerMetadata({
             categoryId: categoryId!,
@@ -234,8 +252,12 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
         lastMetaRef.current = metadata;
         lastSchemeRef.current = colorSchemeName;
 
+        log('execExpression renderOverlay, metadata:', metadata)
+        log ('execExpression renderOverlay, layer colorScheme:', colorSchemeName)
+        
         renderOverlay(rasterData, metadata, colorSchemeName);
       } catch (err) {
+        log(err)
         if (!mountedRef.current) return;
         cleanup();
         if (onError) onError(err as Error);

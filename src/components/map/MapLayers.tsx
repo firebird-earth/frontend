@@ -16,7 +16,7 @@ import {
   GeoTiffLayer,
 } from '../layers';
 import QueryLayer from '../layers/QueryLayer';
-import AOIBoundaryLayer from '../layers/AOIBoundaryLayer';
+import AOILayer from '../layers/AOILayer';
 import IgnitionsLayer from '../layers/IgnitionsLayer';
 import { getOrderedLayers } from '../../store/slices/layersSlice';
 import { useAppSelector } from '../../hooks/useAppSelector';
@@ -88,7 +88,7 @@ const MapLayers: React.FC = () => {
     if (currentAOI) {
       if ('location' in currentAOI) {
         return {
-          displayCoords: [currentAOI.location.center[1], currentAOI.location.center[0]] as [number, number],
+          displayCoords: [currentAOI.location.coordinates[1], currentAOI.location.coordinates[0]] as [number, number],
           boundary: currentAOI.boundary || null
         };
       }
@@ -146,7 +146,7 @@ const MapLayers: React.FC = () => {
 
       {/* AOI Boundary */}
       {displayCoords && (
-        <AOIBoundaryLayer
+        <AOILayer
           locationId={currentAOI ? (typeof currentAOI.id === 'string' ? parseInt(currentAOI.id) : currentAOI.id) : 0}
           active={true}
           geojson={boundary}

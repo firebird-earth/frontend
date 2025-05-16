@@ -5,11 +5,16 @@ import { MapLayer } from '../types/map';
 import { RasterData } from '../../../types/map';
 import { store } from '../store'; 
 
+const DEBUG = true;
+function log(...args: any[]) {
+  if (DEBUG) console.log('[FetchGeotiffLayer]', ...args);
+}
+
 export async function fetchGeoTiffLayer(layer: MapLayer, bounds: L.LatLngBounds): Promise<[RasterData, GeoTiffMetadata]> {
   
-  console.log(`[LayerDataCache] Starting GeoTIFF fetch for: ${layer.name}`);
+  log(`[LayerDataCache] Starting GeoTIFF fetch for: ${layer.name}`);
   
-  const startTime = Date.now();
+  const start = Date.now();
 
   // Access the current AOI from the Redux store
   const currentAOI = store.getState().home.aoi.current;
@@ -17,12 +22,12 @@ export async function fetchGeoTiffLayer(layer: MapLayer, bounds: L.LatLngBounds)
     throw new Error('No AOI selected');
   }
 
-  console.log('[fetchGeoTiffLayer] currentAOI:', currentAOI)
+  log('[fetchGeoTiffLayer] currentAOI:', currentAOI)
 
   const aoiId = currentAOI.id === 1 ? 'TMV' : currentAOI.id.toString();
   const source = layer.source.replace('{aoi}', aoiId);
 
-  console.log('[fetchGeoTiffLayer] source:', source)
+  log('[fetchGeoTiffLayer] source:', source)
   
   const [arrayBuffer, metadata] = await Promise.all([
     geotiffService.getGeoTiffData(source),
@@ -42,6 +47,9 @@ export async function fetchGeoTiffLayer(layer: MapLayer, bounds: L.LatLngBounds)
     noDataValue: metadata.noDataValue
   };
 
-  console.log(`[LayerDataCache] Completed GeoTIFF fetch for: ${layer.name} in ${Date.now() - startTime}ms`);
+  log('Fetched rasterData:', rasterData);
+  log('Fetched metadata:', metadata);
+  log(`Completed fetch for: ${layer.name} in ${Date.now() - start}ms`);
+
   return [rasterData, metadata];
 }

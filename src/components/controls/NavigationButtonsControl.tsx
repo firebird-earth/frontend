@@ -112,7 +112,7 @@ const NavigationButtonsControl: React.FC = () => {
       navigateToLocation({
         id: parseInt(aoi.id),
         name: aoi.name,
-        coordinates: aoi.location.center,
+        coordinates: aoi.location.coordinates,
         boundary: aoi.boundary
       }, bufferRadius);
     } else {

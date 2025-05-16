@@ -5,14 +5,18 @@ import * as GeoTIFF from 'geotiff';
 import { RasterData } from '../types/map';
 import { arcGISTiffService } from '../services/arcGISTiffService';
 
+const DEBUG = true;
+function log(...args: any[]) {
+  if (DEBUG) { console.log('[fetchTiffLayer]', ...args); }
+}
+
 export async function fetchArcGISTiffLayer(layer: MapLayer, bounds: L.LatLngBounds): Promise<[RasterData, GeoTiffMetadata]> {
-  
-  console.log(`[LayerDataCache] Starting Image Service fetch for: ${layer.name}`);
-  
+
+  log(`Starting Image Service fetch for: ${layer.name}`);
+
   const startTime = Date.now();
 
   try {
-    // Extract the base URL and rendering rule
     const exportUrl = layer.source + '/exportImage';
     let parsedRule: any;
     try {
@@ -23,25 +27,21 @@ export async function fetchArcGISTiffLayer(layer: MapLayer, bounds: L.LatLngBoun
       parsedRule = layer.renderingRule;
     }
 
-    // Get the map instance
-    const map = window.leafletMap;
-    //const bounds = map.getBounds();
-    const zoom = map.getZoom();
-    const pixelsPerDegree = Math.pow(2, zoom + 8) / 360;
-    const degreesLng = Math.abs(bounds.getEast() - bounds.getWest());
-    const degreesLat = Math.abs(bounds.getNorth() - bounds.getSouth());
-    const targetWidth = Math.round(degreesLng * pixelsPerDegree);
-    const targetHeight = Math.round(degreesLat * pixelsPerDegree);
-    const tileWidth = Math.min(2048, Math.max(256, targetWidth));
-    const tileHeight = Math.min(2048, Math.max(256, targetHeight));
-    const bbox = `${bounds.getWest().toFixed(6)},${bounds.getSouth().toFixed(6)},${bounds.getEast().toFixed(6)},${bounds.getNorth().toFixed(6)}`;
+    const sw = bounds.getSouthWest();
+    const ne = bounds.getNorthEast();
+    const projectedSW = L.Projection.SphericalMercator.project(sw);
+    const projectedNE = L.Projection.SphericalMercator.project(ne);
+    const widthMeters = projectedNE.x - projectedSW.x;
+    const heightMeters = projectedNE.y - projectedSW.y;
+    const tileWidth = Math.round(widthMeters / 30);
+    const tileHeight = Math.round(heightMeters / 30);
+    const bbox = `${projectedSW.x},${projectedSW.y},${projectedNE.x},${projectedNE.y}`;
 
-    // Create fetch params
     const params: Partial<ArcTiffExportParams> = {
       bbox,
-      bboxSR: '4326',
+      bboxSR: '3857',
       size: `${tileWidth},${tileHeight}`,
-      imageSR: '4326',
+      imageSR: '3857',
       format: 'tiff',
       pixelType: 'F32',
       noData: '',
@@ -53,13 +53,11 @@ export async function fetchArcGISTiffLayer(layer: MapLayer, bounds: L.LatLngBoun
       f: 'image'
     };
 
-    // Fetch both data and metadata in parallel
     const [arrayBuffer, metadata] = await Promise.all([
       arcGISTiffService.getTiffData(exportUrl, params),
       arcGISTiffService.getTiffMetadata(exportUrl, params)
     ]);
 
-    // Extract the image raster from the file array buffer
     const tiff = await GeoTIFF.fromArrayBuffer(arrayBuffer);
     const image = await tiff.getImage();
     const rasters = await image.readRasters();
@@ -72,10 +70,10 @@ export async function fetchArcGISTiffLayer(layer: MapLayer, bounds: L.LatLngBoun
       noDataValue: metadata.noDataValue
     };
 
-    console.log(`[LayerDataCache] Completed Image Service fetch for: ${layer.name} in ${Date.now() - startTime}ms`);
+    log(`Completed Image Service fetch for: ${layer.name} in ${Date.now() - startTime}ms`);
     return [rasterData, metadata];
   } catch (error) {
-    console.error(`[LayerDataCache] Error fetching Image Service for: ${layer.name}`, error);
+    console.error(`Error fetching Image Service for: ${layer.name}`, error);
     throw error;
   }
 }

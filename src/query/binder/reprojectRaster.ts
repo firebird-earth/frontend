@@ -1,7 +1,8 @@
 import L from 'leaflet';
 import proj4 from 'proj4';
-import { RasterData } from '../types/geotiff';
+import { RasterData, GeoTiffMetadata } from '../../types/geotiff';
 import { NODATA_VALUE } from '../../globals';
+import { validateMetadata } from '../../services/geotiffService/validateMetadata';
 
 const DEBUG = true;
 function log(...args: any[]) {
@@ -119,16 +120,25 @@ export async function reprojectRaster(
 
   log('Middle ten values:', outputArray.slice(Math.floor(outputArray.length / 2), Math.floor(outputArray.length / 2) + 10));
 
+  const metadata: GeoTiffMetadata = {
+    ...target.metadata,
+    ...input.metadata,
+    width,
+    height,
+    resolution: target.metadata.resolution,
+    projection: target.metadata.projection,
+    noDataValue: NODATA_VALUE,
+    leafletBounds,
+    stats: input.metadata.stats,
+  };
+
+  validateMetadata(metadata);
+  
   return {
     rasterArray: outputArray,
     width,
     height,
     noDataValue: NODATA_VALUE,
-    metadata: {
-      ...input.metadata,
-      ...target.metadata,
-      noDataValue: NODATA_VALUE,
-      leafletBounds,
-    },
+    metadata
   };
 }

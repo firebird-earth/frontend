@@ -11,7 +11,7 @@ import { defaultColorScheme } from '../../constants/colors';
 import { leafletLayerMap } from '../../store/slices/layersSlice/state';
 import { clampValueToDomain, resolveDomain } from '../../raster/rasterDomain';
 
-const DEBUG = true;
+const DEBUG = false;
 function log(...args: any[]) {
   if (DEBUG) {
     console.log('[ValueTooltipControl]', ...args);

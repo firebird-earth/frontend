@@ -41,6 +41,7 @@ export function buildReferenceRaster(
       [minY, minX],
       [maxY, maxX]
     ],
+    /*
     stats: {
       min: noDataValue,
       max: noDataValue,
@@ -50,6 +51,7 @@ export function buildReferenceRaster(
       zeroCount: 0,
       noDataCount: width * height
     }
+    */
   };
 
   validateMetadata(metadata);

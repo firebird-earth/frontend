@@ -7,6 +7,7 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import { registerAllCRSDefs } from './utils/crs';
 import './index.css';
 
+// hello git
 const useStrict = false;
 if (useStrict) {
   createRoot(document.getElementById('root')!).render(

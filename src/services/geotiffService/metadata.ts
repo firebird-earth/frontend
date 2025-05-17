@@ -5,7 +5,7 @@ import { GeoTiffMetadata } from './types';
 import { validateGeoTiff } from './validateGeoTiff';
 import { getGeoTiffBounds } from './bounds';
 
-const DEBUG = true;
+const DEBUG = false;
 function log(...args: any[]) {
   if (DEBUG) { console.log('[Metadata]', ...args); }
 }

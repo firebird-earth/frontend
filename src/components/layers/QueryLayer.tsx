@@ -94,9 +94,24 @@ const QueryLayer: React.FC<QueryLayerProps> = ({
     metadata: any,
     colorSchemeName: string
   ) => {
-    log('in renderOverlay, colorSchemeName', colorSchemeName)
+    // Validate required data
+    if (!rasterData || !metadata || !colorSchemeName) {
+      log('Missing required data for renderOverlay:', { rasterData, metadata, colorSchemeName });
+      return;
+    }
+
     const { rasterArray, width, height, noDataValue } = rasterData;
-    const schemeObj = getColorScheme(colorSchemeName)!;
+    if (!rasterArray || !width || !height) {
+      log('Invalid raster data:', rasterData);
+      return;
+    }
+
+    const schemeObj = getColorScheme(colorSchemeName);
+    if (!schemeObj) {
+      log('Invalid color scheme:', colorSchemeName);
+      return;
+    }
+
     // full domain
     const rawDomain: [number, number] = [metadata.stats.min, metadata.stats.max];
 

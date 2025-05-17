@@ -138,7 +138,12 @@ function evaluateAtPixel(
       throw new Error(`Layer "${layer.name}" not bound to raster source`);
     }
     const idx = r * layer.source.width + c;
-    return layer.source.rasterArray[idx];
+    //return layer.source.rasterArray[idx];
+    const val = layer.source.rasterArray[idx];
+    if (layer.source.noDataValue != null && val === layer.source.noDataValue) {
+      return outputNoDataValue;
+    }
+    return val;
   }
 
   // binary or logical op

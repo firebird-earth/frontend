@@ -7,15 +7,26 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import { registerAllCRSDefs } from './utils/crs';
 import './index.css';
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <ErrorBoundary>
-      <Provider store={store}>
-        <App />
-      </Provider>
-    </ErrorBoundary>
-  </StrictMode>
-);
+const useStrict = false;
+if (useStrict) {
+  createRoot(document.getElementById('root')!).render(
+    <StrictMode>
+      <ErrorBoundary>
+        <Provider store={store}>
+          <App />
+        </Provider>
+      </ErrorBoundary>
+    </StrictMode>
+  );
+} else {
+  createRoot(document.getElementById('root')!).render(
+      <ErrorBoundary>
+        <Provider store={store}>
+          <App />
+        </Provider>
+      </ErrorBoundary>
+  );
+}
 
 registerAllCRSDefs();
 

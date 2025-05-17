@@ -10,7 +10,7 @@ import { ELEVATION } from '../../constants/maps/elevation';
 import { FIRE_METRICS } from '../../constants/maps';
 import { selectOrderedLayers } from '../../store/slices/layersSlice/selectors';
 
-const DEBUG = true;
+const DEBUG = false;
 function log(...args: any[]) {
   if (DEBUG) {
     console.log('[LegendContent]', ...args);

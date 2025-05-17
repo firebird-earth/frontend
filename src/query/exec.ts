@@ -25,14 +25,12 @@ export interface ExecResult {
 
 export const execExpression = async (expression: string): Promise<ExecResult | void> => {
   try {
-
-    log('parseExpression:', expression);
+    
+    log('start execExpression:', expression);
     
     // Parse the expression into an AST
     const ast = parseExpression(expression);
     log('Parsed AST:', ast);
-
-    log('bindLayers:');
     
     // Bind layer references using the layer cache
     const boundAst = await bindLayers(ast, layerDataCache, (layerName) => {
@@ -53,13 +51,11 @@ export const execExpression = async (expression: string): Promise<ExecResult | v
  
     //log('Evaluation result:', { expression: expression, result: result });
 
+    // Clip the result to the aoi buffer circle
     const aoi = store.getState().home.aoi.current;
     log('aoi', aoi);
-
     const clipped = maskRasterToCircle(result.data, result.metadata, aoi.center, aoi.bufferedRadius);
     
-    //log('Clipped result:', clipped);
-
     log('Original metadata:', result.metadata);
     log('Clipped metadata snapshot:', JSON.parse(JSON.stringify(clipped.metadata)));
 

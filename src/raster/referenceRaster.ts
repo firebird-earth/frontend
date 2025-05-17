@@ -1,88 +1,99 @@
 // referenceRaster.ts
-import type { Raster, RasterMetadata } from "./types";
-import type { GeoTiffMetadata, RasterData } from '../types/geotiff';
-import { RESOLUTION, NODATA_VALUE } from '../globals';
+import type { RasterData } from '../types/geotiff';
+import type { GeoTiffMetadata } from '../types/geotiff';
+import { NODATA_VALUE } from '../globals';
+import { validateMetadata } from '../services/geotiffService/validateMetadata';
+
 const DEBUG = true;
 function log(...args: any[]) {
-  if (DEBUG) { console.log('[ReferenceRaster]', ...args); }
+  if (DEBUG) console.log('[ReferenceRaster]', ...args);
 }
 
 /**
  * Builds a reference raster grid to which all other rasters/vectors will be aligned.
- *
- * Uses a default resolution of 30 (meters) and default CRS of EPSG:3857 (WGS84 / Pseudo-Mercator).
- *
  * @param bounds [minX, minY, maxX, maxY] in the target CRS units.
- * @param resolution resolution of each pixel (in same units as CRS), default 30.
+ * @param resolution resolution of each pixel (in same units as CRS).
  * @param crs target coordinate reference system (e.g., "EPSG:3857").
- * @param noDataValue value to use for no-data cells, default -9999.
+ * @param noDataValue value to use for no-data cells.
  */
 export function buildReferenceRaster(
   bounds: [number, number, number, number],
-  resolution: number = RESOLUTION,
-  crs: string = "EPSG:3857",
-  noDataValue: number = NODATA_VALUE
-): Raster {
+  resolution: number,
+  crs: string,
+  noDataValue: number
+): RasterData {
   const [minX, minY, maxX, maxY] = bounds;
   const width = Math.ceil((maxX - minX) / resolution);
   const height = Math.ceil((maxY - minY) / resolution);
 
-  // Initialize all cells to noDataValue
   const rasterArray = new Float32Array(width * height).fill(noDataValue);
-
-  const metadata: RasterMetadata = {
-    width,
-    height,
-    noDataValue,
-    resolution: { x: resolution, y: resolution },
-    projection: { sourceCRS: crs, origin: [minX, maxY] },
-    rawBounds: bounds,
-    // Additional metadata fields (e.g., bitsPerSample, compression) can be added as needed
-  };
-
-  return { rasterArray, width, height, metadata };
-}
-
-/**
- * Build an empty reference raster grid from feature‐layer metadata.
- * Uses projected extents for rawBounds (so it lines up in Web-Mercator)
- * and geographic extents for leafletBounds.
- */
-export function buildReferenceRasterFromMetadata(m: {
-  width: number;
-  height: number;
-  originX: number;
-  originY: number;
-  pixelWidth: number;
-  pixelHeight: number;
-  bounds: [number, number, number, number];
-  noDataValue?: number;
-}): RasterData {
-  const { width, height, originX, originY, pixelWidth, pixelHeight, bounds: geoBounds } = m;
-
-  // Projected grid bounds (in map projection units)
-  const projMinX = originX;
-  const projMaxY = originY;
-  const projMaxX = originX + pixelWidth * width;
-  const projMinY = originY + pixelHeight * height;
-
-  // Geographic envelope for leaflet
-  const [geoMinX, geoMinY, geoMaxX, geoMaxY] = geoBounds;
 
   const metadata: GeoTiffMetadata = {
     width,
     height,
-    noDataValue: (m.noDataValue ?? -9999),
+    noDataValue,
     compression: null,
     bitsPerSample: [],
-    resolution: { x: pixelWidth, y: Math.abs(pixelHeight) },
-    projection: { origin: [originX, originY] as any },
-    rawBounds: [projMinX, projMinY, projMaxX, projMaxY],
+    resolution: { x: resolution, y: resolution },
+    projection: { sourceCRS: crs, origin: [minX, maxY] },
+    rawBounds: bounds,
     leafletBounds: [
-      [geoMinY, geoMinX],
-      [geoMaxY, geoMaxX]
+      [minY, minX],
+      [maxY, maxX]
     ],
     stats: {
+      min: noDataValue,
+      max: noDataValue,
+      mean: noDataValue,
+      totalPixels: width * height,
+      validCount: 0,
+      zeroCount: 0,
+      noDataCount: width * height
+    }
+  };
+
+  validateMetadata(metadata);
+  log('buildReferenceRaster:', metadata);
+
+  return { rasterArray, width, height, noDataValue, metadata };
+}
+
+/**
+ * Builds a reference raster grid from existing GeoTiffMetadata.
+ * Expects metadata to include full GeoTiff fields: resolution, projection.sourceCRS,
+ * projection.origin, rawBounds, leafletBounds.
+ */
+export function buildReferenceRasterFromMetadata(m: GeoTiffMetadata): RasterData {
+  const { width, height, resolution, projection, rawBounds } = m;
+  const originX = projection.origin?.[0];
+  const originY = projection.origin?.[1];
+
+  if (originX == null || originY == null) {
+    throw new Error('Metadata projection.origin must be defined.');
+  }
+
+  const pixelWidth = resolution.x;
+  const pixelHeight = resolution.y;
+
+  // Compute projected grid bounds
+  const minX = originX;
+  const maxY = originY;
+  const maxX = originX + pixelWidth * width;
+  const minY = originY - pixelHeight * height;
+
+  const rasterArray = new Float32Array(width * height).fill(m.noDataValue ?? NODATA_VALUE);
+
+  const metadata: GeoTiffMetadata = {
+    width,
+    height,
+    noDataValue: m.noDataValue ?? NODATA_VALUE,
+    compression: m.compression ?? null,
+    bitsPerSample: m.bitsPerSample ?? [],
+    resolution: { x: pixelWidth, y: pixelHeight },
+    projection: { sourceCRS: projection.sourceCRS!, origin: [originX, originY] },
+    rawBounds: [minX, minY, maxX, maxY],
+    leafletBounds: m.leafletBounds,
+    stats: m.stats || {
       min: 0,
       max: 0,
       mean: 0,
@@ -93,13 +104,8 @@ export function buildReferenceRasterFromMetadata(m: {
     }
   };
 
-  log('metadata:', metadata)
-  
-  return {
-    rasterArray: new Float32Array(width * height),
-    width,
-    height,
-    noDataValue: metadata.noDataValue,
-    metadata
-  };
+  validateMetadata(metadata);
+  log('buildReferenceRasterFromMetadata:', metadata);
+
+  return { rasterArray, width, height, noDataValue: metadata.noDataValue!, metadata };
 }

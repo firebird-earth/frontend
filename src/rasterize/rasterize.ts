@@ -30,7 +30,7 @@ export async function rasterizeVectorFunction(
   referenceMetadata?: GeoTiffMetadata,
   attributeField?: string
 ): Promise<Raster> {
-  console.debug(`[Rasterizer] ${fnName}(${layerName})`);
+  log(`start rasterize: ${fnName}(${layerName})`);
   const start = performance.now();
 
   const width  = referenceMetadata?.width  ?? 256;
@@ -136,6 +136,7 @@ export async function rasterizeVectorFunction(
   };
 
   const duration = performance.now() - start;
+  log('end rasterize, rasterized metadata:', metadata);
   log(`RasterizeVectorFunction ${fnName} took ${duration.toFixed(2)}ms`);
 
   return { rasterArray: data, width, height, noDataValue: -9999, metadata };

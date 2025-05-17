@@ -5,6 +5,7 @@ import { MapLayer } from '../types/map';
 import { computeGridMetadata } from '../utils/grid';
 import { RESOLUTION, NODATA_VALUE } from '../globals';
 import { RasterData } from '../types/geotiff';
+import { validateMetadata } from '../services/geotiffService/validateMetadata';
 
 const DEBUG = true;
 function log(...args: any[]) {
@@ -107,5 +108,7 @@ export async function fetchArcGISFeatureLayer(
   log('Fetched metadata:', metadata);
   log(`Completed fetch for: ${layer.name} in ${Date.now() - start}ms`);
 
+  validateMetadata(metadata);
+  
   return [rasterData, metadata];
 }

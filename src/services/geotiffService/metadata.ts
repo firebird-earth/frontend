@@ -2,7 +2,7 @@
 
 import * as GeoTIFF from 'geotiff';
 import { GeoTiffMetadata } from './types';
-import { validateGeoTiff } from './validation';
+import { validateGeoTiff } from './validateGeoTiff';
 import { getGeoTiffBounds } from './bounds';
 
 const DEBUG = true;

@@ -10,6 +10,7 @@ import { alignRasters } from './alignRasters';
 import { walkAST } from './walkAST';
 import { fetchAndRasterizeLayers } from './fetchLayers';
 import { RESOLUTION, NODATA_VALUE } from '../../globals';
+import { validateMetadata } from '../../services/geotiffService/validateMetadata';
 
 const DEBUG = true;
 function log(...args: any[]) {
@@ -31,6 +32,8 @@ export async function bindLayers(
   cache: LayerDataCache,
   onProgress?: (layerName: string) => void
 ): Promise<ASTNode | ASTNodeMap> {
+
+  log('start bindLayers');
   
   // 1. Collect functions and layer names
   const neededFnsByLayer = collectRasterFns(ast);
@@ -62,22 +65,19 @@ export async function bindLayers(
   if (!referenceRaster) {
     throw new Error('No raster layers found to bind.');
   }
-  log('Using reference raster size', referenceRaster.width, 'x', referenceRaster.height);
-
-  // 4. Build reference grid
+  log('Reference raster size', referenceRaster.width, 'x', referenceRaster.height);
+  validateMetadata(referenceRaster.metadata);
+  
+  // 4. Build reference raster
   const { rawBounds, resolution, projection } = referenceRaster.metadata;
   const refNoData = referenceRaster.noDataValue ?? NODATA_VALUE;
-  const referenceGrid = buildReferenceRaster(
-    rawBounds,
-    resolution.x,
-    projection.sourceCRS,
-    refNoData
-  );
+  const referenceGrid = buildReferenceRaster(rawBounds, resolution.x, projection.sourceCRS, refNoData);
 
   // 5. Reproject and align all layers to reference grid
   for (const [name, entry] of layerResults.entries()) {
     const rasterData = entry as RasterData;
     const m = rasterData.metadata;
+    validateMetadata(m);
     if (
       m.projection.sourceCRS !== referenceGrid.metadata.projection.sourceCRS ||
       rasterData.width !== referenceGrid.width ||

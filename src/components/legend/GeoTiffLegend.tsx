@@ -3,7 +3,7 @@ import { useAppSelector } from '../../hooks/useAppSelector';
 import { getColorScheme } from '../../utils/colors';
 import { resolveDomain } from '../../raster/rasterDomain';
 
-const DEBUG = true;
+const DEBUG = false;
 function log(...args: any[]) {
   if (DEBUG) console.log('[GeoTiffLegend]', ...args);
 }

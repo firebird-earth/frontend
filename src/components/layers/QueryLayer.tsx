@@ -25,7 +25,7 @@ import { findLayerByName } from '../../store/slices/layersSlice/utils/utils';
 import { resolveDomain } from '../../utils/rasterDomain';
 import { runRasterPipeline } from '../../raster/rasterPipeline';
 
-const DEBUG = true;
+const DEBUG = false;
 function log(...args: any[]) {
   if (DEBUG) console.log('[QueryLayer]', ...args);
 }

@@ -1,4 +1,4 @@
-import { validateGeoTiff } from './validation';
+import { validateGeoTiff } from './validateGeoTiff';
 
 // Debug configuration
 const LoadersConfig = {

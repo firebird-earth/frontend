@@ -166,7 +166,7 @@ const ValueTooltipControl: React.FC<ValueTooltipProps> = React.memo(({ categoryI
         tooltipRef.current = null;
       }
     };
-  }, [map, categoryId, layerId, dispatch]);
+  }, [map, categoryId, layerId, dispatch, layer?.metadata, valueRange]);
 
   return null;
 });
